@@ -1,7 +1,8 @@
 {
+  "verbose": true,
   "ignore": [
-    "public/",
-    "node_modules/",
-    "webpack.config.js"
+    "./deploy/",
+    "./node_modules/",
+    "./client/"
   ]
 }
