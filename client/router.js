@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { BrowserRouter, Route, Switch, Routes } from 'react-router-dom';
 import { App } from './pages/app';
 import { Error404 } from './errors/error404';
-import socketIOClient from "socket.io-client";
 
 export class RouterProvider extends React.Component {
     constructor(props) {
@@ -65,6 +64,8 @@ export class Router extends React.Component {
 
     render() {
         const { ssrLocation } = this.props;
+
+        // this is your both-side router
 
         return (
             <RouterProvider isServer={this.props.isServer} ssrLocation={ssrLocation}>
