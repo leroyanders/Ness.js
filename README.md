@@ -68,15 +68,10 @@ export class Router extends React.Component {
     }
 }
 ```
-> Server side routing you can find in /server/routes.js
+> Manage titles in /server/routes.js
 ```
-module.exports = (app) => {
-    app.use('/', (req, res) => {
-        res.render('index', {
-          title: 'Welcome to Ness.js',
-          component: 'Your component must be declared here'
-        });
-    });
+const Titles = {
+	'/': 'Welcome to Ness.js'
 }
 ```
 
@@ -90,5 +85,11 @@ module.exports = (app) => {
 ``` $ yarn start:ssr ```
 or
 ``` $ npm run start:ssr ```
+
+> Start your production server
+
+``` $ yarn start:production ```
+or
+``` $ npm run start:production ```
 
 > open browser by default: localhost:3000
