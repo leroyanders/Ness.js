@@ -1,3 +1,4 @@
+// 👁 Nodemon configuration
 {
   "verbose": true,
   "ignore": [
