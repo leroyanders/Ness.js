@@ -4,11 +4,15 @@ module.exports = (app, PORT) => {
   const he = require('he');
   const { Router } = require('../client/router'); 
 
+  const Titles = {
+    '/': 'Welcome to Ness.js'
+  }
+
   app.all('*', (req, res) => {
     const htmlString = ReactDOMServer.renderToString(<Router ssrLocation={req.url} isServer={true}/>);
 
     res.render('index', {
-      title: 'Welcome to Ness.js',
+      title: Titles[req.url],
       component: he.unescape(htmlString)
     });
   });

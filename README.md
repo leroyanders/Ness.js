@@ -1,10 +1,16 @@
 <p align="center">
   <a href="https://nessjs.org">
+		<br/><br/><br/><br/><br/>
     <img src="https://user-images.githubusercontent.com/106757584/175770221-a634f207-c3de-4afc-991c-d2fb32953941.png" height="128">
+		<br/><br/><br/><br/><br/>
   </a>
 </p>
 
-## 🌱 Installation &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://reactjs.org/docs/how-to-contribute.html#your-first-pull-request)
+## About Ness.js  &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/ness.js)
+<i>Ness.js - is an open-source framework based on React.js and Express.js + Webpack, supports both-side rendering with preinstalled TailwindCSS and Hot Reloader.</i>
+
+
+## 🌱 Installation
 ### Firstly clone repository (P.S. Later available in Yarn & NPM)
 Follow steps:
 ```
@@ -21,25 +27,46 @@ $ yarn install
 ```
 
 ## Examples
-> Start by editing /client/index.tsx
+> Start by editing /client/router.js
 ```
-import ReactDOM from 'react-dom';
 import React from 'react';
-import App from './pages/app';
-import { BrowserRouter, Route, Switch } from 'react-router-dom';
-import styles from './styles/app.module.scss';
+import { BrowserRouter, Route, Switch, Routes } from 'react-router-dom';
+import { App } from './pages/app';
+import { Error404 } from './errors/error404';
 
-ReactDOM.render(
-    <BrowserRouter>
-        <Switch>
-            <Route path="/" exact component={App} />
-        </Switch>
-    </BrowserRouter>
-, document.getElementById('app'));
+export class RouterProvider extends React.Component {
+    ...
+}
 
-// hot reloading
-// @ts-ignore
-if (module.hot) module.hot.accept();
+
+export function RoutePath(props) {
+    ...
+}
+
+export class Router extends React.Component {
+    constructor(props) {
+        ...
+    }
+```
+> Manage your routes here, it wll apper also to server-side.
+```
+    render() {
+        const { ssrLocation } = this.props;
+        return (
+            <RouterProvider isServer={this.props.isServer} ssrLocation={ssrLocation}>
+                <RoutePath path="/">
+                    <App/>
+                </RoutePath>
+                <RoutePath path="/about">
+                    <div>About Ness.js</div>
+                </RoutePath>
+                <RoutePath path="*">
+                    <Error404/>
+                </RoutePath>
+            </RouterProvider>
+        );
+    }
+}
 ```
 > Server side routing you can find in /server/routes.js
 ```
