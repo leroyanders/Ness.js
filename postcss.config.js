@@ -1,3 +1,4 @@
+// PostCSS for supporting TailwindCSS
 const tailwindcss = require('tailwindcss');
 module.exports = {
     plugins: [
