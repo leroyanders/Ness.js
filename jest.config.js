@@ -1,4 +1,6 @@
 // Sync object
+// Jest testing...
+
 /** @type {import('@jest/types').Config.InitialOptions} */
 const config = {
     verbose: true,
