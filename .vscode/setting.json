@@ -22,44 +22,24 @@
         "last 2 versions"
     ],
     "css.lint.compatibleVendorPrefixes": "ignore",
-
     "css.lint.vendorPrefix": "warning",
-
     "css.lint.duplicateProperties": "ignore",
-
     "css.lint.emptyRules": "warning",
-
     "css.lint.importStatement": "ignore",
-
     "css.lint.boxModel": "ignore",
-
     "css.lint.universalSelector": "ignore",
-
     "css.lint.zeroUnits": "ignore",
-
     "css.lint.fontFaceProperties": "warning",
-
     "css.lint.hexColorLength": "error",
-
     "css.lint.argumentsInColorFunction": "error",
-
     "css.lint.unknownProperties": "warning",
-
     "css.lint.ieHack": "ignore",
-
     "css.lint.unknownVendorSpecificProperties": "ignore",
-
     "css.lint.propertyIgnoredDueToDisplay": "warning",
-
     "css.lint.important": "ignore",
-
     "css.lint.float": "ignore",
-
     "css.lint.idSelector": "ignore",
-
     "scss.lint.unknownAtRules": "ignore",
-
     "css.lint.unknownAtRules": "ignore",
-
     "scss.customData": ["./css-data.json"]
 }
