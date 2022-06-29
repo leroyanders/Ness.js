@@ -1,0 +1,76 @@
+/* import tailwindcss */
+@import "./tailwind.scss";
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif,
+}
+body {
+    @apply bg-slate-50
+}
+.mt5 {
+    @apply mt-5 !important
+}
+.welcomeBlock {
+    @apply mt-0 text-center m-auto
+}
+.welcomeTitle {
+    @apply text-cyan-600
+}
+.heading30 {
+    @apply text-3xl font-medium
+}
+.breadcrumb {
+    @apply bg-slate-200 w-auto
+}
+._flex {
+    @apply flex
+}
+.m_auto {
+    @apply m-auto
+}
+._grid {
+    @apply grid
+}
+.p_3 {
+    @apply p-3
+}
+.p_2 {
+    @apply p-2
+}
+.p_1 {
+    @apply p-1
+}
+.px_2 {
+    @apply px-2
+}
+.pl_2 {
+    @apply pl-2
+}
+.pr_2 {
+    @apply pr-2
+}
+.items_baseline {
+    @apply items-baseline
+}
+.rounded_lg {
+    @apply rounded-lg
+}
+.ml_2 {
+    @apply ml-2
+}
+.text_slate_400 {
+    @apply text-slate-400
+}
+.text_slate_500 {
+    @apply text-slate-500
+}
+.align_middle {
+    @apply align-middle
+}
+.margin_baseline {
+    position: absolute;
+    top: 50%;
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+    width: 100%;
+}

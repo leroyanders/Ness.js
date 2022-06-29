@@ -1,0 +1,13 @@
+doctype html
+html(lang='en', suppressHydrationWarning=true)
+  head
+    meta(charset='utf-8')
+    meta(http-equiv='X-UA-Compatible', content='IE=edge')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    meta(name='description', content=content)
+    link(rel='stylesheet', href='/static/css/main.css')
+    title #{title}
+  body
+    #app !{component}
+
+  script(src='/static/bundle.js', ness-hot-reload)

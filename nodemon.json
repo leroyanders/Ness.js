@@ -1,0 +1,8 @@
+{
+  "verbose": true,
+  "ignore": [
+    "./deploy/",
+    "./node_modules/",
+    "./client/"
+  ]
+}
