@@ -11,20 +11,20 @@
 
 
 ## 🌱 Installation
-### Firstly clone repository (P.S. Later available in Yarn & NPM)
-Follow steps:
+### Firstly install Ness.js-cli to setup new project
+Install using npm or yarn:
 ```
- $ git clone https://github.com/leroywagner/ness.js.git && cd ness.js
+ $ npm install -g create-ness-app
+```
+```
+ $ yarn global add create-ness-app
 ```
 
- If you have been installed yarn globaly:
+Setup new project, run in terminal:
 ```
-$ yarn install
-``` 
- Or if you haven't:
-``` 
- $ npm install
+$ create-ness-app
 ```
+> <i>Enter project name and place to install(by default ness-app)</i>
 
 ## Examples
 > Start by editing /client/router.js
