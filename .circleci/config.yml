@@ -2,7 +2,7 @@ version: 2.1
 executors:
   my-custom-executor:
     docker:
-      - image: cimg/node:stable
+      - image: cimg/node
         auth:
           # ensure you have first added these secrets
           # visit app.circleci.com/settings/project/github/leroywagner/ness.js/environment-variables
