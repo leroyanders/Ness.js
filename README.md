@@ -6,7 +6,7 @@
   </a>
 </p>
 
-## About Ness.js  &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/blob/master/license.md) [![npm version](https://img.shields.io/npm/v/create-ness-app.svg?style=flat)](https://www.npmjs.com/package/create-ness-app) [![CircleCI](https://circleci.com/gh/leroywagner/ness.js.svg?style=flat)](https://circleci.com/gh/leroywagner/ness.js)
+## About Ness.js  &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/blob/master/license.md) [![npm version](https://img.shields.io/npm/v/create-ness-app.svg?style=flat)](https://www.npmjs.com/package/create-ness-app) [![CircleCI](https://circleci.com/gh/leroywagner/ness.js.svg?style=svg)](https://circleci.com/gh/leroywagner/ness.js)
 <i>Ness.js - is an open-source framework based on React.js and Express.js + Webpack, supports both-side rendering with preinstalled TailwindCSS and Hot Reloader.</i>
 
 
