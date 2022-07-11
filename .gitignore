@@ -1,3 +1,4 @@
 /node_modules/
 /deploy/
 /nessapp-npm/
+package-lock.json
