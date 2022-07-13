@@ -1,6 +1,6 @@
 {
-  "name": "ness.js",
-  "version": "3.0.5",
+  "name": "ness-app",
+  "version": "3.0.9",
   "license": "MIT",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
