@@ -25,3 +25,6 @@
 *.t3s text eol=lf
 *.txt text eol=lf
 *.sh text eol=lf
+*.html linguist-detectable=false
+*.css linguist-detectable=false
+*.scss linguist-detectable=false
