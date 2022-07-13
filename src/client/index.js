@@ -9,11 +9,10 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 
 // render
 root.render(
-  <React.StrictMode>
+
     <BrowserRouter>
       <Router />
     </BrowserRouter>
-  </React.StrictMode>
 );
 
 // hot reload the components

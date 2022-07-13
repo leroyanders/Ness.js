@@ -8,14 +8,9 @@ export class Paragraph extends React.Component {
     render() {
       return (
         <div className={this.props.className}>
-          <Flex styles={this.props.styles} className={`_flex m_auto items_baseline text_slate_400`}>
-              <div>
-                  <p>{this.props.text}</p>
-              </div>
-              <div>
-                  {React.cloneElement(this.props.children)}
-              </div>
-          </Flex>
+          <div className={`_flex m_auto items_baseline text_slate_400`}>
+            {React.cloneElement(this.props.children)}
+          </div>
         </div>
       );
     }

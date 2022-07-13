@@ -1,8 +1,9 @@
-import Router from '../client/router';
+import Router, { MetaData } from '../client/router';
 import React from 'react';
 import express from 'express';
 import { StaticRouter } from 'react-router-dom/server';
 import { renderToString } from 'react-dom/server';
+import { Helmet } from 'react-helmet';
 
 // server configuration
 const port = 3000;
@@ -36,18 +37,30 @@ server.set('views', path.join(__dirname, '..', 'views'));
 // all routes to client router
 server.get('/*', (req, res) => {
   const context = {};
-  const serverRouter = renderToString(<StaticRouter location={req.url}><Router/></StaticRouter>);
+  const serverRouter = renderToString(
+    <StaticRouter location={req.url} isServer={true}>
+      <Router isServer={true}/>
+    </StaticRouter>
+  );
+  const metadata = Helmet.renderStatic();
+  const meta = metadata.meta.toComponent()
+  const title = metadata.title.toComponent();
+  const manifest = renderToString(meta) + renderToString(title);
 
   if (context.url) res.redirect(context.url);
   else res.status(200).render('index', {
+      metadata: manifest,
       production: process.env.NODE_ENV === 'production',
-      title: 'Welcome to NessApp',
       clientStyles: assets.client.css,
       bundledScript: assets.client.js,
       body: serverRouter,
     })
   }
 );
+
+server.get('/favicon.ico'), (req, res) => {
+  res.status(404);
+}
 
 // start server
 server.listen(process.env.PORT || port, () => {
