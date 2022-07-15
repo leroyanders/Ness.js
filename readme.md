@@ -17,40 +17,63 @@
 + [React Helmet](https://github.com/nfl/react-helmet)
 + [TailwindCSS](https://github.com/tailwindlabs/tailwindcss)
 
-## 🌱 Installation
-### Firstly install Ness.js-cli to setup new project
+
+## Setup installation
+### Firstly install Ness-cli to setup new project
 Install using npm or yarn:
 ```
- $ npm install -g create-ness-app
+$ npm install -g create-ness-app
 ```
 ```
- $ yarn global add create-ness-app
+$ yarn global add create-ness-app
 ```
+<br>
+<div>
 
-Setup new project, run in terminal:
+<img width="682" align="right" alt="Bildschirmfoto 2022-07-15 um 13 19 35" src="https://user-images.githubusercontent.com/106757584/179204343-50460e2b-8cf1-426f-9abc-ed81b27134a2.png">
+<h2> 🌱 Setup new project</h2>
+
 ```
 $ create-ness-app
 ```
-> <i>Enter project name and place to install(by default ness-app)</i>
+<i>Enter project name and location to installing(by default ness-app)</i>
+
+<b>Steps:</b>
+
+```Enter project name```
+
+```Enter location or leave blank```
+
+<i>*After successful instalation you'll see command as below</i>
+
+</div>
+
+<br><br><br><br>
+
+<div>
+
+<img width="682" align="right" alt="Bildschirmfoto 2022-07-15 um 13 23 27" src="https://user-images.githubusercontent.com/106757584/179205020-57f6b9bc-f258-427a-93bc-04098eb14cd0.png">
+<h2 width="100%"> 🌱 There we go! </h2>
+
+<i>Start your server-side and client-side app</i>
+
+``` 
+$ yarn start 
+```
+``` 
+$ npm run start 
+```
+
+<i>To start production mode, you may run next command, it will create production assets(such media & etc.)</i>
 
 
-## 🚀 There we go!
-> Start your server-side and client-side app
+``` 
+$ yarn start:prod
+```
+``` 
+$ npm run start:prod
+```
 
-``` $ yarn start ```
-or
-``` $ npm run start ```
+Open browser by default: http://localhost:3000/
 
-> Start your production server
-
-``` $ yarn build ```
-
-``` $ yarn start:prod ```
-
-or
-
-``` $ npm run build ```
-
-``` $ npm run start:prod ```
-
-> open browser by default: localhost:3000
+</div>
