@@ -6,11 +6,14 @@ html(lang='en')
     meta(name='viewport', content='width=device-width, initial-scale=1')
 
     if clientStyles
-      link(rel='stylesheet', href=clientStyles)
+      each style in clientStyles
+        link(rel='stylesheet', href=style)
   body
     #root !{body}
 
     if production
-      script(src=bundledScript, defer)
+      each script in bundledScript
+        script(src=script, defer)
     else 
-      script(src=bundledScript, defer, crossorigin)
+      each script in bundledScript
+        script(src=script, defer, crossorigin)
