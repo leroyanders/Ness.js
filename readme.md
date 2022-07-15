@@ -30,19 +30,12 @@ $ yarn global add create-ness-app
 <br>
 <div>
 
-<img width="682" alt="Bildschirmfoto 2022-07-15 um 13 19 35" src="https://user-images.githubusercontent.com/106757584/179204343-50460e2b-8cf1-426f-9abc-ed81b27134a2.png">
 <h2> 🌱 Setup new project</h2>
 
 ```
 $ create-ness-app
 ```
 <i>Enter project name and location to installing(by default ness-app)</i>
-
-<b>Steps:</b>
-
-```Enter project name```
-
-```Enter location or leave blank```
 
 <i>*After successful instalation you'll see command as below</i>
 
@@ -52,7 +45,6 @@ $ create-ness-app
 
 <div>
 
-<img width="682" alt="Bildschirmfoto 2022-07-15 um 13 23 27" src="https://user-images.githubusercontent.com/106757584/179205020-57f6b9bc-f258-427a-93bc-04098eb14cd0.png">
 <h2 width="100%"> 🌱 There we go! </h2>
 
 <i>Start your server-side and client-side app</i>
