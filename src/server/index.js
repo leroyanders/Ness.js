@@ -7,6 +7,9 @@ import { Helmet } from 'react-helmet';
 
 // server configuration
 const port = 3000;
+const environment = process.env;
+const assets_chunks = environment['NESS_CHUNKS_MANIFEST'];
+const public_directory = environment['NESS_PUBLIC_DIR'];
 
 // dependencies
 const path = require('path');
@@ -15,7 +18,7 @@ const chalk = require('chalk');
 const logger = console.log;
 const server = express();
 const nessAplication = server;
-const assets = require('../../deploy/assets.json');
+const assets = require(assets_chunks);
 const { networkInterfaces } = require('os');
 const nets = networkInterfaces();
 
@@ -30,7 +33,7 @@ for (const name of Object.keys(nets)) {
   }
 }
 
-server.use(express.static('../../deploy/chunks.json'));
+server.use(express.static(public_directory));
 server.set('view engine', 'pug');
 server.set('views', path.join(__dirname, '..', 'views'));
 
@@ -51,16 +54,12 @@ server.get('/*', (req, res) => {
   else res.status(200).render('index', {
       metadata: manifest,
       production: process.env.NODE_ENV === 'production',
-      clientStyles: assets.client.css,
-      bundledScript: assets.client.js,
+      clientStyles: assets.client.css.filter(chunk => !chunk.includes('.map')),
+      bundledScript: assets.client.js.filter(chunk => !chunk.includes('.map')),
       body: serverRouter,
     })
   }
 );
-
-server.get('/favicon.ico'), (req, res) => {
-  res.status(404);
-}
 
 // start server
 server.listen(process.env.PORT || port, () => {
