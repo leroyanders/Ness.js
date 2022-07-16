@@ -27,7 +27,6 @@ $ npm install -g create-ness-app
 ```
 $ yarn global add create-ness-app
 ```
-<br>
 <div>
 
 <h2> 🌱 Setup new project</h2>
@@ -40,9 +39,6 @@ $ create-ness-app
 <i>*After successful instalation you'll see command as below</i>
 
 </div>
-
-<br><br><br><br>
-
 <div>
 
 <h2 width="100%"> 🌱 There we go! </h2>
@@ -66,6 +62,6 @@ $ yarn start:prod
 $ npm run start:prod
 ```
 
-Open browser by default: http://localhost:3000/
+<i align="center">Open browser by default: http://localhost:3000/</i>
 
 </div>
