@@ -8,7 +8,7 @@ export class Paragraph extends React.Component {
     render() {
       return (
         <div className={this.props.className}>
-          <div className={`_flex m_auto items_baseline text_slate_400`}>
+          <div className={`flex m-auto items-baseline text-slate-400`}>
             {React.cloneElement(this.props.children)}
           </div>
         </div>

@@ -9,10 +9,9 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 
 // render
 root.render(
-
-    <BrowserRouter>
-      <Router />
-    </BrowserRouter>
+  <BrowserRouter>
+    <Router />
+  </BrowserRouter>
 );
 
 // hot reload the components

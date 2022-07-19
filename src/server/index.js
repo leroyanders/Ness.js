@@ -1,15 +1,13 @@
-import Router, { MetaData } from '../client/router';
+import Router from '../client/router';
 import React from 'react';
 import express from 'express';
 import { StaticRouter } from 'react-router-dom/server';
 import { renderToString } from 'react-dom/server';
 import { Helmet } from 'react-helmet';
+import { exec } from 'child_process';
 
 // server configuration
 const port = 3000;
-const environment = process.env;
-const assets_chunks = environment['NESS_CHUNKS_MANIFEST'];
-const public_directory = environment['NESS_PUBLIC_DIR'];
 
 // dependencies
 const path = require('path');
@@ -18,7 +16,7 @@ const chalk = require('chalk');
 const logger = console.log;
 const server = express();
 const nessAplication = server;
-const assets = require(assets_chunks);
+const assets = require(process.env.NESS_CHUNKS_MANIFEST);
 const { networkInterfaces } = require('os');
 const nets = networkInterfaces();
 
@@ -33,7 +31,7 @@ for (const name of Object.keys(nets)) {
   }
 }
 
-server.use(express.static(public_directory));
+server.use(express.static(process.env.NESS_PUBLIC_DIR));
 server.set('view engine', 'pug');
 server.set('views', path.join(__dirname, '..', 'views'));
 

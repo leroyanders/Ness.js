@@ -14,11 +14,11 @@
     "react-helmet": "^6.1.0",
     "react-helmet-async": "^1.3.0",
     "react-router-dom": "^6.3.0",
-    "sass": "^1.53.0"
+    "sass": "^1.53.0",
+    "shelljs": "^0.8.5"
   },
   "scripts": {
-    "styles": "npx tailwindcss -i ./src/styles/tailwind.scss -o ./src/styles/layout.css --watch",
-    "start": "nessapp start && yarn styles",
+    "start": "nessapp start",
     "build": "nessapp build",
     "test": "nessapp test --env=jsdom",
     "start:prod": "NODE_ENV=production nessapp build && node deploy/server.js"
