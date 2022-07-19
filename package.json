@@ -18,7 +18,7 @@
     "shelljs": "^0.8.5"
   },
   "scripts": {
-    "start": "nessapp start",
+    "start": "NODE_ENV=development nessapp start",
     "build": "nessapp build",
     "test": "nessapp test --env=jsdom",
     "start:prod": "NODE_ENV=production nessapp build && node deploy/server.js"
