@@ -23,7 +23,7 @@ class Home extends React.Component {
         {/* end PageMeta */}
         {/* PageBody */}
         <Layout>
-          <div className={`${styles.margin_baseline} m-auto mt-0 text-center mx-5`}>
+          <div className={`${styles.margin_baseline} m-auto mt-0 text-center mx-5 mr-10`}>
             <div className={`${styles.welcomeBlock} m-auto mt-0 text-center align_middle`}>
               <img src={"https://user-images.githubusercontent.com/106757584/175770221-a634f207-c3de-4afc-991c-d2fb32953941.png"} className={`${styles.welcomeBlock} m-auto mt-0 text-center grid`} style={{marginTop: "-120px", width: "150px"}}/>
               <Title title={"powerfull ssr-framework"}></Title>
