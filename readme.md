@@ -6,7 +6,7 @@
   </a>
 </p>
 
-## About NessJS  &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license) [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
+## About NessJS  &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license) [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/) [![Ness Version](https://img.shields.io/badge/v3.0.9-NessJS-blue)]()
 <i>NessJS - is an open-source framework based on React.js and Express.js + Webpack, supports both-side rendering with preinstalled TailwindCSS and Hot Reloader.</i>
 
 ## NessJS using:
