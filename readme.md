@@ -65,3 +65,5 @@ $ npm run start:prod
 <i align="center">Open browser by default: http://localhost:3000/</i>
 
 </div>
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/start/#leroywagner-nessjs-7fzmgg0lq4i)
