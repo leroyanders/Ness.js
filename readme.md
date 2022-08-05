@@ -76,7 +76,7 @@ $ npm run build
 ```
 > Note: Builded assets, server bundle and client bundle will be located in **./deploy** directory.
 
-<i id="start-dev">**Start your server-side and client-side app**</i>
+<i id="start-dev">**Start development server**</i>
 
 ``` 
 $ yarn start 
@@ -85,7 +85,7 @@ $ yarn start
 $ npm run start 
 ```
 
-<i id="start-prod">**To start production mode, you may run next command, it will create production assets(such media & etc.)**</i>
+<i id="start-prod">**Start production server**, you may run next command, it will create production assets(such media & etc.)</i>
 
 
 ``` 
