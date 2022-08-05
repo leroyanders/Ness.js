@@ -97,7 +97,7 @@ $ yarn start:prod
 $ npm run start:prod
 ```
 
-```Open browser by default: http://localhost:3000/```
+Open browser by default: http://localhost:3000/
 
 </div>
 
