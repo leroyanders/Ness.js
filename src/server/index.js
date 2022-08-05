@@ -32,5 +32,5 @@ export default express()
 .use((req, res) => nessAplication.handle(req, res))
 .listen(port, function(err) {
   if (err) return console.error(err);
-  logger(`🌱 NessApp started on: ${chalk.hex('#5590CB').bold('http://localhost:' + process.env.PORT || port)} and ${chalk.hex('#5590CB').bold('http://' + results['en0'][0] + ':' + process.env.PORT || port)}`);
+  logger(`🌱 NessApp started on: ${chalk.hex('#5590CB').bold('http://localhost:' + process.env.PORT || port)} and ${chalk.hex('#5590CB').bold('http://' + results['en0'][0] || 'localhost' + ':' + process.env.PORT || port)}`);
 });
