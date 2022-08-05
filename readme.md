@@ -11,8 +11,6 @@
 
 <i>NessJS - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Basically it using **Hot-reloder** and **TailwindCSS** that will helped you reduce your time to develop something great.</i>
 
----
-
  - **[Installation](#setup-installation)**
  - **[Setup new project](#setup-new-project)**
  - [Advanced Usage](#application-scripts)
