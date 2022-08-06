@@ -7,7 +7,10 @@
 </p>
 
 ## About NessJS  
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license) [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/) [![Ness Version](https://img.shields.io/badge/v3.0.9-NessJS-blue)]()
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license)
+[![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
+[![Ness Version](https://img.shields.io/badge/v3.0.9-NessJS-blue)]()
+[![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
 
 <i>NessJS - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Basically it using **Hot-reloder** and **TailwindCSS** that will helped you reduce your time to develop something great.</i>
 
@@ -101,10 +104,11 @@ Open browser by default: http://localhost:3000/
 
 # Setup and test project online
 
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/start/#leroywagner-nessjs-7fzmgg0lq4i)
+[![Open in Gitpod](https://user-images.githubusercontent.com/106757584/183264192-113ba74f-da88-47a2-808d-207b247102b6.svg)](https://gitpod.io/start/#leroywagner-nessjs-7fzmgg0lq4i)
+
 
 ## Donation
 
 If this package helped you reduce your time to develop something, or it solved any major problems you had.
 
-Feel free give me a some [cup of coffee :)](https://www.buymeacoffee.com/leroywagner)
+<a href="https://www.buymeacoffee.com/leroywagner" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" width="150" ></a>
