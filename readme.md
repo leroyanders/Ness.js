@@ -31,7 +31,7 @@ Install this package via [Node.js](https://nodejs.org/en/).
 ```
 $ npm install -g create-ness-app
 ```
-Or you may install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) package manager globaly.
+Or you may install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) package manager globally.
 ```
 $ npm install -g yarn
 ```
