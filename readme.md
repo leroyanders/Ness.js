@@ -104,8 +104,7 @@ Open browser by default: http://localhost:3000/
 
 # Setup and test project online
 
-[![Open in Gitpod](https://user-images.githubusercontent.com/106757584/183264192-113ba74f-da88-47a2-808d-207b247102b6.svg)](https://gitpod.io/start/#leroywagner-nessjs-7fzmgg0lq4i)
-
+[![Open in Gitpod](https://user-images.githubusercontent.com/106757584/183264311-1d9bb397-d5d6-443d-89c4-09f7fbb4ecb6.svg)](https://gitpod.io/start/#leroywagner-nessjs-7fzmgg0lq4i)
 
 ## Donation
 
