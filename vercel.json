@@ -4,11 +4,11 @@
     "builds": [
         {
             "src": "deploy/public/**",
-            "use": "@now/static"
+            "use": "@vercel/static"
         },
         {
             "src": "deploy/server.js",
-            "use": "@now/node-server"
+            "use": "@vercel/node"
         }
     ],
     "routes": [
