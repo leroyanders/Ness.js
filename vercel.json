@@ -1,6 +1,6 @@
 {
     "name": "ness-app",
-    "version": 3,
+    "version": 2,
     "builds": [
         {
             "src": "deploy/public/**",
