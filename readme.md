@@ -26,12 +26,12 @@
 
 
 ## Setup installation
-Install this package via [Node.js](https://nodejs.org/en/).
+Install this package via [`Node.js`](https://nodejs.org/en/).
 
 ```
 $ npm install -g create-ness-app
 ```
-Or you may install [Yarn](https://classic.yarnpkg.com/lang/en/docs/install/) package manager globally.
+Or you may install [`Yarn`](https://classic.yarnpkg.com/lang/en/docs/install/) package manager globally.
 ```
 $ npm install -g yarn
 ```
@@ -63,11 +63,11 @@ Example:
 $ nessapp generate <type> <name>
 ```
 
-Available commands:
-+ ```nessapp generate page <name>```
-+ ```nessapp generate component <name>```
-+ ```nessapp generate hook <name>```
-+ ```nessapp generate service <name>```
+*Available commands:*
++ ```nessapp generate page <name>``` : ```generate page```
++ ```nessapp generate component <name>``` : ```generate component```
++ ```nessapp generate hook <name>``` : ```generate hook```
++ ```nessapp generate service <name>``` : ```generate service```
 
 <i id="build">**Build project**</i>
 
