@@ -64,10 +64,10 @@ $ nessapp generate <type> <name>
 ```
 
 *Available commands:*
-+ ```nessapp generate page <name>``` : ```generate page```
-+ ```nessapp generate component <name>``` : ```generate component```
-+ ```nessapp generate hook <name>``` : ```generate hook```
-+ ```nessapp generate service <name>``` : ```generate service```
++ ```nessapp generate page <name>``` - *create custom page with layout*
++ ```nessapp generate component <name>``` - *create custom component*
++ ```nessapp generate hook <name>``` - *create custom hook*
++ ```nessapp generate service <name>``` - *create custom service(f.e. fetch-service or socket client)*
 
 <i id="build">**Build project**</i>
 
