@@ -1,11 +1,9 @@
 {
   "client": {
-    "css": [
-      "/static/css/bundle.f0c56006.css"
-    ],
+    "css": [],
     "js": [
-      "/static/js/bundle.2d6fabe0.js",
-      "/static/js/bundle.2d6fabe0.js.map"
+      "http://localhost:3001/static/js/bundle.js",
+      "http://localhost:3001/static/js/bundle.js.map"
     ]
   }
 }

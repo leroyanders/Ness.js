@@ -1,4 +1,4 @@
-const server = require('./core').default;
+const server = require('../index').default;
 const express = require('express');
 const results = Object.create(null);
 const chalk = require('chalk');
@@ -22,9 +22,9 @@ for (const name of Object.keys(nets)) {
 }
 
 // server live mode
-if (module.hot) module.hot.accept('./core', () => {
+if (module.hot) module.hot.accept('../index', () => {
   try {
-    nessAplication = require('./core').default;
+    nessAplication = require('../index').default;
   } catch (error) {console.error(error)}
 });
 
