@@ -9,7 +9,7 @@
 ## About NessJS  
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/ness.js/license)
 [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
-[![Ness Version](https://img.shields.io/badge/v3.0.9-NessJS-blue)]()
+[![Ness Version](https://img.shields.io/badge/v3.4.2-NessJS-blue)]()
 [![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
 
 <i>NessJS - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Basically it using **Hot-reloder** and **TailwindCSS** that will helped you reduce your time to develop something great.</i>
