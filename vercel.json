@@ -1,0 +1,40 @@
+{
+    "name": "ness-app",
+    "version": 2,
+    "builds": [
+      {
+        "src": "deploy/public/**",
+        "use": "@vercel/static"
+      },
+      {
+        "src": "deploy/server.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/assets.json",
+        "dest": "deploy/assets.json"
+      },
+      {
+        "src": "/chunks.json",
+        "dest": "deploy/chunks.json"
+      },
+      {
+        "src": "/favicon.ico",
+        "dest": "deploy/public/favicon.ico"
+      },
+      {
+        "src": "/robots.txt",
+        "dest": "deploy/public/robots.txt"
+      },
+      {
+        "src": "/static/(.*)",
+        "dest": "deploy/public/static/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "deploy/server.js"
+      }
+    ]
+}
