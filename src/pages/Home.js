@@ -2,6 +2,7 @@ import React from 'react';
 import { Title } from '../components/title.component';
 import { Paragraph } from '../components/paragraph.component';
 import { Page, Layout, Head } from 'nessapp/next/ui';
+import { Helmet } from 'react-helmet';
 
 // Home module stylesheet
 import '../styles/Home.module.scss';
@@ -15,8 +16,10 @@ class Home extends React.Component {
     return (
       <Page>
         <Head>
-          <title>Welcome to NessApp</title>
-          <meta name="description" content="Thanks for installing this application!"></meta>
+          <Helmet>
+            <title>Welcome to NessApp</title>
+            <meta name="description" content="Thanks for installing this application!"></meta>
+          </Helmet>
         </Head>
         <Layout>
           <div className={"margin_baseline m-auto mt-0 text-center mx-5 mr-10"}>

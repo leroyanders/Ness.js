@@ -23,7 +23,7 @@ module.exports =
 /******/
 /******/ 	var hotApplyOnUpdate = true;
 /******/ 	// eslint-disable-next-line no-unused-vars
-/******/ 	var hotCurrentHash = "446ee032da4211fed277";
+/******/ 	var hotCurrentHash = "011c32ca0fbbceb0542c";
 /******/ 	var hotRequestTimeout = 10000;
 /******/ 	var hotCurrentModuleData = {};
 /******/ 	var hotCurrentChildModule;
@@ -1250,10 +1250,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_paragraph_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../components/paragraph.component */ "./src/components/paragraph.component.js");
 /* harmony import */ var nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! nessapp/next/ui */ "nessapp/next/ui");
 /* harmony import */ var nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../styles/Home.module.scss */ "./src/styles/Home.module.scss");
-/* harmony import */ var _styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var react_helmet__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react-helmet */ "react-helmet");
+/* harmony import */ var react_helmet__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_helmet__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../styles/Home.module.scss */ "./src/styles/Home.module.scss");
+/* harmony import */ var _styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_styles_Home_module_scss__WEBPACK_IMPORTED_MODULE_5__);
 var _jsxFileName = "/Users/leroywagner/Desktop/Projects/react/ness-app/src/pages/Home.js";
 var __jsx = react__WEBPACK_IMPORTED_MODULE_0___default.a.createElement;
+
 
 
 
@@ -1271,22 +1274,29 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 16,
+        lineNumber: 17,
         columnNumber: 7
       }
     }, __jsx(nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3__["Head"], {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 17,
+        lineNumber: 18,
         columnNumber: 9
+      }
+    }, __jsx(react_helmet__WEBPACK_IMPORTED_MODULE_4__["Helmet"], {
+      __self: this,
+      __source: {
+        fileName: _jsxFileName,
+        lineNumber: 19,
+        columnNumber: 11
       }
     }, __jsx("title", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 18,
-        columnNumber: 11
+        lineNumber: 20,
+        columnNumber: 13
       }
     }, "Welcome to NessApp"), __jsx("meta", {
       name: "description",
@@ -1294,14 +1304,14 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 19,
-        columnNumber: 11
+        lineNumber: 21,
+        columnNumber: 13
       }
-    })), __jsx(nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3__["Layout"], {
+    }))), __jsx(nessapp_next_ui__WEBPACK_IMPORTED_MODULE_3__["Layout"], {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 21,
+        lineNumber: 24,
         columnNumber: 9
       }
     }, __jsx("div", {
@@ -1309,7 +1319,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 22,
+        lineNumber: 25,
         columnNumber: 11
       }
     }, __jsx("div", {
@@ -1317,7 +1327,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 23,
+        lineNumber: 26,
         columnNumber: 13
       }
     }, __jsx("img", {
@@ -1330,7 +1340,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 24,
+        lineNumber: 27,
         columnNumber: 15
       }
     }), __jsx(_components_title_component__WEBPACK_IMPORTED_MODULE_1__["Title"], {
@@ -1338,7 +1348,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 25,
+        lineNumber: 28,
         columnNumber: 15
       }
     }), __jsx("h3", {
@@ -1349,7 +1359,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 26,
+        lineNumber: 29,
         columnNumber: 15
       }
     }, "Get started by editing:"), __jsx("div", {
@@ -1357,7 +1367,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 28,
+        lineNumber: 31,
         columnNumber: 15
       }
     }, __jsx(_components_paragraph_component__WEBPACK_IMPORTED_MODULE_2__["Paragraph"], {
@@ -1365,7 +1375,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 29,
+        lineNumber: 32,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -1373,14 +1383,14 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 30,
+        lineNumber: 33,
         columnNumber: 19
       }
     }, __jsx("b", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 31,
+        lineNumber: 34,
         columnNumber: 21
       }
     }, "./src/client/router.js"))), __jsx(_components_paragraph_component__WEBPACK_IMPORTED_MODULE_2__["Paragraph"], {
@@ -1388,7 +1398,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 35,
+        lineNumber: 38,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -1396,14 +1406,14 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 36,
+        lineNumber: 39,
         columnNumber: 19
       }
     }, __jsx("b", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 37,
+        lineNumber: 40,
         columnNumber: 21
       }
     }, "or"))), __jsx(_components_paragraph_component__WEBPACK_IMPORTED_MODULE_2__["Paragraph"], {
@@ -1411,7 +1421,7 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 41,
+        lineNumber: 44,
         columnNumber: 17
       }
     }, __jsx("div", {
@@ -1419,14 +1429,14 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 42,
+        lineNumber: 45,
         columnNumber: 19
       }
     }, __jsx("b", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 43,
+        lineNumber: 46,
         columnNumber: 21
       }
     }, "./src/pages/Home.js")))), __jsx("div", {
@@ -1434,14 +1444,14 @@ class Home extends react__WEBPACK_IMPORTED_MODULE_0___default.a.Component {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 48,
+        lineNumber: 51,
         columnNumber: 15
       }
     }, __jsx("i", {
       __self: this,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 49,
+        lineNumber: 52,
         columnNumber: 17
       }
     }, "Thank you for installing"))))));
