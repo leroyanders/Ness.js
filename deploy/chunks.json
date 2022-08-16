@@ -1,1 +1,9 @@
-{}
+{
+  "client": {
+    "css": [],
+    "js": [
+      "/static/js/bundle.c91a0c44.js",
+      "/static/js/bundle.c91a0c44.js.map"
+    ]
+  }
+}
