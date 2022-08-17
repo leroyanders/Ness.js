@@ -5,11 +5,9 @@ import { BrowserRouter } from 'react-router-dom';
 
 import 'nessapp/tailwind/base.scss';
 
-// root element for rendering div#root
 // eslint-disable-next-line
-const root = ReactDOM.createRoot(document.getElementById("root"));
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
-// render
 root.render(
   <BrowserRouter>
     <Router />

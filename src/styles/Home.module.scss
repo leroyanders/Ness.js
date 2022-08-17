@@ -1,14 +1,35 @@
-.align_middle {
-    vertical-align: middle;
-}
-  
-.margin_baseline {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 100%;
+nav li  > ul {
+    display: none;
+
+    & li{
+        @apply text-slate-100;
+    }
 }
 
-.welcomeBlock {
-    text-align: center;
+nav li.active {
+    & ul {
+        display: block;
+    }
+    
+    & div {
+        @apply bg-slate-200;
+        display: block;
+        color: black;
+        font-weight: 500;
+    }
+}
+
+nav li {
+    & div {
+        background-color: transparent !important;
+    }
+}
+
+
+.code-description {
+    line-height: 28px;
+    & code {
+        @apply text-[14px] bg-slate-100 rounded-lg p-1 m-2;
+        white-space: nowrap;
+    }
 }

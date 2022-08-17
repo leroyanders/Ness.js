@@ -1,62 +1,172 @@
 import React, { useState } from 'react';
-import { Paragraph } from '../components/paragraph.component';
-import { Page, Layout, Head } from 'nessapp/next/ui';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
+
+// layout
+import { Page, Layout, Head } from 'nessapp/next/ui';
+
+// components
+import Header from '../components/ui/Header';
+import Container from '../components/ui/Container';
+import Flex from '../components/ui/Flex';
+import Navbar from '../components/ui/Navbar';
 
 // Home module stylesheet
 import '../styles/Home.module.scss';
 
 function Home(props) {
-  const [state, setState] = useState(0);
   return (
     <Page>
       <Head>
         <Helmet>
-          <title>Welcome to NessApp</title>
+          <title>Introduction | NessApp</title>
           <meta name="description" content="Thanks for installing this application!"></meta>
         </Helmet>
       </Head>
       <Layout>
-        <div className={"margin_baseline m-auto mt-0 text-center mx-5 mr-10"}>
-          <div className={"welcomeBlock m-auto mt-0 text-center align_middle"}>
-            <img src={"https://user-images.githubusercontent.com/106757584/175770221-a634f207-c3de-4afc-991c-d2fb32953941.png"} className={"welcomeBlock m-auto mt-0 text-center grid"} style={{marginTop: "-120px", width: "150px"}}/>
-            <h1 className='heading30 mt-5'>
-              <b>Newest Experience of Server Side development. </b><br/> 
-              <i>Awesome React framework!</i>
-            </h1>
-
-            <div className={"m-auto w-1/4 mt-5 text-center"}>
-              <div className="m-auto mt-5 px-2 rounded-lg text-slate-500">
-                <p>You clicked {state} times!</p>
-              </div>
-              <button 
-                className={"text-blue-700 font-semibold hover:text-black py-2 px-4 border-transparent hover:border-transparent rounded"} 
-                onClick={() => setState(state + 1)}>Make one more click!</button>
-            </div>
-
-            <h3 className={"welcomeBlock m-auto mt-0 text-center mt-10"} style={{color: "grey"}}>Get started by editing:</h3>
-            
-            <div className={"flex m-auto w-1/4 mt-5"}>
-              <Paragraph className={"welcomeBlock m-auto mt-0 text-center grid"}>
-                <div className={"bg-slate-100 p-1 px-4 rounded-lg ml-2 text-slate-500"}>
-                  <b>./src/router.js</b>
+        <Header active="default"/>
+        <Container>
+          <div className="m-auto">
+            <Flex>
+              <Navbar>
+                <ul className="h-[100%] p-0 bg-slate-0 rounded-md ml-9 border-r border-slate-200 rounded-r-none sticky">
+                  {/* Introduction */}
+                  <li className="active text-slate-200 rounded-lg p-3 px-4 text-[15px]">
+                    <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
+                        <Link to={"/"}>Introduction</Link>
+                    </div>
+                    <ul className="ml-5">
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#about">
+                          - What is Ness.js?
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#why-to-use">
+                          - Why to use Ness.js?
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#development-experience">
+                          - Development experience
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="https://github.com/leroywagner/Ness.js/issues" target={"_blank"}>
+                          - Create an issue
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                  {/* Getting Started */}
+                  <li className="text-slate-200 rounded-lg p-3 px-4 text-[15px]">
+                    <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
+                        <Link to={"/getting-started"}>Getting Started</Link>
+                    </div>
+                    <ul className="ml-5">
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#quick-start">
+                          - Installing Ness CLI
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#why-to-use">
+                          - Setup a new application
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#development-experience">
+                          - Commands
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#development-experience">
+                          - Plugins
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                  {/* Documentation */}
+                  <li className="text-slate-200 rounded-lg p-3 px-4 text-[15px]">
+                    <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
+                        <Link to={"/documentation"}>Documentation</Link>
+                    </div>
+                    <ul className="ml-5">
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#quick-start">
+                          - Installing Ness CLI
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#why-to-use">
+                          - Setup a new application
+                        </a>
+                      </li>
+                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
+                        <a href="#development-experience">
+                          - Commands
+                        </a>
+                      </li>
+                    </ul>
+                  </li>
+                </ul>
+              </Navbar>
+              <main className="ml-10 w-[50%] p-10 pt-0">
+                <div className="mb-10 font-light pb-2">
+                  <h1 className="text-[40px]">Introduction</h1>
+                  <p className="text-slate-500 mt-2">Get started with the open-source framework of React experience and interactive UI components built with the utility classes from Tailwind CSS</p>
                 </div>
-              </Paragraph>
-
-              <Paragraph className={"welcomeBlock m-auto mt-0 text-center grid"}>
-                <div className={"p-1 px-2 rounded-lg ml-2 text-slate-500"}>
-                  <b>or</b>
+                <div className="bg-slate-0 p-0 rounded-lg">
+                  <div>
+                    <h2 id="accordion-flush-heading-1">
+                      <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
+                        <span>What is Ness.js?</span>
+                      </button>
+                    </h2>
+                    <div id="accordion-flush-body-1" className="" aria-labelledby="accordion-flush-heading-1">
+                      <div className="py-5 font-light border-b border-gray-200 dark:border-gray-700">
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">Ness.js is an open-source framework of React experience and interactive UI components built with the utility classes from Tailwind CSS. It supports both-side rendering without missmatches on client-side and server-side.</p>
+                        <p className="text-gray-500 dark:text-gray-400">Check out this guide to learn how to <a href="/getting-started" className="text-blue-600 dark:text-blue-500 hover:underline">get started</a> and start developing websites even faster.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h2 id="accordion-flush-heading-1">
+                      <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
+                        <span>Why to use Ness.js?</span>
+                      </button>
+                    </h2>
+                    <div id="accordion-flush-body-1" className="" aria-labelledby="accordion-flush-heading-1">
+                      <div className="py-5 font-light border-b border-gray-200 dark:border-gray-700">
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">Ness.js will allow you to create modern SPA applications without any extra knowledge, only with experience in creating <a href="https://create-react-app.dev/" className="text-blue-600 dark:text-blue-500 hover:underline">create-react-app</a>.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h2 id="accordion-flush-heading-1">
+                      <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
+                        <span>Development experience</span>
+                      </button>
+                    </h2>
+                    <div id="accordion-flush-body-1" className="" aria-labelledby="accordion-flush-heading-1">
+                      <div className="py-5 font-light border-b border-gray-200 dark:border-gray-700">
+                        <p className="mb-2 text-gray-500 dark:text-gray-400">You do not have to buy various solutions, development and assembly of your application takes place in real time using the popular HOT Module Replacement(HMR) and also saves time writing styling. As practice has shown, writing a complex application takes less than a week.</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </Paragraph>
-
-              <Paragraph className={"welcomeBlock m-auto mt-0 text-center grid"}>
-                <div className={"bg-slate-100 p-1 px-4 rounded-lg ml-2 text-slate-500"}>
-                  <b>./src/index.js</b>
+                <div className="mt-10">
+                  <Flex>
+                    <Link to={"/getting-started"} className="inline-flex items-center py-2 px-4 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                      Next: Getting Started
+                      <svg aria-hidden="true" className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
+                    </Link>
+                  </Flex>
                 </div>
-              </Paragraph>
-            </div>
+              </main>
+            </Flex>
           </div>
-        </div>
+        </Container>
       </Layout>
     </Page>
   );
