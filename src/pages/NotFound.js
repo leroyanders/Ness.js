@@ -7,9 +7,6 @@ import { Page, Layout, Head } from 'nessapp/next/ui';
 
 // components
 import Header from '../components/ui/Header';
-import Container from '../components/ui/Container';
-import Flex from '../components/ui/Flex';
-import Navbar from '../components/ui/Navbar';
 
 // Home module stylesheet
 import '../styles/Home.module.scss';

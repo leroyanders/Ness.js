@@ -7811,10 +7811,10 @@
     "sass" "^1.29.0"
     "sass-loader" "^10.0.3"
 
-"nessapp@^3.6.3":
-  "integrity" "sha512-f1kkk+UzcRtVX4tNhNHn++9MuZYiwtUsNkgj/tuXg0ssMKhcAEsmMxx36ps2tbGqpjcQGRY8jJ2Bo3VfnLDbmg=="
-  "resolved" "https://registry.npmjs.org/nessapp/-/nessapp-3.6.3.tgz"
-  "version" "3.6.3"
+"nessapp@^3.7.5":
+  "integrity" "sha512-wsc9WCUneI7Yc/qUkLG5csGrZAoCOQ4qa1jIfJIOud9ymVCKwuY/8eDqyp1q2ekIgSg7q3yp1NdWpTh/mIg6YA=="
+  "resolved" "https://registry.npmjs.org/nessapp/-/nessapp-3.7.5.tgz"
+  "version" "3.7.5"
 
 "next-tick@^1.1.0":
   "integrity" "sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ=="

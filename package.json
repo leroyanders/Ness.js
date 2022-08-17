@@ -14,7 +14,7 @@
     "flowbite": "^1.5.2",
     "flowbite-react": "^0.1.8",
     "ness-tailwind": "^1.0.7",
-    "nessapp": "^3.7.4",
+    "nessapp": "^3.7.5",
     "node-sass": "npm:sass@^1.54.4",
     "postcss": "^8.4.16",
     "postcss-import": "^14.1.0",
