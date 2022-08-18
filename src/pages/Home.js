@@ -101,7 +101,7 @@ function Home(props) {
                 </div>
                 <div className="bg-slate-0 p-0 rounded-lg">
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="about">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>What is Ness.js?</span>
                       </button>
@@ -114,7 +114,7 @@ function Home(props) {
                     </div>
                   </div>
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="why-to-use">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>Why to use Ness.js?</span>
                       </button>
@@ -126,7 +126,7 @@ function Home(props) {
                     </div>
                   </div>
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="development-experience">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>Development experience</span>
                       </button>

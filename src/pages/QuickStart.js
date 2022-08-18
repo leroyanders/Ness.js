@@ -65,22 +65,22 @@ function QuickStart(props) {
                     </div>
                     <ul className="ml-5 xs:ml-0 sm:ml-0">
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#quick-start">
+                        <a href="#install-cli">
                           - Installing Ness CLI
                         </a>
                       </li>
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#why-to-use">
+                        <a href="#setup-project">
                           - Setup a new application
                         </a>
                       </li>
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#development-experience">
+                        <a href="#commands">
                           - Commands
                         </a>
                       </li>
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#development-experience">
+                        <a href="#plugins">
                           - Plugins
                         </a>
                       </li>
@@ -101,7 +101,7 @@ function QuickStart(props) {
                 </div>
                 <div className="bg-slate-0 p-0 rounded-lg">
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="install-cli">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>Installing Ness CLI</span>
                       </button>
@@ -144,7 +144,7 @@ function QuickStart(props) {
                     </div>
                   </div>
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="setup-project">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>Setup a new application</span>
                       </button>
@@ -192,7 +192,7 @@ function QuickStart(props) {
                     </div>
                   </div>
                   <div>
-                    <h2 id="accordion-flush-heading-1">
+                    <h2 id="commands">
                       <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                         <span>Availbale commands</span>
                       </button>
@@ -261,7 +261,7 @@ function QuickStart(props) {
                         </div>
                     </div>
                     <div>
-                        <h2 id="accordion-flush-heading-1">
+                        <h2 id="plugins">
                             <button type="button" className="flex items-center justify-between w-full py-5 font-medium text-left dark:border-gray-700 dark:bg-gray-900 text-gray-900 dark:text-white" data-accordion-target="#accordion-flush-body-1" aria-expanded="true" aria-controls="accordion-flush-body-1">
                                 <span>Plugins</span>
                             </button>
@@ -396,7 +396,7 @@ function QuickStart(props) {
                         <svg aria-hidden="true" className="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"></path></svg>
                         Previous: Introduction
                     </Link>
-                    <Link to={"/documentation"} className="xs:text-[8px] mr-0 inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <Link to={"/documentation"} className="xs:text-[8px] ml-auto inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                         Next: Documentation
                         <svg aria-hidden="true" className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
                     </Link>
