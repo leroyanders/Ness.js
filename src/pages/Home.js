@@ -29,13 +29,13 @@ function Home(props) {
           <div className="m-auto">
             <Flex>
               <Navbar>
-                <ul className="h-[100%] p-0 bg-slate-0 rounded-md ml-9 border-r border-slate-200 rounded-r-none sticky">
+                <ul className="h-[100%] p-0 bg-slate-0 rounded-md ml-9 border-r border-slate-200 rounded-r-none sticky xs:w-[100%] xs:ml-0 xs:m-4 xs:bg-slate-50 sm:w-[100%] sm:ml-0 sm:m-4 sm:bg-slate-50">
                   {/* Introduction */}
                   <li className="active text-slate-200 rounded-lg p-3 px-4 text-[15px]">
                     <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
                         <Link to={"/"}>Introduction</Link>
                     </div>
-                    <ul className="ml-5">
+                    <ul className="ml-5 xs:ml-0 sm:ml-0">
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
                         <a href="#about">
                           - What is Ness.js?
@@ -91,27 +91,10 @@ function Home(props) {
                     <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
                         <Link to={"/documentation"}>Documentation</Link>
                     </div>
-                    <ul className="ml-5">
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#quick-start">
-                          - Installing Ness CLI
-                        </a>
-                      </li>
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#why-to-use">
-                          - Setup a new application
-                        </a>
-                      </li>
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#development-experience">
-                          - Commands
-                        </a>
-                      </li>
-                    </ul>
                   </li>
                 </ul>
               </Navbar>
-              <main className="ml-10 w-[50%] p-10 pt-0">
+              <main className="ml-10 w-[50%] p-10 pt-0 xs:ml-0 xs:w-[100%] sm:ml-0 sm:w-[100%]">
                 <div className="mb-10 font-light pb-2">
                   <h1 className="text-[40px]">Introduction</h1>
                   <p className="text-slate-500 mt-2">Get started with the open-source framework of React experience and interactive UI components built with the utility classes from Tailwind CSS</p>

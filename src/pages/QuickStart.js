@@ -29,7 +29,7 @@ function QuickStart(props) {
           <div className="m-auto">
             <Flex>
                 <Navbar>
-                <ul className="h-[100%] p-0 bg-slate-0 rounded-md ml-9 border-r border-slate-200 rounded-r-none sticky">
+                <ul className="h-[100%] p-0 bg-slate-0 rounded-md ml-9 border-r border-slate-200 rounded-r-none sticky xs:w-[100%] xs:ml-0 xs:m-4 xs:bg-slate-50 sm:w-[100%] sm:ml-0 sm:m-4 sm:bg-slate-50">
                   {/* Introduction */}
                   <li className="text-slate-200 rounded-lg p-3 px-4 text-[15px]">
                     <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
@@ -63,7 +63,7 @@ function QuickStart(props) {
                     <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
                         <Link to={"/getting-started"}>Getting Started</Link>
                     </div>
-                    <ul className="ml-5">
+                    <ul className="ml-5 xs:ml-0 sm:ml-0">
                       <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
                         <a href="#quick-start">
                           - Installing Ness CLI
@@ -91,27 +91,10 @@ function QuickStart(props) {
                     <div className="bg-slate-100 rounded-md p-3 text-slate-600 px-4 text-[15px]">
                         <Link to={"/documentation"}>Documentation</Link>
                     </div>
-                    <ul className="ml-5">
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#quick-start">
-                          - Installing Ness CLI
-                        </a>
-                      </li>
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#why-to-use">
-                          - Setup a new application
-                        </a>
-                      </li>
-                      <li className="rounded-md p-3 text-slate-500 px-4 text-[15px]">
-                        <a href="#development-experience">
-                          - Commands
-                        </a>
-                      </li>
-                    </ul>
                   </li>
                 </ul>
               </Navbar>
-              <main className="ml-10 w-[50%] p-10 pt-0">
+              <main className="ml-10 w-[50%] p-10 pt-0 xs:ml-0 xs:w-[100%] sm:ml-0 sm:w-[100%]">
                 <div className="mb-10 font-light pb-2">
                   <h1 className="text-[40px]">Getting Started</h1>
                   <p className="text-slate-500 mt-2">Installation, commands and plugins.</p>
@@ -240,12 +223,12 @@ function QuickStart(props) {
                             <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Generate component, hook, page and others</p>
                             <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">Available types:
                                 <div className="mt-2">
-                                    <Flex>
+                                    <div className="flex">
                                         <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">page</div>
                                         <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">hook</div>
                                         <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">service</div>
                                         <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">component</div>
-                                    </Flex>
+                                    </div>
                                 </div>
                             </p>
                             <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">Example:</p>
@@ -409,7 +392,7 @@ function QuickStart(props) {
                   </div>
                 </div>
                 <div className="mt-10">
-                  <Flex>
+                  <div className="flex">
                     <Link to={"/"} className="mr-auto inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                         <svg aria-hidden="true" className="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
                         Previous: Introduction
@@ -418,7 +401,7 @@ function QuickStart(props) {
                         Next: Documentation
                         <svg aria-hidden="true" className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </Link>
-                  </Flex>
+                  </div>
                 </div>
               </main>
             </Flex>

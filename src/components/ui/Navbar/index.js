@@ -10,7 +10,7 @@ function Navbar({children}) {
         return child;
       });
     
-    return <nav className="navbar w-[25%]">
+    return <nav className="navbar w-[25%] xs:w-[100%] xs:mt-[-15px] xs:mb-10 sm:w-[100%] sm:mt-[-15px] sm:mb-10">
         {childrenWithProps}
     </nav>
 }

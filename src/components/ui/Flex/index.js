@@ -10,7 +10,7 @@ function Flex({children}) {
         return child;
       });
     
-    return <div className="flex">
+    return <div className="flex xs:block sm:block w-[100%]">
         {childrenWithProps}
     </div>
 }
