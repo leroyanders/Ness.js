@@ -199,7 +199,7 @@ function QuickStart(props) {
                     </h2>
                     <div id="accordion-flush-body-1" className="" aria-labelledby="accordion-flush-heading-1">
                         <div>
-                            <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Running development server with hot-reload on port 3000</p>
+                            <p className="mb-2 text-gray-700 dark:text-gray-300 mt-5">Running development server with hot-reload on port 3000</p>
                             <pre className="text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
                                 <code className="prism-code language-sh">
                                     <div className="token-line">
@@ -209,7 +209,7 @@ function QuickStart(props) {
                             </pre>
                         </div>
                         <div>
-                            <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Building server</p>
+                            <p className="mb-2 text-gray-700 dark:text-gray-300 mt-5">Building server</p>
                             <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">You may pass<code>NODE_ENV=production</code>directly or<code>NODE_ENV=development</code></p>
                             <pre className="text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
                                 <code className="prism-code language-sh">
@@ -220,17 +220,16 @@ function QuickStart(props) {
                             </pre>
                         </div>
                         <div>
-                            <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Generate component, hook, page and others</p>
-                            <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">Available types:
-                                <div className="mt-2">
-                                    <div className="flex">
-                                        <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">page</div>
-                                        <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">hook</div>
-                                        <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">service</div>
-                                        <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">component</div>
-                                    </div>
+                            <p className="mb-2 text-gray-700 dark:text-gray-300 mt-5">Generate component, hook, page and others</p>
+                            <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">Available types:</p>
+                            <div className="mt-2">
+                                <div className="flex">
+                                    <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">page</div>
+                                    <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">hook</div>
+                                    <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">service</div>
+                                    <div className="p-2 border-[1.5px] border-slate-100 rounded-lg mr-2 py-1">component</div>
                                 </div>
-                            </p>
+                            </div>
                             <p className="mb-2 text-gray-500 dark:text-gray-400 mt-5 code-description">Example:</p>
                             <pre className="text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
                                 <code className="prism-code language-sh">
@@ -241,7 +240,7 @@ function QuickStart(props) {
                             </pre>
                         </div>
                         <div>
-                            <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Start production server</p>
+                            <p className="mb-2 text-gray-700 dark:text-gray-300 mt-5">Start production server</p>
                             <pre className="text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
                                 <code className="prism-code language-sh">
                                     <div className="token-line">
@@ -251,7 +250,7 @@ function QuickStart(props) {
                             </pre>
                         </div>
                         <div>
-                            <p className="mb-2 text-gray-700 dark:text-gray-700 mt-5">Start testing</p>
+                            <p className="mb-2 text-gray-700 dark:text-gray-300 mt-5">Start testing</p>
                             <pre className="text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
                                 <code className="prism-code language-sh">
                                     <div className="token-line">
@@ -272,100 +271,100 @@ function QuickStart(props) {
                                 <div>
                                     <b className="mb-4 code-description text-slate-500">After installing plugins include them in<code>ness.config.js</code></b>
                                     <pre className="mt-5 text-[14px] bg-slate-100 rounded-lg p-5 mb-2 text-slate-600">
-                                        <code class="prism-code language-js">
-                                            <div class="token-line">
-                                                <span class="token plain" style={{color: "rgb(233, 30, 99)"}}>module</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>.</span>
-                                                <span class="token property-access">exports</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token operator" style={{color: "rgb(51, 51, 51)"}}>=</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
-                                                <span class="token plain"></span>
+                                        <code className="prism-code language-js">
+                                            <div className="token-line">
+                                                <span className="token plain" style={{color: "rgb(233, 30, 99)"}}>module</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>.</span>
+                                                <span className="token property-access">exports</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token operator" style={{color: "rgb(51, 51, 51)"}}>=</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">  plugins</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>[</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">  plugins</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>[</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">    </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">    </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">      name</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token string" style={{color: "rgb(2, 130, 101)"}}>'tailwind'</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">      name</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token string" style={{color: "rgb(2, 130, 101)"}}>'tailwind'</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">      options</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">      options</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">        postcss</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">        postcss</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">          dev</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">          dev</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"{"}</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">            sourceMap</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
-                                                <span class="token plain"> </span>
-                                                <span class="token boolean" style={{color: "rgb(217, 147, 30)"}}>true</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">            sourceMap</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>:</span>
+                                                <span className="token plain"> </span>
+                                                <span className="token boolean" style={{color: "rgb(217, 147, 30)"}}>true</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">          </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">          </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">        </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">        </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">      </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">      </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">    </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">    </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain">  </span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>]</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
-                                                <span class="token plain"></span>
+                                            <div className="token-line">
+                                                <span className="token plain">  </span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>]</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>,</span>
+                                                <span className="token plain"></span>
                                             </div>
-                                            <div class="token-line">
-                                                <span class="token plain"></span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
-                                                <span class="token punctuation" style={{color: "rgb(51, 51, 51)"}}>;</span>
+                                            <div className="token-line">
+                                                <span className="token plain"></span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>{"}"}</span>
+                                                <span className="token punctuation" style={{color: "rgb(51, 51, 51)"}}>;</span>
                                             </div>
                                         </code>
                                     </pre>                                
@@ -393,13 +392,13 @@ function QuickStart(props) {
                 </div>
                 <div className="mt-10">
                   <div className="flex">
-                    <Link to={"/"} className="mr-auto inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
-                        <svg aria-hidden="true" className="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+                    <Link to={"/"} className="xs:text-[8px] mr-auto inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <svg aria-hidden="true" className="mr-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M7.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd"></path></svg>
                         Previous: Introduction
                     </Link>
-                    <Link to={"/documentation"} className="mr-auto inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                    <Link to={"/documentation"} className="xs:text-[8px] mr-0 inline-flex items-center py-2 px-4 mr-3 text-sm font-medium text-gray-500 bg-white rounded-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
                         Next: Documentation
-                        <svg aria-hidden="true" className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        <svg aria-hidden="true" className="ml-2 w-5 h-5" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd"></path></svg>
                     </Link>
                   </div>
                 </div>

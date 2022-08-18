@@ -10,7 +10,7 @@ function Container({children}) {
         return child;
       });
     
-    return <div className="container m-auto w-[100%] ml-5 xs:ml-0 sm:ml-0 inline">
+    return <div className="container m-auto w-[100%] ml-5 xs:ml-0 sm:ml-0 inline dark:bg-[#3F4E4F]">
         {childrenWithProps}
     </div>
 }

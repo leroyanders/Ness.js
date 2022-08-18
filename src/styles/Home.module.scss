@@ -1,3 +1,11 @@
+body {
+    @apply dark:bg-[#3F4E4F];
+}
+
+body.dark {
+    @apply bg-[#3F4E4F];
+}
+
 nav li  > ul {
     display: none;
 
@@ -12,9 +20,8 @@ nav li.active {
     }
     
     & div {
-        @apply bg-slate-200;
+        @apply bg-slate-200 dark:text-slate-100 text-black;
         display: block;
-        color: black;
         font-weight: 500;
     }
 }
@@ -27,14 +34,75 @@ nav li {
 
 
 .code-description {
+    @apply dark:text-slate-300;
     line-height: 28px;
     & code {
-        @apply text-[14px] bg-slate-100 rounded-lg p-1 m-2;
+        @apply text-[14px] bg-slate-100 rounded-lg p-1 m-2 dark:bg-[#3F4E4F];
+    }
+
+    & .flex > div {
+        @apply dark:bg-[#3F4E4F] border-none;   
     }
 }
 
+@media (prefers-color-scheme: dark){
+    .token-line > .punctuation, .operator {
+        --tw-text-opacity: 1;
+        color: rgb(100 116 139/var(--tw-text-opacity)) !important;
+    }
+    .token-line > .string {
+        color: #5db4a0 !important;
+    }
+}
+
+.text-gray-700 {
+    @apply dark:text-slate-300
+}
+
 .container {
-    @apply sm:ml-0;
+    @apply sm:ml-0 dark:bg-[#3F4E4F];
+
+    & main {
+        @apply dark:bg-[#2C3639] pt-10 rounded-md;
+    }
+
+    & h1 {
+        @apply dark:text-slate-200;
+    }
+
+    & nav {
+        @apply mb-[-16px];
+        @apply dark:bg-[#3F4E4F];
+    }
+
+    & nav ul:first-child {
+        @apply dark:bg-[#3F4E4F] dark:text-slate-100;
+        border:none;
+    }
+
+    & div {
+        @apply dark:text-slate-400;
+    }
+
+    & li {
+        @apply dark:text-slate-300;
+    }
+
+    & button[data-accordion-target] {
+        @apply dark:bg-transparent dark:text-slate-400;
+    }
+}
+
+pre.bg-slate-100 {
+    @apply dark:bg-[#3F4E4F];
+}
+
+p.border-slate-100 {
+    @apply dark:border-[#3F4E4F];
+}
+
+a.inline-flex {
+    @apply dark:text-slate-200 dark:border-none dark:bg-slate-700;
 }
 
 pre {
