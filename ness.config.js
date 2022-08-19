@@ -16,14 +16,7 @@ module.exports = {
                 },
                 content: ["./src/**/*.{html,js}"],
                 plugins: [],
-            },
-            options: {
-                postcss: {
-                    dev: {
-                        sourceMap: false,
-                    },
-                },
-            },
-        },
+            }
+        }
     ]
 }

@@ -2,11 +2,11 @@
   "client": {
     "scss": [],
     "css": [
-      "/static/css/bundle.6cb0afbf.css"
+      "/static/css/bundle.ad8d6e2d.css"
     ],
     "js": [
-      "/static/js/bundle.6fe27f94.js",
-      "/static/js/bundle.6fe27f94.js.map"
+      "/static/js/bundle.3d6759b3.js",
+      "/static/js/bundle.3d6759b3.js.map"
     ]
   }
 }

@@ -1,9 +1,8 @@
 import { Fragment, useEffect } from 'react';
 import { Menu, Transition } from '@headlessui/react'
-import useLocalStorage from '../../../hooks/useLocalStorage';
 
 function classNames(...classes) {
-    return classes.filter(Boolean).join(' ')
+    return classes.filter(Boolean).join(' ');
 }
   
 function DropdownMenu(props) {
@@ -81,7 +80,7 @@ function DropdownMenu(props) {
                     onClick={() => props.setMode('system')}
                   >
                     <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6 mr-2"><path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" strokeWidth="2" strokeLinejoin="round" className="stroke-slate-400 dark:stroke-slate-500"></path><path d="M14 15c0 3 2 5 2 5H8s2-2 2-5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="stroke-slate-400 dark:stroke-slate-500"></path></svg>
-                    <b className="mt-[1.5px]">System</b>
+                    <b className="mt-[1.5px]">System theme</b>
                   </a>
                 )}
               </Menu.Item>

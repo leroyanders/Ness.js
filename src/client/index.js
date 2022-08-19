@@ -3,10 +3,13 @@ import Router from '../router';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
-import 'nessapp/tailwind/base.scss';
+// tailwind
+import 'ness-tailwind/styles/base.scss';
 
-// eslint-disable-next-line
-const root = ReactDOM.createRoot(document.getElementById('root'));
+/* eslint-disable */
+/*babel: disable */
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
 
 root.render(
   <BrowserRouter>
@@ -15,4 +18,4 @@ root.render(
 );
 
 // hot reload the components
-if (module.hot) module.hot.accept();
+if (module.hot) module.hot.accept(() => root.unmount());
