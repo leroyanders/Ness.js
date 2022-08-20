@@ -5608,6 +5608,11 @@
   "resolved" "https://registry.npmjs.org/hex-color-regex/-/hex-color-regex-1.1.0.tgz"
   "version" "1.1.0"
 
+"highlight.js@^11.6.0":
+  "integrity" "sha512-ig1eqDzJaB0pqEvlPVIpSSyMaO92bH1N2rJpLMN/nX396wTpDA4Eq0uK+7I/2XG17pFaaKE0kjV/XPeGt7Evjw=="
+  "resolved" "https://registry.npmjs.org/highlight.js/-/highlight.js-11.6.0.tgz"
+  "version" "11.6.0"
+
 "history@^5.2.0":
   "integrity" "sha512-ZqaKwjjrAYUYfLG+htGaIIZ4nioX2L70ZUMIFysS3xvBsSG4x/n1V6TXV3N8ZYNuFGlDirFg32T7B6WOUPDYcQ=="
   "resolved" "https://registry.npmjs.org/history/-/history-5.3.0.tgz"
@@ -7805,10 +7810,10 @@
   "resolved" "https://registry.npmjs.org/neo-async/-/neo-async-2.6.2.tgz"
   "version" "2.6.2"
 
-"ness-tailwind@^1.0.7":
-  "integrity" "sha512-5hVGxty5VbKHf/7EdcKPhs9fqrDC2bNhOm0EqbYfxGRLctU6UBMJ9NVnczZ94UcguFGhocH/2ZRQSJeMTF3BcQ=="
-  "resolved" "https://registry.npmjs.org/ness-tailwind/-/ness-tailwind-1.0.7.tgz"
-  "version" "1.0.7"
+"ness-tailwind@^1.1.8":
+  "integrity" "sha512-bDT36afnbfTnnAAPXUO0RNYipzZfzgeCpAYit3gIfv23jq4URltW2RNE8BPn4UKKdO6/Pz5AzX5oOsiv7e9DXg=="
+  "resolved" "https://registry.npmjs.org/ness-tailwind/-/ness-tailwind-1.1.8.tgz"
+  "version" "1.1.8"
   dependencies:
     "autoprefixer" "^10.2.3"
     "css-loader" "^5.0.0"
@@ -7821,10 +7826,10 @@
     "sass" "^1.29.0"
     "sass-loader" "^10.0.3"
 
-"nessapp@^3.7.7":
-  "integrity" "sha512-53zY1/BnP5jq6MjbP+XUMC+RA+ub8AEOgYyUCgWnqBa33Y8TOiNrQpUdHu2xNa1uwKufnlxxgiK/zO3PwVCfgQ=="
-  "resolved" "https://registry.npmjs.org/nessapp/-/nessapp-3.7.7.tgz"
-  "version" "3.7.7"
+"nessapp@^3.7.9":
+  "integrity" "sha512-/DUQf7sxvHKTior2eTQrG34obW0gyVOndbJ6RINuKbQIWAyPCYc/Zuj526IVWyI2ImBdYD/fpYOLErk0v7QszQ=="
+  "resolved" "https://registry.npmjs.org/nessapp/-/nessapp-3.7.9.tgz"
+  "version" "3.7.9"
 
 "next-tick@^1.1.0":
   "integrity" "sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ=="
