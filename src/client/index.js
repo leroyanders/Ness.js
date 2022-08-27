@@ -1,13 +1,13 @@
 import React from 'react';
-import Router from '../router';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
+
+// Router
+import Router from '../router';
 
 // tailwind
 import 'ness-tailwind/styles/base.scss';
 
-/* eslint-disable */
-/*babel: disable */
 const container = document.getElementById('root');
 const root = ReactDOM.createRoot(container);
 

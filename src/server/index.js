@@ -12,4 +12,6 @@ if (module.hot) module.hot.accept('../index', () => {
   } catch (error) {console.error(error)}
 });
 
-export default express().use((req, res) => nessAplication.handle(req, res)).listen(port);
+export default express().use(
+  (req, res) => nessAplication.handle(req, res)
+).listen(port);

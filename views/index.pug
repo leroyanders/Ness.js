@@ -4,7 +4,8 @@ html(lang='en')
     meta(charset='utf-8')
     meta(http-equiv='X-UA-Compatible', content='IE=edge')
     meta(name='viewport', content='width=device-width, initial-scale=1')
-
+    script !{__context__}
+    
     if clientStyles
       each style in clientStyles
         link(rel='stylesheet', href=style)
