@@ -146,8 +146,14 @@ const createApp = (name, template, useYarn) => {
 
     const applicationPackage = {
         name: appName,
-        version: '0.1.0',
+        version: package.version,
         private: true,
+        scripts: {
+            'start': 'nessapp start',
+            'build': 'nessapp build',
+            'start:prod': 'nessapp production',
+            'generate': 'nessapp generate'
+        }
     };
 
     // Create a new package.json in application folder
