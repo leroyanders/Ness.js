@@ -1,0 +1,16 @@
+{
+  "name": "welcome",
+  "version": "4.0.21",
+  "private": true,
+  "scripts": {
+    "start": "nessapp start",
+    "build": "nessapp build",
+    "start:prod": "nessapp production",
+    "generate": "nessapp generate"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "ness-tailwind": "1.3.8",
+    "nessapp": "4.0.2"
+  }
+}
