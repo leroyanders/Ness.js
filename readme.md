@@ -1,1 +1,1 @@
-./packages/nessapp/readme.md
+packages/nessapp/readme.md
