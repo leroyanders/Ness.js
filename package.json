@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "version": "4.0.2",
+  "description": "Newest Experience of Server Side development. Awesome React framework ✨",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "devEngines": {
+    "node": "^15.x || 16.x || 17.x"
+  },
+  "scripts": {
+    "publish:template": "cd templates/ness-template-default && npm publish --access public",
+    "publish:client": "cd packages/create-ness-app && npm publish --access public",
+    "publish:scripts": "cd packages/nessapp && npm publish --access public"
+  },
+  "author": "Leroy Wagner <leroy.wagner20@gmail.com>",
+  "license": "MIT"
+}

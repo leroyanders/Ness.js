@@ -1,0 +1,15 @@
+{
+  "name": "create-ness-app",
+  "version": "4.0.2",
+  "license": "MIT",
+  "author": "Leroy Wagner <leroy.wagner20@gmail.com>",
+  "repository": "git@github.com:leroywagner/ness.js.git",
+  "bin": {
+    "create-ness-app": "./bin/index.js"
+  },
+  "dependencies": {
+    "chalk": "^3.0.0",
+    "envinfo": "^7.8.1",
+    "tar-stream": "^2.2.0"
+  }
+}
