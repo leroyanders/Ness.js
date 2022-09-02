@@ -169,7 +169,7 @@ const run = (root, name, version, originalDirectory, template, useYarn) => {
     const tmp = template !== undefined ? template : 'ness-template-default';
 
     getPackageInfo(tmp).then(async () => {
-        const dependencies = ['nessapp', 'ness-tailwind', tmp];
+        const dependencies = ['nessapp', 'ness-tailwind', 'axios', tmp];
 
         console.log(chalk.green(`Installing: ${dependencies.join(', ')}`));
         console.log('\nInstalling packages. This might take a couple of minutes.');
