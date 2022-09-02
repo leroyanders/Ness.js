@@ -1,1 +1,3 @@
 /node_modules/
+/examples/welcome/node_modules/
+/package-lock.json
