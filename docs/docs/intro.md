@@ -12,11 +12,11 @@ The idea of creating this framework was to take all the useful things from simil
 
 ## Templates and boilerplates
 
-We have a list of templates that you can use when creating a new application with our CLI. For example `typescript` or any other template you are interested in.
+We have a list of templates that you can use when creating a new application with our CLI. For example `typescript` or any other template you are interested in. [See more.](/docs/templates/into)
 
 ## Plugins usebilite
 
-We have a huge list of plugins, that will help's you using modern techniques such as SASS or Stylus. Of course, you also may use your own plugins from local folder application, so you don't need to waste time on configuring them.
+We have a huge list of plugins, that will help's you using modern techniques such as SASS or Stylus. Of course, you also may use your own plugins from local folder application, so you don't need to waste time on configuring them. [See more.](/docs/plugins/your-own-plugin)
 
 ## In what situations will it suit me?
 

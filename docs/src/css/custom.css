@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 .header-github-link:hover {
   opacity: 0.6;
 }
@@ -4852,4 +4856,47 @@ pre.prism-code {
 
 .navbar-ukraine p > a:hover {
   color: #5590CC;
+}
+
+.home-cover {
+  width: 100%;
+  margin: 0 auto;
+  padding: 120px 0 30px;
+  text-align: center;
+}
+
+.home-cover h1 {
+  font-size: 60px;
+  font-weight: 600;
+  width: 50%;
+  text-align: center;
+  margin: auto;
+}
+
+.home-cover p {
+  width: 50%;
+  text-align: center;
+  margin: auto;
+  margin-top: 10px;
+  color: grey;
+}
+
+.flex {
+  display: flex;
+}
+
+[data-theme=dark] .navbar__logo img {
+  filter: invert(1);
+}
+
+.theme-doc-markdown.markdown img {
+  width: 50%;
+  border-radius: 10px;
+  border: solid 1px #e5e5e5;
+}
+
+.theme-doc-markdown.markdown a > img {
+  width: auto;
+  border-radius: 4px;
+  border: none;
 }

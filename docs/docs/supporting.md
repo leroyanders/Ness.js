@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# Where to get support
+# Where to get support?
 
 Before participating in Ness.js communities, [please read our Code of Conduct](https://github.com/leroywagner/Ness.js/blob/master/CODE_OF_CONDUCT.md). We have adopted the [Contributor Covenant](https://www.contributor-covenant.org/) and we expect that all community members adhere to the guidelines within.
 

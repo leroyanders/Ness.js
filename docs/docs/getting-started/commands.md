@@ -30,7 +30,7 @@ This client is used by your application's local management.
 
 #### 1. **nessapp start**
 
-*Start the application in development mode. The application will generate bundles in deployment folder and then start server on 3000 port by default, if you wanna specify it, see **ness.config.js.***
+*Start the application in development mode. The application will generate bundles in deployment folder and then start server on 3000 port by default, if you wanna specify it, see **ness.config.js**.*
 
 #### 2. **nessapp build**
 

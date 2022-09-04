@@ -1,29 +1,23 @@
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/106757584/188333735-fe92e2d8-faea-4405-8fab-b77cd32781ac.svg">
+    <img src="https://user-images.githubusercontent.com/106757584/188333666-5ee6f31f-0672-411e-b59e-db6c518e0e70.svg">
+  </picture>
+</p>
+
 ## Ness.js  
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/Ness.js/license)
 [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
 [![Ness Version](https://img.shields.io/badge/v4.0.2-Ness.js-blue)]()
 [![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
 
-<i>
-
-Ness.js - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering.
-
-It support installing our plugins and plugins from your application ```source```, will save your development time and provide more-userful experience.
-
-</i>
+*Ness.js - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Supports installing our plugins and plugins from your application directly, will save your development time and provide more-userful experience.*
 
 ## Documentation
 
 You can find the Ness.js documentation [on the framework website](https://nessapp.vercel.com/).  
 
-Check out the [Getting Started](https://nessapp.vercel.app/docs/getting-started) page for a quick overview.
-
-* [Tutorial](https://nessapp.vercel.app/docs/tutorial)
-* [Main Concepts](https://nessapp.vercel.app/docs/hello-world)
-* [Advanced Guides](https://nessapp.vercel.app/docs/advanced)
-* [API Reference](https://nessapp.vercel.app/docs/api)
-* [Where to Get Support](https://nessapp.vercel.app/community/support)
-* [Contributing Guide](https://nessapp.vercel.app/docs/how-to-contribute)
+Check out the [Getting Started](https://nessapp.vercel.app/docs/getting-started/create-new-app) page for a quick overview.
 
 ## Examples
 
@@ -61,8 +55,6 @@ Read our [contributing guide](https://nessapp.vercel.app/docs/how-to-contribute)
 ### Good First Issues
 
 To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/leroywagner/Ness.js/issues/new) that contain bugs that have a relatively limited scope. This is a great place to get started.
-
-<br/>
 
 ### License
 

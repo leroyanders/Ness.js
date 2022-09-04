@@ -19,6 +19,7 @@ const config = {
 
   organizationName: 'leroywagner', // Usually your GitHub org/user name.
   projectName: 'Ness.js', // Usually your repo name.
+  deploymentBranch: 'master',
 
   i18n: {
     defaultLocale: 'en',
@@ -31,17 +32,10 @@ const config = {
       /** @type {import('@docusaurus/preset-classic').Options} */
       ({
         docs: {
-          // lastVersion: 'current',
-          // versions: {
-          //   current: {
-          //     label: 'Stable 4.0.2',
-          //     path: '4.0.2',
-          //   },
-          // },
           breadcrumbs: false,
           sidebarPath: require.resolve('./sidebars.js'),
           editUrl:
-            'https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/',
+            'https://github.com/leroywagner/Ness.js/tree/master/docs/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),
@@ -53,51 +47,45 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      // algolia: {
-      //   contextualSearch: false,
-      //   appId: 'YOUR_APP_ID',
-
-      //   // Public API key: it is safe to commit it
-      //   apiKey: 'YOUR_SEARCH_API_KEY',
-
-      //   indexName: 'YOUR_INDEX_NAME',
-
-      //   // Optional: Specify domains where the navigation should occur through window.location instead on history.push. Useful when our Algolia config crawls multiple documentation sites and we want to navigate with window.location.href to them.
-      //   externalUrlRegex: 'external\\.com|domain\\.com',
-
-      //   // Optional: Algolia search parameters
-      //   searchParameters: {},
-
-      //   // Optional: path for search page that enabled by default (`false` to disable it)
-      //   searchPagePath: 'search',
-
-      //   //... other Algolia params
-      // },
+      colorMode: {
+        defaultMode: 'dark',
+        disableSwitch: false,
+        respectPrefersColorScheme: false,
+      },
       navbar: {
         title: 'Ness.js',
+        logo: {
+          alt: 'Site Logo',
+          src: 'img/favicon.png',
+          width: 20,
+          height: 20,
+        },
         items: [
           {
             to: '/',
             label: 'Newest Experience of Server Side development.',
             className: 'navbar-slogan'
           },
-          // {
-          //   type: 'docsVersionDropdown',
-          //   position: 'right',
-          //   dropdownItemsAfter: [{to: '/versions', label: 'All versions'}],
-          //   dropdownActiveClassDisabled: true,
-          // },
           {
-            to: '/',
+            to: '/docs/templates/your-own-template',
             position: 'right',
-            label: "Dashboard",
-            target: '_blank',
+            label: "Templates",
+          },
+          {
+            to: '/docs/plugins/your-own-plugin',
+            position: 'right',
+            label: "Plugins",
+          },
+          {
+            to: '/docs/examples/common',
+            position: 'right',
+            label: "Examples",
           },
           {
             type: 'doc',
             docId: 'intro',
             position: 'right',
-            label: 'Documentation',
+            label: 'Documentation (v4.0.2)',
           },
           {
             href: 'https://github.com/leroywagner/Ness.js',

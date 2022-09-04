@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# How to contribute
+# How to contribute?
 
 Ness.js is one of Leroy Wagner's first open source projects that is both under very active development and is also being used to ship code to everybody on [github.com](https://www.github.com). We're still working out the kinks to make contributing to this project as easy and transparent as possible, but we're not quite there yet. Hopefully this document makes the process for contributing clear and answers some questions that you may have.
 

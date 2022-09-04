@@ -32,6 +32,34 @@ const sidebars = {
       collapsed: true,
       items: [
         'plugins/tailwind',
+        'plugins/your-own-plugin',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Templates',
+      collapsed: true,
+      items: [
+        'templates/your-own-template',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Examples',
+      collapsed: true,
+      items: [
+        'examples/common',
+      ],
+    },
+    {
+      type: 'category',
+      label: 'Documentation',
+      collapsed: true,
+      items: [
+        'documentation/router',
+        'documentation/client/render',
+        'documentation/server/render',
+        'documentation/data-fetching',
       ],
     },
     'code-of-conduct',
