@@ -13,7 +13,7 @@ const config = {
   url: 'https://your-docusaurus-test-site.com',
   baseUrl: '/',
 
-  onBrokenLinks: 'throw',
+  onBrokenLinks: 'ignore',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.png',
 
