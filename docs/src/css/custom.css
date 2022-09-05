@@ -4900,3 +4900,23 @@ pre.prism-code {
   border-radius: 4px;
   border: none;
 }
+
+@media screen and (max-width: 997px) {
+  .menu {
+    margin: 0 auto;
+  }
+  .clean-btn.navbar-sidebar__back {
+    display: none;
+  }
+  .navbar__item.navbar__link.header-github-link {
+    display: block !important;
+  }
+
+  .tocCollapsible_node_modules-\@docusaurus-theme-classic-lib-theme-TOCCollapsible-styles-module {
+    display: none;
+  }
+
+  .pagination-nav__label {
+    font-size: 12px;
+  }
+}
