@@ -10,7 +10,7 @@ import { useServerRendering } from 'nessapp/server/dom';
 
 ## Example of usage
 
-```jsx title='./src/index.js'
+```jsx title='./src/index.js' showLineNumbers
 import express from 'express';
 import { useServerRendering } from 'nessapp/server/dom';
 import Routes from './router';

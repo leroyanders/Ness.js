@@ -16,7 +16,7 @@ import render from 'nessapp/client/dom'
 
 ## Example of usage
 
-```javascript title='./src/client/index.js'
+```javascript title='./src/client/index.js' showLineNumbers
 import React from 'react';
 import { Router } from '../router';
 import render from 'nessapp/client/dom'

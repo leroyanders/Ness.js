@@ -22,7 +22,7 @@ npm install --save ness-tailwind@latest
 
 As all plugins, this plugin configuring in **ness.config.js**. You can use the following or simply configure by passing from tailwind official documentation website.
 
-```jsx
+```jsx showLineNumbers
 module.exports = {
     "plugins": [
         {

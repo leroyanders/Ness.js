@@ -10,7 +10,7 @@ Please not that the plugin must have prefix **ness-**, it is required, otherwise
 
 Let's create a plugin with the following configuration.
 
-```js title='your_plugin/index.js'
+```js title='your_plugin/index.js' showLineNumbers
 /*
     *    function install used to install the plugin. 
     *    contains two arguments(webpack configuration and plugin configuration)
@@ -38,7 +38,7 @@ After all done, please test your plugin localy and then push to NPM registry pub
 
 ### Configuration
 
-```js title='./ness.config.js'
+```js title='./ness.config.js' showLineNumbers
 module.exports = {
     "plugins": [
         ...
@@ -54,7 +54,7 @@ module.exports = {
 
 This way the same, but you must use parameter `entrypoint` in ness.config.js
 
-```js title='your_plugin/index.js'
+```js title='your_plugin/index.js' showLineNumbers
 /*
     *    function install used to install the plugin. 
     *    contains two arguments(webpack configuration and plugin configuration)
@@ -77,7 +77,7 @@ module.exports = {
 };
 ```
 
-```js title='Configuration in ./ness.config.js'
+```js title='Configuration in ./ness.config.js' showLineNumbers
 
 const path = require('path');
 

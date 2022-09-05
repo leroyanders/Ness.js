@@ -6,7 +6,7 @@ You can use class component and functional components. We will provide you ways 
 
 To fetch data on server side, you need to configure your component, just add static function `useServerSideFetching`.
 
-```javascript title='Server fetching function useServerSideFetching(). Return object with custom name and request.'
+```javascript title='Server fetching function useServerSideFetching(). Return object with custom name and request.' showLineNumbers
 static useServerSideFetching() {
     return {
         users: axios.get('https://jsonplaceholder.typicode.com/users'),
@@ -17,7 +17,7 @@ static useServerSideFetching() {
 
 ### Example usage on server side
 
-```javascript title='Class component'
+```javascript title='Class component' showLineNumbers
 import React from 'react';
 import axios from 'axios';
 
@@ -44,7 +44,7 @@ class Component extends React.Component {
 
 > After `useServerSideFetching()` has been called on server, it will pass function `useServerSideProps()` to props, which returns fetched data.
 
-```javascript title='Functional component'
+```javascript title='Functional component' showLineNumbers
 import React from 'react';
 import axios from 'axios';
 
@@ -70,7 +70,7 @@ To fetch data on client side, you needn't use any of the following methods, just
 
 ### Example usage on client side
 
-```javascript title='Class component'
+```javascript title='Class component' showLineNumbers
 import React from 'react';
 
 class MyComponent extends React.Component {
@@ -123,7 +123,7 @@ class MyComponent extends React.Component {
     }
 ```
 
-```javascript title='Functional component'
+```javascript title='Functional component' showLineNumbers
 import React, { useEffect, useState } from 'react';
 
 function MyComponent() {

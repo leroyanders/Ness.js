@@ -16,7 +16,7 @@ import { renderRoutes } from 'nessapp/client/dom';
 
 1. Define all routes as the following example. Route must have path and component property. Property `exact` will be ignored if path passed as RegExp.
 
-```jsx
+```jsx showLineNumbers
 // pages
 import Home from './pages/Home';
 import NotFound from './pages/NotFound';
@@ -37,7 +37,7 @@ const Routes = [
 
 2. Initialize client-side router
 
-```jsx
+```jsx showLineNumbers
 import { renderRoutes } from 'nessapp/client/dom';
 
 const Routes = [...];

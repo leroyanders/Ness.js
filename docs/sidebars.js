@@ -57,9 +57,14 @@ const sidebars = {
       collapsed: true,
       items: [
         'documentation/router',
+
         'documentation/client/render',
         'documentation/server/render',
+        
         'documentation/data-fetching',
+        'documentation/styling',
+
+        'documentation/config',
       ],
     },
     'code-of-conduct',
