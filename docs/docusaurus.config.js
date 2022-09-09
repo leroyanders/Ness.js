@@ -15,7 +15,7 @@ const config = {
 
   onBrokenLinks: 'ignore',
   onBrokenMarkdownLinks: 'warn',
-  favicon: 'img/favicon.png',
+  favicon: 'img/favicon.ico',
 
   organizationName: 'leroywagner', // Usually your GitHub org/user name.
   projectName: 'Ness.js', // Usually your repo name.
