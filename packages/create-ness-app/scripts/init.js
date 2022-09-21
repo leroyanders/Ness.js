@@ -116,7 +116,7 @@ const init = () => {
             // create a new application
             createApp(
                 projectName,
-                app.template,
+                app._optionValues.template,
                 useYarn
             );
         }
@@ -166,10 +166,10 @@ const createApp = (name, template, useYarn) => {
 }
 
 const run = (root, name, version, originalDirectory, template, useYarn) => {
-    const tmp = template !== undefined ? template : 'ness-template-default';
+    const tmp = template !== undefined ? `ness-template-${template}` : 'ness-template-default';
 
     getPackageInfo(tmp).then(async () => {
-        const dependencies = ['nessapp', 'ness-tailwind', 'axios', tmp];
+        const dependencies = ['nessapp', 'ness-tailwind', tmp];
 
         console.log(chalk.green(`Installing: ${dependencies.join(', ')}`));
         console.log('\nInstalling packages. This might take a couple of minutes.');
@@ -185,21 +185,21 @@ const run = (root, name, version, originalDirectory, template, useYarn) => {
 
             // uninstall template as package
             await uninstall(root, [tmp]).then(() => {
-                console.log(`${chalk.green(`\nSuccess! Created "${name}"`)}`);
-                console.log(`${chalk.green(`Inside that directory, you can run several commands:\n`)}`);
+                console.log(`${chalk.green.bold(`\nSuccess! Created new project in "${name}"`)}\n\n`);
+                console.log(`${chalk.green.italic(`Inside that directory, you can run several commands:`)}`);
 
-                console.log(`${chalk.green(`     ${chalk.green('npm run start')}`)}`);
-                console.log(`${chalk.green(`     Starts the development server.`)}\n`);
+                console.log(`${chalk.green.bold(`${chalk('npm run start')}`)}`);
+                console.log(`${chalk.green.italic(`- Starts the development server.`)}\n`);
 
-                console.log(`${chalk.green(`     ${chalk.green('npm run build')}`)}`);
-                console.log(`${chalk.green(`     Bundles the app into static files for production.`)}\n`);
+                console.log(`${chalk.green.bold(`${chalk('npm run build')}`)}`);
+                console.log(`${chalk.green.italic(`- Bundles the app into static files for production.`)}\n`);
 
-                console.log(`${chalk.green(`     ${chalk.green('npm run generate')}`)}`);
-                console.log(`${chalk.green(`     Generate pages, hooks and also.`)}\n`);
+                console.log(`${chalk.green.bold(`${chalk('npm run generate')}`)}`);
+                console.log(`${chalk.green.italic(`- Generate pages, hooks and also.`)}\n\n`);
 
-                console.log(`${chalk.green(`${chalk.green('We suggest that you begin by typing:')}`)}\n`);
-                console.log(`${chalk.green(`cd ${chalk.green(name)} && ${chalk.green('npm run start')}`)}\n`);
-                console.log(`${chalk.green('Sweet coding!')}`);
+                console.log(`${chalk.blue.italic.bold(`${chalk.blue('We suggest that you begin by typing:')}`)}`);
+                console.log(`${chalk.blue(`> cd ${chalk.blue(name)} && ${chalk.blue('npm run start')}`)}\n`);
+                console.log(`${chalk.green.bold('Sweet coding! ❤️')}`);
             });
         } catch (err) {
             console.error(err)

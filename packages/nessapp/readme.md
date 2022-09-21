@@ -37,9 +37,6 @@ import { Router } from '../router';
 import render from 'nessapp/client/dom'
 
 render(<Router/>, document.getElementById('root'));
-
-// hot reload the components
-if (module.hot) module.hot.accept(() => root.unmount());
 ```
 
 This example will render page based your route into a container on the page.
