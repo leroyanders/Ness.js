@@ -32,6 +32,16 @@ module.exports = function (api, options) {
     };
   }
 
+  api.cache(true);
+
+  const presets = ['@babel/preset-env'];
+  const plugins = [
+      '@babel/plugin-transform-arrow-functions',
+      '@babel/plugin-proposal-class-properties',
+      '@babel/plugin-syntax-dynamic-import',
+      '@babel/plugin-proposal-object-rest-spread',
+  ];
+
   var customModernPreset = isLaxModern && options['experimental-modern-preset'];
   return {
     sourceType: 'unambiguous',

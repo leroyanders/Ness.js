@@ -4,6 +4,8 @@ var url = require('url');
 var appDirectory = fs.realpathSync(process.cwd());
 var envPublicUrl = process.env.PUBLIC_URL;
 
+const typescipt = process.env.enableTypescript;
+
 var resolveDirectoryPathname = function resolveDirectoryPathname(relativePath) {
   return path.resolve(appDirectory, relativePath);
 };
@@ -32,6 +34,7 @@ var resolveRootDirectoryPathname = function resolveRootDirectoryPathname(relativ
 var nodePathesResolve = (process.env.NODE_PATH || '').split(os.platform() === 'win32' ? ';' : ':').filter(Boolean).filter(function (folder) {
   return !path.isAbsolute(folder);
 }).map(resolveDirectoryPathname);
+
 module.exports = {
   dotenv: resolveDirectoryPathname('.env'),
   applicationDirectory: resolveDirectoryPathname('.'),
@@ -44,8 +47,8 @@ module.exports = {
   applicationSource: resolveDirectoryPathname('src'),
   appTemplate: resolveDirectoryPathname('public/index.html'),
   applicationPackage: resolveDirectoryPathname('package.json'),
-  serverEntry: resolveDirectoryPathname('src/server/index.js'),
-  clientIndex: resolveDirectoryPathname('src/client/index.js'),
+  serverEntry: typescipt === 'false'? resolveDirectoryPathname('src/server/index.js') : resolveDirectoryPathname('src/server/index.ts'),
+  clientIndex: typescipt === 'false'? resolveDirectoryPathname('src/client/index.js') : resolveDirectoryPathname('src/client/index.tsx'),
   clientDirectory: resolveDirectoryPathname('src/client'),
   tsTestsSetup: resolveDirectoryPathname('src/setupTests.ts'),
   jsTestsSetup: resolveDirectoryPathname('src/setupTests.js'),

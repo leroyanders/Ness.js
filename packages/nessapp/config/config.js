@@ -20,6 +20,9 @@ var ManifestPlugin = require('webpack-manifest-plugin');
 var modules = require('./modules');
 var chalk = require('chalk');
 var logging = require('webpack/lib/logging/runtime');
+var ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+// @remove-on-eject-begin
+var getCacheIdentifier = require('react-dev-utils/getCacheIdentifier');
 
 module.exports = function () {
   var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'web';
@@ -64,10 +67,13 @@ module.exports = function () {
     host: host,
     port: port
   });
+  
   var portOffset = useOnlyForClient ? 0 : 1;
   var devServerPort = process.env.PORT && parseInt(process.env.PORT) + portOffset || 3000 + portOffset;
   var clientPublicPath = dotenv.raw.CLIENT_PUBLIC_PATH || (IS_DEVELOPMENT ? "http://".concat(dotenv.raw.HOST, ":").concat(devServerPort, "/") : '/');
+  
   const devMode = process.env.NODE_ENV !== 'production';
+  const mode = devMode ? 'development' : 'production';
 
   var config = {
     mode: IS_DEVELOPMENT ? 'development' : 'production',
@@ -76,7 +82,7 @@ module.exports = function () {
     devtool: IS_DEVELOPMENT ? 'cheap-module-source-map' : 'source-map',
     resolve: {
       modules: ['node_modules', paths.nodeModulesDirectory].concat(modules.additionalModulePaths || []),
-      extensions: ['.mjs', '.js', '.jsx', '.json', '.tsx', '.ts'],
+      extensions: [".ts", ".tsx", ".js"],
       alias: {
         'webpack/hot/poll': require.resolve('webpack/hot/poll'),
         'react-native': 'react-native-web'
@@ -91,14 +97,60 @@ module.exports = function () {
         test: /\.mjs$/,
         include: /node_modules/,
         type: 'javascript/auto'
-      }, {
-        test: /\.(js|jsx|mjs)$/,
+      }, 
+      {
+        test: /\.(ts|tsx)$/,
+        include: paths.applicationSource,
+        loader: require.resolve('babel-loader'),
+        options: {
+          customize: require.resolve(
+            'babel-preset-react-app/webpack-overrides'
+          ),
+          presets: [
+            [
+              require.resolve('babel-preset-react-app'),
+              {
+                runtime: 'automatic',
+              },
+            ],
+          ],
+          // @remove-on-eject-begin
+          babelrc: false,
+          configFile: false,
+          cacheIdentifier: getCacheIdentifier(
+            IS_PRODUCTION
+              ? 'production'
+              : IS_DEVELOPMENT && 'development',
+            [
+              'babel-plugin-named-asset-import',
+              'babel-preset-react-app',
+              'react-dev-utils',
+              'nessapp',
+            ]
+          ),
+          // @remove-on-eject-end
+          plugins: [
+            IS_DEVELOPMENT &&
+              require.resolve('react-refresh/babel'),
+          ].filter(Boolean),
+          // This is a feature of `babel-loader` for webpack (not Babel itself).
+          // It enables caching results in ./node_modules/.cache/babel-loader/
+          // directory for faster rebuilds.
+          cacheDirectory: true,
+          // See #6846 for context on why cacheCompression is disabled
+          cacheCompression: false,
+          compact: IS_PRODUCTION,
+        },
+      },
+      {
+        test: /\.(js|jsx)$/,
         include: [paths.applicationSource],
         use: [{
           loader: require.resolve('babel-loader'),
           options: babelConfiguration
         }]
-      }, {
+      },
+      {
         exclude: [/\.html$/, /\.(js|jsx|mjs)$/, /\.(ts|tsx)$/, /\.(vue)$/, /\.(less)$/, /\.(re)$/, /\.(s?css|sass)$/, /\.json$/, /\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
         loader: require.resolve('file-loader'),
         options: {
@@ -156,6 +208,7 @@ module.exports = function () {
       __dirname: false,
       __filename: false
     };
+
     config.externals = [nodeExternals({
       whitelist: [IS_DEVELOPMENT ? 'webpack/hot/poll?300' : null, /\.(eot|woff|woff2|ttf|otf)$/, /\.(svg|png|jpg|jpeg|gif|ico)$/, /\.(mp4|mp3|ogg|swf|webp)$/, /\.(css|scss|sass|sss|less)$/].filter(function (x) {
         return x;
@@ -168,11 +221,15 @@ module.exports = function () {
       filename: 'server.js',
       libraryTarget: 'commonjs2'
     };
+    
     const HtmlWebpackPlugin = require('html-webpack-plugin') 
-    config.plugins = [new webpack.DefinePlugin(dotenv.stringified), new HtmlWebpackPlugin()];
+
+    config.plugins = [new webpack.DefinePlugin(dotenv.stringified), new HtmlWebpackPlugin(), new ReactRefreshWebpackPlugin()];
+
     if (IS_PRODUCTION) config.plugins.push(new webpack.optimize.LimitChunkCountPlugin({
       maxChunks: 1
     }));
+
     config.entry = [paths.serverEntry];
 
     if (IS_DEVELOPMENT) {
@@ -185,12 +242,12 @@ module.exports = function () {
       config.plugins = [].concat(_toConsumableArray(config.plugins), [new webpack.HotModuleReplacementPlugin(), new StartServerPlugin({
         name: 'server.js',
         nodeArgs: nodeArgs
-      }), new webpack.WatchIgnorePlugin([paths.assets, paths.chunks])]);
+      }), new webpack.WatchIgnorePlugin([paths.assets, paths.chunks]), new ReactRefreshWebpackPlugin()]);
     }
   }
 
   if (IS_WEB) {
-    config.plugins = [new AssetsPlugin({
+    config.plugins = [new webpack.DefinePlugin(dotenv.stringified), new AssetsPlugin({
       path: paths.appdeploy,
       filename: 'assets.json'
     }), new ManifestPlugin({
@@ -201,6 +258,7 @@ module.exports = function () {
       },
       generate: function generate(seed, files) {
         var entrypoints = new Set();
+
         files.forEach(function (file) {
           return ((file.chunk || {})._groups || []).forEach(function (group) {
             return entrypoints.add(group);
@@ -211,9 +269,7 @@ module.exports = function () {
 
         var entryArrayManifest = entries.reduce(function (acc, entry) {
           var _ref2;
-
           var name = (entry.options || {}).name || (entry.runtimeChunk || {}).name;
-
           var files = (_ref2 = []).concat.apply(_ref2, _toConsumableArray((entry.chunks || []).map(function (chunk) {
             return chunk.files.map(function (path) {
               return config.output.publicPath + path;
@@ -229,6 +285,7 @@ module.exports = function () {
           var jsFiles = files.map(function (item) {
             return item.indexOf('.js') !== -1 ? item : null;
           }).filter(Boolean);
+
           return name ? _objectSpread(_objectSpread({}, acc), {}, _defineProperty({}, name, {
             scss: scssFiles,
             css: cssFiles,
@@ -253,6 +310,7 @@ module.exports = function () {
         libraryTarget: 'var',
         filename: 'static/js/bundle.js',
         chunkFilename: 'static/js/[name].chunk.js',
+
         devtoolModuleFilenameTemplate: function devtoolModuleFilenameTemplate(info) {
           return path.resolve(info.resourcePath).replace(/\\/g, '/');
         }
@@ -281,25 +339,15 @@ module.exports = function () {
           warnings: false,
           errors: false
         },
-        // stats: {
-        //   all: false,
-        //   minimal: false,
-        //   assets: false,
-        //   colors: false,
-        //   version: false,
-        //   hash: false,
-        //   timings: false,
-        //   chunks: false,
-        //   chunkModules: false
-        // },
         logLevel: 'silent',
+
         before: function before(app) {
           app.use(errorOverlayMiddleware());
         }
       };
       config.plugins = [].concat(_toConsumableArray(config.plugins), [new webpack.HotModuleReplacementPlugin({
         multiStep: !useOnlyForClient
-      }), new webpack.DefinePlugin(dotenv.stringified)]);
+      }), new webpack.DefinePlugin(dotenv.stringified), new ReactRefreshWebpackPlugin()]);
       config.optimization = {};
     } else {
       config.entry = {
@@ -316,7 +364,7 @@ module.exports = function () {
         // historyApiFallback: true,
 
       };
-      config.plugins = [].concat(_toConsumableArray(config.plugins), [new webpack.DefinePlugin(dotenv.stringified), new MiniCssExtractPlugin({
+      config.plugins = [].concat(_toConsumableArray(config.plugins), [ new ReactRefreshWebpackPlugin(), new webpack.DefinePlugin(dotenv.stringified), new MiniCssExtractPlugin({
         filename: 'static/css/bundle.[contenthash:8].css',
         chunkFilename: 'static/css/[name].[contenthash:8].chunk.css'
       }), new webpack.HashedModuleIdsPlugin(), new webpack.optimize.AggressiveMergingPlugin()]);

@@ -8,7 +8,7 @@
 ## Ness.js  
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/Ness.js/license)
 [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
-[![Ness Version](https://img.shields.io/badge/v4.0.2-Ness.js-blue)]()
+[![Ness Version](https://img.shields.io/badge/v4.5.76-Ness.js-blue)]()
 [![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
 
 *Ness.js - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Supports installing our plugins and plugins from your application directly, will save your development time and provide more-userful experience.*
@@ -31,9 +31,6 @@ import { Router } from '../router';
 import render from 'nessapp/client/dom'
 
 render(<Router/>, document.getElementById('root'));
-
-// hot reload the components
-if (module.hot) module.hot.accept(() => root.unmount());
 ```
 
 This example will render page based your route into a container on the page.

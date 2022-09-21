@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "types": ["webpack-env"],
+    "module": "commonjs",
+    "target": "ES6",
+    "allowJs": true,
+    "checkJs": true,
+    "jsx": "react",
+    "outDir": "./deploy/",
+    "rootDir": "./",
+    "removeComments": true,
+    "noEmit": false,
+    "pretty": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}
