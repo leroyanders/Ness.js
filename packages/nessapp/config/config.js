@@ -122,49 +122,11 @@ module.exports = function () {
         },
         {
           test: /\.(ts|tsx)$/,
-          include: paths.applicationSource,
-          exclude: /node_modules/,
-          loader: require.resolve('babel-loader'),
+          loader: 'ts-loader',
           options: {
-            customize: require.resolve(
-              'babel-preset-react-app/webpack-overrides'
-            ),
-            presets: [
-              [
-                require.resolve('babel-preset-react-app'),
-                {
-                  runtime: 'automatic',
-                },
-              ],
-            ],
-            // @remove-on-eject-begin
-            babelrc: false,
-            configFile: false,
-            cacheIdentifier: getCacheIdentifier(
-              IS_PRODUCTION
-                ? 'production'
-                : IS_DEVELOPMENT && 
-                'development',
-              [
-                'babel-plugin-named-asset-import',
-                'babel-preset-react-app',
-                'react-dev-utils',
-                'nessapp',
-              ]
-            ),
-            // @remove-on-eject-end
-            plugins: [
-              IS_DEVELOPMENT &&
-                require.resolve('react-refresh/babel'),
-            ].filter(Boolean),
-            // This is a feature of `babel-loader` for webpack (not Babel itself).
-            // It enables caching results in ./node_modules/.cache/babel-loader/
-            // directory for faster rebuilds.
-            cacheDirectory: true,
-            // See #6846 for context on why cacheCompression is disabled
-            cacheCompression: false,
-            compact: IS_PRODUCTION,
+              transpileOnly: true,
           },
+          exclude: /node_modules/,
         },
         {
           test: /\.(js|jsx)$/,
@@ -257,8 +219,7 @@ module.exports = function () {
         process: 'process/browser'
       }), 
       new webpack.DefinePlugin(dotenv.stringified), 
-      new HtmlWebpackPlugin(), 
-      new reactRefreshWebpackPlugin()
+      new HtmlWebpackPlugin()
     ];
 
     if (IS_PRODUCTION) config.plugins.push(new webpack.optimize.LimitChunkCountPlugin({
@@ -298,7 +259,7 @@ module.exports = function () {
         // Thanks to https://stackoverflow.com/a/65018686/14239942
         process: 'process/browser'
       }), 
-      new reactRefreshWebpackPlugin(), new webpack.DefinePlugin(dotenv.stringified), new AssetsPlugin({
+      new webpack.DefinePlugin(dotenv.stringified), new AssetsPlugin({
         path: paths.appdeploy,
         filename: 'assets.json'
       }), 
@@ -367,7 +328,6 @@ module.exports = function () {
         path: paths.appdeployPublic,
         publicPath: clientPublicPath,
         pathinfo: true,
-        chunkFormat: 'commonjs',
         filename: 'static/js/bundle.js',
         chunkFilename: 'static/js/[name].chunk.js',
 
@@ -397,7 +357,7 @@ module.exports = function () {
         clientLogLevel: 'silent',
         
         hotOnly: true,
-        overlay: false,
+        overlay: true,
         
         watchOptions: {
           ignored: /node_modules/
@@ -428,7 +388,6 @@ module.exports = function () {
         publicPath: dotenv.raw.PUBLIC_PATH || '/',
         filename: 'static/js/bundle.[chunkhash:8].js',
         chunkFilename: 'static/js/[name].[chunkhash:8].chunk.js',
-        chunkFormat: 'commonjs',
       };
 
       config.plugins = [].concat(
@@ -440,8 +399,7 @@ module.exports = function () {
             chunkFilename: 'static/css/[name].[contenthash:8].chunk.css'
           }), 
 
-          new webpack.optimize.AggressiveMergingPlugin(), 
-          new reactRefreshWebpackPlugin()
+          new webpack.optimize.AggressiveMergingPlugin()
       ]);
 
       config.optimization = {

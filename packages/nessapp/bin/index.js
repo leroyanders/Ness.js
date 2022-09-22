@@ -7,26 +7,31 @@ const prog = sade('nessapp');
 const fs = require('fs');
 const path = require('path');
 
+var refreshPackage = require('react-refresh/package.json');
 var appDirectory = fs.realpathSync(process.cwd());
 var resolveDirectoryPathname = function resolveDirectoryPathname(relativePath) {
   return path.resolve(appDirectory, relativePath);
 };
 
 function dispatchScript(script) {
-  fs.exists(resolveDirectoryPathname('tsconfig.json'), (exists) => {
+  // refreshPackage.exports['./runtime.js'] = './runtime.js';
 
-    process.env.enableTypescript = exists;
+  // fs.writeFile(require.resolve('react-refresh/package.json'), JSON.stringify(refreshPackage), 'utf8', () => {
+    fs.exists(resolveDirectoryPathname('tsconfig.json'), (exists) => {
 
-    const result = spawn.sync('node', [require.resolve('../scripts/' + script)].concat(process.argv.slice(3)), { stdio: 'inherit' });
-
-    // if script was killed by SIGKILL or SIGTERM
-    if (result.signal) {
-      if (result.signal === 'SIGKILL') console.log('The build failed because the process exited too early. ' + '\nThis probably means the system ran out of memory or someone called ' + '\n`kill -9` on the process.');
-      else if (result.signal === 'SIGTERM') console.log('The build failed because the process exited too early. ' + '\nSomeone might have called `kill` or `killall`, or the system could ' + '\nbe shutting down.');
-      process.exit(1);
-    }
-    process.exit(result.status);
-  });
+      process.env.enableTypescript = exists;
+  
+      const result = spawn.sync('node', [require.resolve('../scripts/' + script)].concat(process.argv.slice(3)), { stdio: 'inherit' });
+  
+      // if script was killed by SIGKILL or SIGTERM
+      if (result.signal) {
+        if (result.signal === 'SIGKILL') console.log('The build failed because the process exited too early. ' + '\nThis probably means the system ran out of memory or someone called ' + '\n`kill -9` on the process.');
+        else if (result.signal === 'SIGTERM') console.log('The build failed because the process exited too early. ' + '\nSomeone might have called `kill` or `killall`, or the system could ' + '\nbe shutting down.');
+        process.exit(1);
+      }
+      process.exit(result.status);
+    });
+  // });
 }
 
 // version
