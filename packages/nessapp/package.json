@@ -4,7 +4,7 @@
   "license": "MIT",
   "author": "Leroy Wagner <leroy.wagner20@gmail.com>",
   "repository": "git@github.com:leroywagner/ness.js.git",
-  "version": "5.1.42",
+  "version": "5.1.44",
   "bin": {
     "nessapp": "./bin/index.js"
   },
@@ -97,7 +97,9 @@
     "webpack-dev-server": "~3.10.3",
     "webpack-manifest-plugin": "^5.0.0",
     "webpack-node-externals": "^1.7.2",
-    "webpackbar": "^5.0.2"
+    "webpackbar": "^5.0.2",
+    "process": "^0.11.10",
+    "react-error-overlay": "^6.0.9"
   },
   "keywords": [
     "nodejs",
