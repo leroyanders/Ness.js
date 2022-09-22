@@ -26,8 +26,6 @@ var modules = require('./modules');
 
 var chalk = require('chalk');
 var logging = require('webpack/lib/logging/runtime');
-var getCacheIdentifier = require('react-dev-utils/getCacheIdentifier');
-var reactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 var CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = function () {

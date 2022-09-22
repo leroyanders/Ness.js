@@ -4,7 +4,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
-exports.default = render;
+exports.render = render;
 exports.renderRoutes = renderRoutes;
 
 var _reactRouterDom = require("react-router-dom");
@@ -12,13 +12,29 @@ var _react = _interopRequireDefault(require("react"));
 var _client = _interopRequireDefault(require("react-dom/client"));
 var _reactRouterDom = require("react-router-dom");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+let _root;
+let _module;
+let _dom;
 
-function render(dom, container) {
-  const root = _client.default.createRoot(container);
+const root = typeof document !== 'undefined'? _client.default.createRoot(document.getElementById('root')) : {
+  render: () => {}
+};
+
+/*
+  Render client side components using render function.
+  Options: {
+    component: "Pass the component(F.e. <Router/>)",
+    module: "Pass the module, for hot reload"
+  }
+*/
+function render(dom, module_) {
+  window.module = module_;
+  window.dom = dom;
+
   root.render( /*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, dom));
 }
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 function renderRoutes(arr) {
@@ -37,4 +53,13 @@ function renderRoutes(arr) {
       }))
     });
   }));
+}
+
+if (typeof window !== 'undefined') {
+  // hot reload the components
+  setInterval(() => {
+    if (window.module?.hot) window.module.hot.accept(() => {
+      root.render(/*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, window.dom))
+    });
+  }, 100)
 }

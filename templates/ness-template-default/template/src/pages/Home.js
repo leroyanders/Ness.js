@@ -4,6 +4,7 @@ import axios from 'axios';
 // Page layout
 import { Helmet } from 'react-helmet';
 import { Page, Layout, Head } from 'nessapp/next/ui';
+import { NessComponent } from 'nessapp/types/component';
 
 // Home module stylesheet
 import '../styles/Home.module.scss';
@@ -21,7 +22,7 @@ class Home extends React.Component {
   }
 
   render() {
-    const { users, posts, application: { name } } = this.props.useServerSideProps();
+    const { application: { name } } = this.props.useServerSideProps();
 
     return (
       <Page>
@@ -34,20 +35,18 @@ class Home extends React.Component {
         <Layout>
           <div className="h-full absolute w-full">
             <div className="absolute main text-center py-10 m-auto w-full" style={{left: '50%', top: '50%', transform: 'translate(-50%,-50%)'}}>
-              <div className="container w-6/12 mx-auto">
+              <div className="container w-6/12 mx-auto sm:w-8/12 xs:w-full">
                 <h1 className="text-[50px] font-normal">
                   Welcome to <font className="text-blue-700">{name}!</font>
                 </h1>
                 
-                <p>
-                  Newest Experience of Server Side development 🌱
-                </p>
+                <p>Newest Experiences of Server Side development 🌱</p>
                 
                 <p className="p-5 mt-5 p-6 bg-white rounded-2xl text-gray-600">
                   Get started by editing: <span className="p-2 ml-2 rounded-full px-4 text-slate-700 border border-gray-200 dark:bg-gray-800 dark:border-gray-700">./src/pages/Home.js</span>
                 </p>
 
-                <div className="grid w-fit grid-cols-2 mx-auto mt-0">
+                <div className="w-fit grid-cols-2 mx-auto mt-0 md:grid lg:grid xl:grid xxl:grid">
                   {/* Documentation */}
                   <div className="p-6 max-w-sm bg-white rounded-2xl border border-gray-200 dark:bg-gray-800 dark:border-gray-700 m-5">
                     <a href="https://nessapp.vercel.app/docs/" target="_blank">
