@@ -8,6 +8,3 @@ import 'ness-tailwind/styles/base.scss';
 // prefer to use this instead classic React DOM function,
 // because it will discard server-side fetching
 render(<Router/>, document.getElementById('root'));
-
-// hot reload the components
-if (module.hot) module.hot.accept(() => root.unmount());

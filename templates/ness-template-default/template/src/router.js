@@ -23,3 +23,6 @@ export function Router() {
 }
 
 export default Routes;
+
+// hot reload the components
+if (module.hot) module.hot.accept(() => root.unmount());
