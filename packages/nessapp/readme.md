@@ -1,7 +1,7 @@
 ## Ness.js  
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/Ness.js/license)
 [![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
-[![Ness Version](https://img.shields.io/badge/v5.1.35-Ness.js-blue)]()
+[![Ness Version](https://img.shields.io/badge/v5.1.48-Ness.js-blue)]()
 [![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
 
 <i>

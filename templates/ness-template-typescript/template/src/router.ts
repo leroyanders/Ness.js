@@ -20,6 +20,3 @@ const Routes = [
 // Initialize router
 export const Router = () => renderRoutes(Routes)
 export default Routes;
-
-// hot reload the components
-if (module.hot) module.hot.accept();

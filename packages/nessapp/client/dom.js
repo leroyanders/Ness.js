@@ -4,6 +4,10 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
+exports.useContainer = useContainer;
+exports.useRefresh = useRefresh;
+exports.useDocument = useDocument;
+exports.useRoot = useRoot;
 exports.render = render;
 exports.renderRoutes = renderRoutes;
 
@@ -12,13 +16,35 @@ var _react = _interopRequireDefault(require("react"));
 var _client = _interopRequireDefault(require("react-dom/client"));
 var _reactRouterDom = require("react-router-dom");
 
-let _root;
-let _module;
-let _dom;
+const rootElement = (dom) => {
+  if (typeof document !== 'undefined') {
+    return _client.default.createRoot(dom);
+  } else {
+    return {
+      render: () => {}
+    };
+  }
+}
 
-const root = typeof document !== 'undefined'? _client.default.createRoot(document.getElementById('root')) : {
-  render: () => {}
-};
+function useRoot(doc) {
+  return window.component = doc;
+}
+
+function useContainer(element) {
+  return typeof window.rootContainer === "undefined"? window.rootContainer = rootElement(element) : window.rootContainer;
+}
+
+function useDocument(element) {
+  return window.component = element;
+}
+
+function useRefresh(module) {
+  if (module.hot) {
+    module.hot.accept(() => {
+      useContainer().render(/*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, window.component))
+    })
+  }
+}
 
 /*
   Render client side components using render function.
@@ -27,11 +53,11 @@ const root = typeof document !== 'undefined'? _client.default.createRoot(documen
     module: "Pass the module, for hot reload"
   }
 */
-function render(dom, module_) {
-  window.module = module_;
-  window.dom = dom;
+function render(options) {
+  const { root, document } = options;
 
-  root.render( /*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, dom));
+  // render the root element
+  return root.render( /*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, document));
 }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
@@ -53,13 +79,4 @@ function renderRoutes(arr) {
       }))
     });
   }));
-}
-
-if (typeof window !== 'undefined') {
-  // hot reload the components
-  setInterval(() => {
-    if (window.module?.hot) window.module.hot.accept(() => {
-      root.render(/*#__PURE__*/_react.default.createElement(_reactRouterDom.BrowserRouter, null, window.dom))
-    });
-  }, 100)
 }

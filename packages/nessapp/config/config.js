@@ -28,6 +28,38 @@ var chalk = require('chalk');
 var logging = require('webpack/lib/logging/runtime');
 var CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const makeLoaderFinder = loaderName => rule => {
+  // i.e.: /eslint-loader/
+  const loaderRegex = new RegExp(`[/\\\\]${loaderName}[/\\\\]`);
+
+  // Checks if there's a loader string in rule.loader matching loaderRegex.
+  const inLoaderString =
+    typeof rule.loader === 'string' && (rule.loader.match(loaderRegex) || rule.loader === loaderName);
+
+  // Checks if there is an object inside rule.use with loader matching loaderRegex, OR
+  // Checks another condition, if rule is not an object, but pure string (ex: "style-loader", etc)
+  const inUseArray =
+    Array.isArray(rule.use) &&
+    rule.use.find(
+      loader =>
+        (typeof loader.loader === 'string' &&
+          (loader.loader.match(loaderRegex)) || rule.loader === loaderName) ||
+        (typeof loader === 'string' && (loader.match(loaderRegex) || loader === loaderName))
+    );
+
+  return inUseArray || inLoaderString;
+};
+
+
+const babelLoaderFinder = makeLoaderFinder('babel-loader');
+const tsLoaderFinder = makeLoaderFinder('ts-loader');
+
+module.exports = {
+  babelLoaderFinder,
+  tsLoaderFinder,
+};
+
 module.exports = function () {
   var target = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'web';
   var env = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'dev';
@@ -98,6 +130,7 @@ module.exports = function () {
       extensions: [".ts", ".tsx", ".js"],
       
       alias: {
+        'process': require.resolve('process'),
         'webpack/hot/poll': require.resolve('webpack/hot/poll'),
         'react-native': 'react-native-web'
       }
@@ -117,14 +150,6 @@ module.exports = function () {
           test: /\.mjs$/,
           include: /node_modules/,
           type: 'javascript/auto'
-        },
-        {
-          test: /\.(ts|tsx)$/,
-          loader: 'ts-loader',
-          options: {
-              transpileOnly: true,
-          },
-          exclude: /node_modules/,
         },
         {
           test: /\.(js|jsx)$/,
@@ -154,18 +179,16 @@ module.exports = function () {
         {
           test: /\.s[ac]ss$/i,
           use: IS_WEB? [
-            devMode ? 'style-loader' : MiniCssExtractPlugin.loader,
-            // Creates `style` nodes from JS strings
-            // "style-loader",
-            // Compiles Sass to CSS
+            devMode ? 
+              'style-loader' 
+            : 
+              MiniCssExtractPlugin.loader,
             "css-loader",
-            // Translates CSS into CommonJS
             { 
               loader: 'postcss-loader', 
             },
             "sass-loader",
           ] : [
-            // Creates `style` nodes from JS strings
             {
               loader: require.resolve('url-loader'),
               options: {
@@ -174,7 +197,6 @@ module.exports = function () {
                 emitFile: IS_WEB
               }
             },
-            // Compiles Sass to CSS
             "sass-loader",
           ]
         }, 
@@ -204,6 +226,7 @@ module.exports = function () {
     config.output = {
       path: paths.appdeploy,
       publicPath: clientPublicPath,
+      libraryTarget: 'umd',
       filename: 'server.js',
     };
     
@@ -211,11 +234,16 @@ module.exports = function () {
 
     config.plugins = [
       new webpack.ProvidePlugin({
-        // Make a global `process` variable that points to the `process` package,
-        // because the `util` package expects there to be a global variable named `process`.
-        // Thanks to https://stackoverflow.com/a/65018686/14239942
         process: 'process/browser'
       }), 
+      new webpack.DefinePlugin({
+        PRODUCTION: JSON.stringify(true),
+        VERSION: JSON.stringify('5fa3b9'),
+        BROWSER_SUPPORTS_HTML5: true,
+        TWO: '1+1',
+        'typeof window': JSON.stringify('object'),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      }),
       new webpack.DefinePlugin(dotenv.stringified), 
       new HtmlWebpackPlugin()
     ];
@@ -252,12 +280,18 @@ module.exports = function () {
   if (IS_WEB) {
     config.plugins = [
       new webpack.ProvidePlugin({
-        // Make a global `process` variable that points to the `process` package,
-        // because the `util` package expects there to be a global variable named `process`.
-        // Thanks to https://stackoverflow.com/a/65018686/14239942
         process: 'process/browser'
       }), 
-      new webpack.DefinePlugin(dotenv.stringified), new AssetsPlugin({
+      new webpack.DefinePlugin({
+        PRODUCTION: JSON.stringify(true),
+        VERSION: JSON.stringify('5fa3b9'),
+        BROWSER_SUPPORTS_HTML5: true,
+        TWO: '1+1',
+        'typeof window': JSON.stringify('object'),
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      }),
+      new webpack.DefinePlugin(dotenv.stringified), 
+      new AssetsPlugin({
         path: paths.appdeploy,
         filename: 'assets.json'
       }), 
@@ -371,6 +405,14 @@ module.exports = function () {
           new webpack.HotModuleReplacementPlugin({
             multiStep: !useOnlyForClient
           }), 
+          new webpack.DefinePlugin({
+            PRODUCTION: JSON.stringify(true),
+            VERSION: JSON.stringify('5fa3b9'),
+            BROWSER_SUPPORTS_HTML5: true,
+            TWO: '1+1',
+            'typeof window': JSON.stringify('object'),
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          }),
           new webpack.DefinePlugin(dotenv.stringified) 
         ]
       );
@@ -390,6 +432,14 @@ module.exports = function () {
 
       config.plugins = [].concat(
         _toConsumableArray(config.plugins), [
+          new webpack.DefinePlugin({
+            PRODUCTION: JSON.stringify(true),
+            VERSION: JSON.stringify('5fa3b9'),
+            BROWSER_SUPPORTS_HTML5: true,
+            TWO: '1+1',
+            'typeof window': JSON.stringify('object'),
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+          }),
           new webpack.DefinePlugin(dotenv.stringified), 
 
           new MiniCssExtractPlugin({
@@ -541,12 +591,79 @@ module.exports = function () {
             console.log(
               chalk.bgBlue.bold(' SUCCESS '), 
               `🌱 NessApp started on: ${chalk.hex('#5590CB')
-                .bold('http://localhost:' + process.env.PORT || port)} and ${chalk.hex('#5590CB')
-                .bold('http://' + results['en0'] instanceof Object?results['en0'] [0] : 'http://localhost' + ':' + process.env.PORT || port)}`);
+              .bold('http://localhost:' + process.env.PORT || port)} and ${chalk.hex('#5590CB')
+              .bold('http://' + results['en0'] instanceof Object?results['en0'] [0] : 'http://localhost' + ':' + process.env.PORT || port)}`);
           },
         }
       })
   ]);
+
+  config.resolve.extensions = [...config.resolve.extensions, '.ts', '.tsx'];
+
+  const defaultOptions = {
+    useBabel: false,
+    tsLoader: {
+      transpileOnly: true,
+      experimentalWatchApi: true,
+    },
+    forkTsChecker: {
+      eslint: {
+        files: './src/**/*.{ts,tsx,js,jsx}',
+        options: {
+          config: '.eslintrc',
+        },
+      }
+    },
+  };
+  
+  const babelLoader = config.module.rules.find(babelLoaderFinder);
+  const { include } = babelLoader;
+  const options = Object.assign({}, defaultOptions);
+
+  if (!babelLoader) {
+    throw new Error(
+      `'babel-loader' was erased from config, we need it to define 'include' option for 'ts-loader'`
+    );
+  }
+
+  babelLoader.exclude = [/\.ts$/, /\.tsx$/];
+
+  const tsLoader = {
+    include,
+    test: /\.tsx?$/,
+    use: [
+      {
+        loader: require.resolve('ts-loader'),
+        options: Object.assign({}, defaultOptions.tsLoader, options.tsLoader),
+      },
+    ],
+  };
+
+  if (options.useBabel) tsLoader.use = [...babelLoader.use, ...tsLoader.use];
+  else {
+    config.module.rules = config.module.rules.filter(
+      rule => !babelLoaderFinder(rule)
+    );
+  }
+
+  config.module.rules.push(tsLoader);
+
+  if (IS_WEB) {
+    config.plugins.push(
+      new ForkTsCheckerWebpackPlugin(
+        Object.assign({}, defaultOptions.forkTsChecker, options.forkTsChecker)
+      )
+    );
+
+    if (IS_DEVELOPMENT) {
+      config.output.pathinfo = false;
+      config.optimization = {
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
+      };
+    }
+  }
 
   if (typeof plugins === 'object' && plugins.length > 0) {
     plugins.forEach(function (plugin) {
@@ -562,6 +679,18 @@ module.exports = function () {
       }
     });
   }
+
+  config.plugins.push(
+    new webpack.ProvidePlugin({
+      process: 'process/browser.js',
+    })
+  );
+  
+  config.plugins.push(
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+    })
+  )
 
   return config;
 };
