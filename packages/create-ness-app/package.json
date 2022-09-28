@@ -1,6 +1,6 @@
 {
   "name": "create-ness-app",
-  "version": "4.5.92",
+  "version": "4.5.94",
   "license": "MIT",
   "description": "Create Ness.js application using create-ness-app cli.",
   "author": "Leroy Wagner <leroy.wagner20@gmail.com>",

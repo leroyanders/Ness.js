@@ -170,11 +170,13 @@ const run = (root, name, version, originalDirectory, template, useYarn) => {
 
     getPackageInfo(tmp).then(async () => {
         const dependencies = ['nessapp', 'ness-tailwind', tmp];
+        const devDependencies = ['react-error-overlay@6.0.9'];
 
         console.log(chalk.green(`Installing: ${dependencies.join(', ')}`));
         console.log('\nInstalling packages. This might take a couple of minutes.');
 
         await install(root, dependencies);
+        await installDev(root, devDependencies);
 
         console.log(chalk.blue(`\nInstalling ${tmp === 'ness-template-default' ? 'default template' : `${tmp} template.`}`));
 
@@ -313,6 +315,33 @@ const install = (root, dependencies) => {
           '--save-exact',
           '--loglevel',
           'error',
+        ].concat(dependencies);
+
+        const child = spawn(command, args, { stdio: 'inherit' });
+
+        child.on('close', code => {
+            if (code !== 0) {
+                reject({
+                    command: `${command} ${args.join(' ')}`,
+                });
+                return;
+            }
+            resolve();
+        });
+    });
+}
+
+const installDev = (root, dependencies) => {
+    return new Promise((resolve, reject) => {
+        var command = 'npm';
+        var args = [
+          'install',
+          '--no-audit',
+          '--save',
+          '--save-exact',
+          '--loglevel',
+          'error',
+          '-D'
         ].concat(dependencies);
 
         const child = spawn(command, args, { stdio: 'inherit' });
