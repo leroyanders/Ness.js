@@ -28,7 +28,12 @@ Here is the first one to get you started:
 ```jsx
 import React from 'react';
 import { Router } from '../router';
-import { render, useRefresh, useRoot, useContainer } from 'nessapp/client/dom';
+import { 
+  render, 
+  useRefresh, 
+  useRoot, 
+  useContainer 
+} from 'nessapp/client/dom';
 
 // prefer to use this instead classic React DOM function,
 // because it will discard server-side fetching
