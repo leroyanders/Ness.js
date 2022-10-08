@@ -28,9 +28,14 @@ Here is the first one to get you started:
 ```jsx
 import React from 'react';
 import { Router } from '../router';
-import render from 'nessapp/client/dom'
+import { render, useRefresh, useRoot, useContainer } from 'nessapp/client/dom';
 
-render(<Router/>, document.getElementById('root'));
+// prefer to use this instead classic React DOM function,
+// because it will discard server-side fetching
+const document = useRoot(<Router/>);
+const root = useContainer(document.getElementById('root'));
+
+render({document, root, module: useRefresh(module)});
 ```
 
 This example will render page based your route into a container on the page.
