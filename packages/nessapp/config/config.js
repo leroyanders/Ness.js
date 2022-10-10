@@ -22,13 +22,15 @@ var errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 var WebpackBar = require('webpackbar');
 var { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 
-var modules = require('./modules');
+var modules = require('./modules'); 
 
 var chalk = require('chalk');
 var logging = require('webpack/lib/logging/runtime');
 var CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
+const tsExists = fs.existsSync(path.join(__dirname, 'tsconfig.json'));
+
 const makeLoaderFinder = loaderName => rule => {
   // i.e.: /eslint-loader/
   const loaderRegex = new RegExp(`[/\\\\]${loaderName}[/\\\\]`);
@@ -639,21 +641,24 @@ module.exports = function () {
     ],
   };
 
-  if (options.useBabel) tsLoader.use = [...babelLoader.use, ...tsLoader.use];
-  else {
-    config.module.rules = config.module.rules.filter(
-      rule => !babelLoaderFinder(rule)
-    );
-  }
-
-  config.module.rules.push(tsLoader);
-
   if (IS_WEB) {
-    config.plugins.push(
-      new ForkTsCheckerWebpackPlugin(
-        Object.assign({}, defaultOptions.forkTsChecker, options.forkTsChecker)
-      )
-    );
+    if(tsExists) {
+
+      if (options.useBabel) tsLoader.use = [...babelLoader.use, ...tsLoader.use];
+      else {
+        config.module.rules = config.module.rules.filter(
+          rule => !babelLoaderFinder(rule)
+        );
+      }
+
+      config.module.rules.push(tsLoader);
+
+      config.plugins.push(
+        new ForkTsCheckerWebpackPlugin(
+          Object.assign({}, defaultOptions.forkTsChecker, options.forkTsChecker)
+        )
+      );
+    }
 
     if (IS_DEVELOPMENT) {
       config.output.pathinfo = false;
