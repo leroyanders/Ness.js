@@ -5,21 +5,24 @@
   </picture>
 </p>
 
-## Ness.js  
-[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/leroywagner/Ness.js/license)
-[![Cypress.io](https://img.shields.io/badge/tested%20with-Cypress-04C38E.svg)](https://www.cypress.io/)
-[![Ness Version](https://img.shields.io/badge/v4.5.76-Ness.js-blue)]()
-[![Ness Version](https://img.shields.io/badge/Contribute%20with-Gitpod-908a85?logo=gitpod)]()
+## Ness.js
+[![Build Status][build-badge]][build] [![Version][version-badge]][package] [![MIT License][license-badge]][license] [![PRs Welcome][prs-welcome-badge]][prs-welcome]
+
+### About
 
 *Ness.js - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Supports installing our plugins and plugins from your application directly, will save your development time and provide more-userful experience.*
 
 ## Documentation
 
-You can find the Ness.js documentation [on the framework website](https://nessapp.vercel.com/).  
+- [Getting Started](./docs/docs/getting-started/create-new-app.md)
+- [Commands](./docs/docs/getting-started/commands.md)
+- [Plugins](./docs/docs/plugins/your-own-plugin.md)
+- [Templates](./docs/docs/templates/your-own-template.md)
+- [Examples](./docs/docs/examples/common.md)
 
-Check out the [Getting Started](https://nessapp.vercel.app/docs/getting-started/create-new-app) page for a quick overview.
+You can find full documentation [on the official website](https://nessapp.vercel.com/).  
 
-## Examples
+## Firts view
 
 We have several examples [on the website](https://nessapp.vercel.app/). 
 
@@ -35,12 +38,11 @@ import {
   useContainer 
 } from 'nessapp/client/dom';
 
-// prefer to use this instead classic React DOM function,
-// because it will discard server-side fetching
-const document = useRoot(<Router/>);
-const root = useContainer(document.getElementById('root'));
-
-render({document, root, module: useRefresh(module)});
+render({
+  document: useRoot(<Router/>), 
+  root: useContainer(document.getElementById('root')), 
+  module: useRefresh(module)
+});
 ```
 
 This example will render page based your route into a container on the page.
@@ -65,4 +67,17 @@ To help you get your feet wet and get you familiar with our contribution process
 
 ### License
 
-Ness.js is under [MIT license](./license).
+Everything inside this repository is [MIT licensed](./license).
+
+
+<!-- badges -->
+
+[build-badge]: https://img.shields.io/circleci/project/github/nessapp/master.svg?style=flat-square
+[build]: https://circleci.com/gh/nessapp/tree/master
+[version-badge]: https://img.shields.io/npm/v/nessapp.svg?style=flat-square
+[package]: https://www.npmjs.com/package/nessapp
+[license-badge]: https://img.shields.io/npm/l/nessapp?style=flat-square
+[license]: https://opensource.org/licenses/MIT
+[prs-welcome-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
+[prs-welcome]: http://makeapullrequest.com
+[lean-core-badge]: https://img.shields.io/badge/Lean%20Core-Extracted-brightgreen.svg?style=flat-square
