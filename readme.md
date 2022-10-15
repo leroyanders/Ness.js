@@ -72,8 +72,8 @@ Everything inside this repository is [MIT licensed](./license).
 
 <!-- badges -->
 
-[build-badge]: https://img.shields.io/circleci/project/github/nessapp/master.svg?style=flat-square
-[build]: https://circleci.com/gh/nessapp/tree/master
+[build-badge]: https://img.shields.io/circleci/project/github/leroywagner/Ness.js/master.svg?style=flat-square
+[build]: https://circleci.com/gh/leroywagner/Ness.js/tree/master
 [version-badge]: https://img.shields.io/npm/v/nessapp.svg?style=flat-square
 [package]: https://www.npmjs.com/package/nessapp
 [license-badge]: https://img.shields.io/npm/l/nessapp?style=flat-square
