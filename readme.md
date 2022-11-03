@@ -1,12 +1,4 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/106757584/188333735-fe92e2d8-faea-4405-8fab-b77cd32781ac.svg">
-    <img src="https://user-images.githubusercontent.com/106757584/188333666-5ee6f31f-0672-411e-b59e-db6c518e0e70.svg">
-  </picture>
-</p>
-
-## Ness.js
-[![Build Status][build-badge]][build] [![Version][version-badge]][package] [![MIT License][license-badge]][license] [![PRs Welcome][prs-welcome-badge]][prs-welcome]
+# Ness.js [![Build Status][build-badge]][build] [![Version][version-badge]][package] [![MIT License][license-badge]][license] [![PRs Welcome][prs-welcome-badge]][prs-welcome]
 
 ### About
 
