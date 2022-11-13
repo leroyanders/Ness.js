@@ -11,6 +11,6 @@
   "dependencies": {
     "axios": "^0.27.2",
     "ness-tailwind": "1.3.8",
-    "nessapp": "4.0.2"
+    "nessapp": "4.6.32"
   }
 }
