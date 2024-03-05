@@ -9,7 +9,7 @@
     "generate": "nessapp generate"
   },
   "dependencies": {
-    "axios": "^0.27.2",
+    "axios": "^0.28.0",
     "ness-tailwind": "1.4.3",
     "nessapp": "4.6.32"
   }
