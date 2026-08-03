@@ -1,11 +1,11 @@
 {
-  "name": "@ness/typescript",
+  "name": "@nessframework/typescript",
   "version": "3.0.0",
   "type": "module",
   "description": "The typescript template for Create Ness App.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "templates/typescript"
   },
   "engines": {

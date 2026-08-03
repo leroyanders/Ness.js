@@ -1,1 +1,1 @@
-export * from '@ness/assets/font';
+export * from '@nessframework/assets/font';

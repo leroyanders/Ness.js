@@ -10,8 +10,8 @@ The command verifies:
 
 - Node.js satisfies the minimum version
 - `package.json` exists
-- a compatible `@ness/core` is installed
-- a compatible `@ness/nest` is installed
+- a compatible `@nessframework/core` is installed
+- a compatible `@nessframework/nest` is installed
 - `ness.config.mjs` (or a legacy Vite configuration) is present
 - `app/root` exists
 - the application route directory exists

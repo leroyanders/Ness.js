@@ -1,2 +1,2 @@
-export { default } from '@ness/router';
-export * from '@ness/router';
+export { default } from '@nessframework/router';
+export * from '@nessframework/router';

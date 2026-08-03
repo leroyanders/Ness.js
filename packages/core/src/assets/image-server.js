@@ -1,1 +1,1 @@
-export * from '@ness/assets/image/server';
+export * from '@nessframework/assets/image/server';

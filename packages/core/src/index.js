@@ -1,4 +1,4 @@
-export { Image, Script } from '@ness/assets';
+export { Image, Script } from '@nessframework/assets';
 export {
   Form,
   Link,

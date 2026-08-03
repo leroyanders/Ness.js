@@ -1,10 +1,14 @@
 {
-  "name": "@ness/cli",
+  "name": "@nessframework/cli",
   "version": "6.0.0",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "repository": "git@github.com:leroyanders/ness.js.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/cli"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.js"

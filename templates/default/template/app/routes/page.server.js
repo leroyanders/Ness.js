@@ -1,4 +1,4 @@
-import { cached } from '@ness/cache';
+import { cached } from '@nessframework/cache';
 
 const loadFramework = cached(
   async () => ({

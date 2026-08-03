@@ -108,7 +108,7 @@ export default function Home() {
               </div>
               <div className={styles.installCommand}>
                 <span>$</span>
-                <code>npm install -g @ness/cli</code>
+                <code>npm install -g @nessframework/cli</code>
                 <small>Node 16+</small>
               </div>
             </div>
@@ -166,8 +166,8 @@ export default function Home() {
                 <span className={styles.prompt}>$</span> ness new studio
                 --template typescript
                 {'\n'}
-                <span className={styles.success}>✓</span> Installed @ness/core
-                and @ness/cli
+                <span className={styles.success}>✓</span> Installed
+                @nessframework/core and @nessframework/cli
                 {'\n'}
                 <span className={styles.prompt}>$</span> ness g controller users
                 {'\n'}

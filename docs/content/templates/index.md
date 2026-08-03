@@ -6,13 +6,13 @@ slug: /templates
 
 Every official template uses ESM, React Router for UI and SSR, and NestJS controllers under `app/server` for public APIs.
 
-| Alias        | Package            | Best for                                       |
-| ------------ | ------------------ | ---------------------------------------------- |
-| `default`    | `@ness/default`    | JavaScript applications and first projects     |
-| `typescript` | `@ness/typescript` | Strict TypeScript full-stack applications      |
-| `minimal`    | `@ness/minimal`    | Small prototypes with the fewest source files  |
-| `api`        | `@ness/api`        | NestJS-first services with a small React UI    |
-| `dashboard`  | `@ness/dashboard`  | Internal tools, consoles, and admin interfaces |
+| Alias        | Package                     | Best for                                       |
+| ------------ | --------------------------- | ---------------------------------------------- |
+| `default`    | `@nessframework/default`    | JavaScript applications and first projects     |
+| `typescript` | `@nessframework/typescript` | Strict TypeScript full-stack applications      |
+| `minimal`    | `@nessframework/minimal`    | Small prototypes with the fewest source files  |
+| `api`        | `@nessframework/api`        | NestJS-first services with a small React UI    |
+| `dashboard`  | `@nessframework/dashboard`  | Internal tools, consoles, and admin interfaces |
 
 ```bash
 ness new my-app --template minimal

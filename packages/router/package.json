@@ -1,5 +1,5 @@
 {
-  "name": "@ness/router",
+  "name": "@nessframework/router",
   "version": "6.0.0",
   "description": "File-system routing and Vite integration for Ness.js.",
   "type": "module",

@@ -2,26 +2,26 @@
 sidebar_position: 2
 ---
 
-# @ness/nest
+# @nessframework/nest
 
-`@ness/nest` integrates a NestJS 10 application into Ness development and production servers.
+`@nessframework/nest` integrates a NestJS 10 application into Ness development and production servers.
 
 ## Installation
 
 New Ness applications include the integration. Add it to an existing application with:
 
 ```bash
-ness add @ness/nest
+ness add @nessframework/nest
 npm install @nestjs/common@10.4.22 @nestjs/core@10.4.22 reflect-metadata@0.2.2 rxjs@7.8.2
 ```
 
 ## Unified integration
 
 ```js title="ness.config.mjs"
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
-import nest from '@ness/nest';
-import { nestServer } from '@ness/nest/server';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import nest from '@nessframework/nest';
+import { nestServer } from '@nessframework/nest/server';
 
 export default defineNessConfig({
   vite: { plugins: [ness({ plugins: [nest()] })] },

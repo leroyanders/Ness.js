@@ -21,7 +21,7 @@ ness update
 npm run check
 ```
 
-Without package arguments, Ness discovers installed packages in the `@ness/*` scope and updates them to the `latest` npm tag.
+Without package arguments, Ness discovers installed packages in the `@nessframework/*` scope and updates them to the `latest` npm tag.
 
 Update selected packages when a smaller change is required:
 

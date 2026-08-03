@@ -1,11 +1,11 @@
 {
-  "name": "@ness/dashboard",
+  "name": "@nessframework/dashboard",
   "version": "1.0.0",
   "type": "module",
   "description": "Dashboard starter for Ness.js and NestJS.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "templates/dashboard"
   },
   "engines": {

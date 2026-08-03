@@ -1,4 +1,4 @@
-# @ness/default
+# @nessframework/default
 
 Official JavaScript starter for `ness new`.
 

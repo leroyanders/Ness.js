@@ -20,7 +20,7 @@ const capitalize = (str, lower = false) =>
     match.toUpperCase(),
   );
 const page = name => `import React from 'react';
-import { Page, Layout, Head } from '@ness/core/next/ui';
+import { Page, Layout, Head } from '@nessframework/core/next/ui';
 
 class ${capitalize(name)} extends React.Component {
     constructor(props) {

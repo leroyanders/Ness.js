@@ -1,11 +1,11 @@
 {
-  "name": "@ness/minimal",
+  "name": "@nessframework/minimal",
   "version": "1.0.0",
   "type": "module",
   "description": "Minimal TypeScript starter for Ness.js.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "templates/minimal"
   },
   "engines": {

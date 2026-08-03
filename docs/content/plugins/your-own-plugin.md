@@ -1,6 +1,6 @@
 # Create a plugin
 
-Ness 6 plugins use the standard Vite plugin contract. Public official plugins use the `@ness/*` scope; community plugins can use any npm package name.
+Ness 6 plugins use the standard Vite plugin contract. Public official plugins use the `@nessframework/*` scope; community plugins can use any npm package name.
 
 ## Vite plugin
 
@@ -22,8 +22,8 @@ export default function example(options = {}) {
 Enable it inside the Ness Vite integration:
 
 ```js title="ness.config.mjs" showLineNumbers
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
 import example from 'ness-example';
 
 export default defineNessConfig({

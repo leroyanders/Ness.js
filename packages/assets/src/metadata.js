@@ -1,4 +1,4 @@
-import '@ness/server/web-api';
+import '@nessframework/server/web-api';
 
 function compact(object) {
   return Object.fromEntries(

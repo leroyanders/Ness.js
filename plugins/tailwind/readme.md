@@ -1,9 +1,9 @@
-# @ness/tailwind
+# @nessframework/tailwind
 
 ## Installation
 
 ```bash
-npm install @ness/tailwind
+npm install @nessframework/tailwind
 ```
 
 ## Configuration
@@ -19,8 +19,8 @@ Ness Tailwind uses Tailwind CSS 4 with automatic source detection and CSS-first 
 For Ness 6, enable it in Vite:
 
 ```js
-import { ness } from '@ness/router/vite';
-import { tailwind } from '@ness/tailwind';
+import { ness } from '@nessframework/router/vite';
+import { tailwind } from '@nessframework/tailwind';
 
 export default {
   plugins: [ness({ plugins: [tailwind()] })],
@@ -30,5 +30,5 @@ export default {
 The base stylesheet is available as an explicit package export:
 
 ```css
-@import '@ness/tailwind/styles/base.css';
+@import '@nessframework/tailwind/styles/base.css';
 ```

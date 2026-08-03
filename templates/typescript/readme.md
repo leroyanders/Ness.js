@@ -1,4 +1,4 @@
-# @ness/typescript
+# @nessframework/typescript
 
 Official strict TypeScript starter for `ness new`.
 

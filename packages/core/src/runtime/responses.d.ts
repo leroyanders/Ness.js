@@ -1,1 +1,1 @@
-export * from '@ness/server/responses';
+export * from '@nessframework/server/responses';

@@ -7,7 +7,7 @@ sidebar_position: 1
 Install Node.js 16 or newer, then run:
 
 ```bash
-npx @ness/cli@latest new my-app
+npx @nessframework/cli@latest new my-app
 cd my-app
 npm run dev
 ```
@@ -15,7 +15,7 @@ npm run dev
 The installed command is also available globally:
 
 ```bash
-npm install --global @ness/cli@latest
+npm install --global @nessframework/cli@latest
 ness new my-app
 ```
 

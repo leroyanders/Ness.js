@@ -6,7 +6,7 @@ export {
   useParams,
   useSearchParams,
 } from 'react-router';
-export { Image, Script } from '@ness/assets';
+export { Image, Script } from '@nessframework/assets';
 export {
   prefetch,
   reportWebVitals,

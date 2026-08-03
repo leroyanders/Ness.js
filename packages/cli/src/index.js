@@ -185,7 +185,7 @@ export async function init() {
 
   program
     .command('update')
-    .description('update installed @ness packages')
+    .description('update installed @nessframework packages')
     .argument('[packages...]', 'specific package names or aliases')
     .option('--tag <tag>', 'npm distribution tag', 'latest')
     .option('--dry-run', 'print the npm command without running it')

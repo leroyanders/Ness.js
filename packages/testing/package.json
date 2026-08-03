@@ -1,5 +1,5 @@
 {
-  "name": "@ness/testing",
+  "name": "@nessframework/testing",
   "version": "6.0.0",
   "description": "Test utilities for Ness.js applications.",
   "type": "module",
@@ -14,8 +14,8 @@
     "readme.md"
   ],
   "dependencies": {
-    "@ness/cache": "^6.0.0",
-    "@ness/server": "^6.0.0",
+    "@nessframework/cache": "^6.0.0",
+    "@nessframework/server": "^6.0.0",
     "react-router": "8.3.0"
   },
   "engines": {

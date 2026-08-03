@@ -15,7 +15,7 @@ app/
         └── users.module.ts
 ```
 
-New applications include `@ness/nest`, NestJS 10, `reflect-metadata`, and RxJS. NestJS 10 is used because the framework maintains Node.js 16 compatibility; NestJS 11 requires Node.js 20 or newer.
+New applications include `@nessframework/nest`, NestJS 10, `reflect-metadata`, and RxJS. NestJS 10 is used because the framework maintains Node.js 16 compatibility; NestJS 11 requires Node.js 20 or newer.
 
 ## Root module
 
@@ -73,13 +73,13 @@ The generator writes Nest modules under `app/server` and registers controllers, 
 
 ## Development and production
 
-The `@ness/nest` Vite plugin compiles decorators with `emitDecoratorMetadata`, mounts the application during `ness dev`, and reloads it when `app/server` changes. `ness build` writes the ESM backend to `build/nest`.
+The `@nessframework/nest` Vite plugin compiles decorators with `emitDecoratorMetadata`, mounts the application during `ness dev`, and reloads it when `app/server` changes. `ness build` writes the ESM backend to `build/nest`.
 
 The production bridge is configured in `ness.config.mjs`:
 
 ```js
-import { defineNessConfig } from '@ness/router';
-import { nestServer } from '@ness/nest/server';
+import { defineNessConfig } from '@nessframework/router';
+import { nestServer } from '@nessframework/nest/server';
 
 export default defineNessConfig({
   server: { configureServer: nestServer({ prefix: 'api' }) },

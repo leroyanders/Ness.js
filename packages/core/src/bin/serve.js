@@ -4,10 +4,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequestListener } from '@remix-run/node-fetch-server';
-import { createImageHandler } from '@ness/assets/image/server';
-import { getCache, setCache } from '@ness/cache';
-import { registerInstrumentation } from '@ness/instrumentation';
-import { createNessRequestHandler } from '@ness/server';
+import { createImageHandler } from '@nessframework/assets/image/server';
+import { getCache, setCache } from '@nessframework/cache';
+import { registerInstrumentation } from '@nessframework/instrumentation';
+import { createNessRequestHandler } from '@nessframework/server';
 import express from 'express';
 
 async function loadServerConfig(root) {

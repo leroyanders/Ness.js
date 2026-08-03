@@ -1,5 +1,5 @@
 {
-  "name": "@ness/instrumentation",
+  "name": "@nessframework/instrumentation",
   "version": "6.0.0",
   "description": "Server instrumentation and Web Vitals for Ness.js.",
   "type": "module",

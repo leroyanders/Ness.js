@@ -1,5 +1,5 @@
 {
-  "name": "@ness/server",
+  "name": "@nessframework/server",
   "version": "6.0.0",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
   "type": "module",
@@ -22,8 +22,8 @@
     "readme.md"
   ],
   "dependencies": {
-    "@ness/cache": "^6.0.0",
-    "@ness/instrumentation": "^6.0.0",
+    "@nessframework/cache": "^6.0.0",
+    "@nessframework/instrumentation": "^6.0.0",
     "node-fetch": "^3.3.2",
     "react-router": "8.3.0"
   },

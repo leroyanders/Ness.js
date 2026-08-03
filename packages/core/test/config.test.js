@@ -36,7 +36,7 @@ test('loader finder supports string and object loader declarations', () => {
 });
 
 test('plugin loader prefers a named legacy install hook', async () => {
-  const plugin = await loadPlugin('@ness/security');
+  const plugin = await loadPlugin('@nessframework/security');
   const config = plugin.install({ devServer: {} }, { target: 'web' });
   assert.equal(config.devServer.headers['X-Frame-Options'], 'DENY');
 });

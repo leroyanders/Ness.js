@@ -28,7 +28,7 @@ function prepareUnifiedConfig(command, args, cwd) {
   const configUrl = pathToFileURL(configFile).href;
   fs.writeFileSync(
     adapter,
-    `import config from ${JSON.stringify(configUrl)};\nimport {resolveNessRouterConfig} from '@ness/router';\nexport default resolveNessRouterConfig(config, ${JSON.stringify(cwd)});\n`,
+    `import config from ${JSON.stringify(configUrl)};\nimport {resolveNessRouterConfig} from '@nessframework/router';\nexport default resolveNessRouterConfig(config, ${JSON.stringify(cwd)});\n`,
   );
   return {
     args:
@@ -56,7 +56,11 @@ export async function runRouterCommand(
 }
 
 export async function startProductionServer(options = {}, cwd = process.cwd()) {
-  const executable = resolvePackageBin('@ness/core', cwd, 'ness-serve');
+  const executable = resolvePackageBin(
+    '@nessframework/core',
+    cwd,
+    'ness-serve',
+  );
   const build = path.resolve(cwd, options.build || 'build/server/index.js');
   if (!fs.existsSync(build)) {
     throw new Error(

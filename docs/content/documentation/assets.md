@@ -3,7 +3,7 @@
 ## Metadata
 
 ```tsx
-import { defineMetadata } from '@ness/assets/metadata';
+import { defineMetadata } from '@nessframework/assets/metadata';
 
 export const meta = () =>
   defineMetadata({
@@ -20,7 +20,7 @@ export const meta = () =>
 ## Images
 
 ```tsx
-import { Image } from '@ness/assets/image';
+import { Image } from '@nessframework/assets/image';
 
 <Image
   src="/hero.jpg"

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRoutesStub } from 'react-router';
-import { MemoryCacheAdapter, NessCache } from '@ness/cache';
-import '@ness/server/web-api';
+import { MemoryCacheAdapter, NessCache } from '@nessframework/cache';
+import '@nessframework/server/web-api';
 
 function createTestRequest(pathname = '/', init = {}) {
   return new Request(new URL(pathname, 'http://ness.test'), init);

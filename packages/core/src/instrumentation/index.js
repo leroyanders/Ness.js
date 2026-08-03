@@ -1,1 +1,1 @@
-export * from '@ness/instrumentation';
+export * from '@nessframework/instrumentation';

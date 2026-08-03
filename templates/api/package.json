@@ -1,11 +1,11 @@
 {
-  "name": "@ness/api",
+  "name": "@nessframework/api",
   "version": "1.0.0",
   "type": "module",
   "description": "NestJS API-first starter for Ness.js.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "templates/api"
   },
   "engines": {

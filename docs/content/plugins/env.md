@@ -2,7 +2,7 @@
 sidebar_position: 5
 ---
 
-# @ness/env
+# @nessframework/env
 
 Validates environment variables before the application starts or builds. Validation errors contain variable names, but never print their values.
 
@@ -11,9 +11,9 @@ ness add env --dev
 ```
 
 ```js title="ness.config.mjs" showLineNumbers
-import env from '@ness/env';
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
+import env from '@nessframework/env';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
 
 export default defineNessConfig({
   vite: {

@@ -16,19 +16,33 @@ export async function doctor(cwd = process.cwd()) {
   add('package.json', fs.existsSync(path.join(cwd, 'package.json')), cwd);
   try {
     const core = fs.readJsonSync(
-      path.join(resolvePackageDirectory('@ness/core', cwd), 'package.json'),
+      path.join(
+        resolvePackageDirectory('@nessframework/core', cwd),
+        'package.json',
+      ),
     );
-    add('@ness/core', semver.satisfies(core.version, '^6.0.0'), core.version);
+    add(
+      '@nessframework/core',
+      semver.satisfies(core.version, '^6.0.0'),
+      core.version,
+    );
   } catch (error) {
-    add('@ness/core', false, error.message);
+    add('@nessframework/core', false, error.message);
   }
   try {
     const nest = fs.readJsonSync(
-      path.join(resolvePackageDirectory('@ness/nest', cwd), 'package.json'),
+      path.join(
+        resolvePackageDirectory('@nessframework/nest', cwd),
+        'package.json',
+      ),
     );
-    add('@ness/nest', semver.satisfies(nest.version, '^1.0.0'), nest.version);
+    add(
+      '@nessframework/nest',
+      semver.satisfies(nest.version, '^1.0.0'),
+      nest.version,
+    );
   } catch (error) {
-    add('@ness/nest', false, error.message);
+    add('@nessframework/nest', false, error.message);
   }
   add(
     'Ness config',
@@ -80,12 +94,12 @@ export async function printEnvironmentInfo() {
         Binaries: ['Node', 'npm', 'Yarn'],
         Browsers: ['Chrome', 'Edge', 'Firefox', 'Safari'],
         npmPackages: [
-          '@ness/core',
-          '@ness/nest',
+          '@nessframework/core',
+          '@nessframework/nest',
           '@nestjs/common',
           '@nestjs/core',
         ],
-        npmGlobalPackages: ['@ness/cli'],
+        npmGlobalPackages: ['@nessframework/cli'],
       },
       { duplicates: true, showNotFound: true },
     ),

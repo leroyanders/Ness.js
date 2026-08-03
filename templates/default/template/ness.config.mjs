@@ -1,7 +1,7 @@
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
-import nest from '@ness/nest';
-import { nestServer } from '@ness/nest/server';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import nest from '@nessframework/nest';
+import { nestServer } from '@nessframework/nest/server';
 
 const rsc = process.env.NESS_EXPERIMENTAL_RSC === 'true';
 

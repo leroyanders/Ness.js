@@ -1,11 +1,11 @@
-import analyzer from '@ness/analyzer';
-import compression from '@ness/compression';
-import env from '@ness/env';
-import { ness } from '@ness/router/vite';
-import nest from '@ness/nest';
-import { nestServer } from '@ness/nest/server';
-import security from '@ness/security';
-import { tailwind } from '@ness/tailwind';
+import analyzer from '@nessframework/analyzer';
+import compression from '@nessframework/compression';
+import env from '@nessframework/env';
+import { ness } from '@nessframework/router/vite';
+import nest from '@nessframework/nest';
+import { nestServer } from '@nessframework/nest/server';
+import security from '@nessframework/security';
+import { tailwind } from '@nessframework/tailwind';
 
 ness({
   plugins: [

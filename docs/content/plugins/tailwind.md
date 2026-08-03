@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# @ness/tailwind
+# @nessframework/tailwind
 
 This plugin provides the ability to use Tailwind CSS.
 
@@ -23,15 +23,15 @@ ness add tailwind --dev
 Tailwind CSS 4 discovers source files automatically and uses CSS-first configuration.
 
 ```js showLineNumbers
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
-import { tailwind } from '@ness/tailwind';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import { tailwind } from '@nessframework/tailwind';
 
 export default defineNessConfig({
   vite: { plugins: [ness({ plugins: [tailwind()] })] },
 });
 ```
 
-Import the optional base stylesheet with `@import '@ness/tailwind/styles/base.css';`.
+Import the optional base stylesheet with `@import '@nessframework/tailwind/styles/base.css';`.
 
 For custom themes and sources, see the [Tailwind CSS documentation](https://tailwindcss.com/docs/theme).

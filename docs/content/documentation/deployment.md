@@ -9,14 +9,14 @@ npm run start:prod
 
 The starter Dockerfile uses the same commands. Set `HOST`, `PORT`, and server-only environment variables at runtime.
 
-`@ness/deployment` exposes Node/Express listeners, serverless functions, Edge `fetch` adapters, health checks, and graceful shutdown. Applications targeting Edge must avoid Node-only dependencies such as the built-in Sharp image optimizer and in-memory Node cache.
+`@nessframework/deployment` exposes Node/Express listeners, serverless functions, Edge `fetch` adapters, health checks, and graceful shutdown. Applications targeting Edge must avoid Node-only dependencies such as the built-in Sharp image optimizer and in-memory Node cache.
 
 ## Instrumentation
 
 Add instrumentation to `ness.config.mjs`:
 
 ```js
-import { defineNessConfig } from '@ness/router';
+import { defineNessConfig } from '@nessframework/router';
 
 export default defineNessConfig({
   instrumentation: {

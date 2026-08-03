@@ -7,7 +7,7 @@ Ness.js is a full-stack React framework with a NestJS backend. Version 6 combine
 Node.js 16 or newer is required.
 
 ```bash
-npx @ness/cli@latest new my-app
+npx @nessframework/cli@latest new my-app
 cd my-app
 npm run dev
 ```
@@ -67,7 +67,7 @@ app/
 
 ```tsx
 // app/routes/products/page.server.ts
-import { cached } from '@ness/cache';
+import { cached } from '@nessframework/cache';
 
 const getProducts = cached(() => db.product.findMany(), {
   key: 'products',
@@ -103,50 +103,50 @@ ness routes --json      Inspect the route tree
 ness g page blog/[slug] Generate a route module
 ness g service users    Generate a server service
 ness g controller users Generate and register a Nest controller
-ness add tailwind       Install @ness/tailwind
-ness update             Update installed @ness packages
+ness add tailwind       Install @nessframework/tailwind
+ness update             Update installed @nessframework packages
 ness clean              Remove generated output
 ness doctor             Diagnose an application
 ```
 
 ## Packages
 
-- `@ness/core` — client runtime and backward-compatible umbrella exports
-- `@ness/router` — unified configuration, file routing, and Vite integration
-- `@ness/server` — Web request handler, middleware, redirects, rewrites, and responses
-- `@ness/cache` — cache profiles, SWR, deduplication, tags, and path invalidation
-- `@ness/assets` — optimized images, fonts, scripts, and metadata
-- `@ness/instrumentation` — lifecycle hooks and Core Web Vitals
-- `@ness/deployment` — Node, Express, serverless, and Edge adapters
-- `@ness/testing` — route, request, cache, and response test helpers
-- `@ness/cli` — the `ness` command
-- `@ness/default` — JavaScript starter
-- `@ness/typescript` — strict TypeScript starter
-- `@ness/minimal` — compact TypeScript starter
-- `@ness/api` — NestJS API-first starter with a users resource
-- `@ness/dashboard` — dashboard UI with NestJS metrics endpoints
-- `@ness/nest` — NestJS server routes, compiler, and production bridge
-- `@ness/tailwind` — Tailwind CSS 4 integration
-- `@ness/security` — secure development and preview headers
-- `@ness/env` — environment validation
-- `@ness/compression` — Gzip and Brotli build assets
-- `@ness/analyzer` — bundle reports and size budgets
+- `@nessframework/core` — client runtime and backward-compatible umbrella exports
+- `@nessframework/router` — unified configuration, file routing, and Vite integration
+- `@nessframework/server` — Web request handler, middleware, redirects, rewrites, and responses
+- `@nessframework/cache` — cache profiles, SWR, deduplication, tags, and path invalidation
+- `@nessframework/assets` — optimized images, fonts, scripts, and metadata
+- `@nessframework/instrumentation` — lifecycle hooks and Core Web Vitals
+- `@nessframework/deployment` — Node, Express, serverless, and Edge adapters
+- `@nessframework/testing` — route, request, cache, and response test helpers
+- `@nessframework/cli` — the `ness` command
+- `@nessframework/default` — JavaScript starter
+- `@nessframework/typescript` — strict TypeScript starter
+- `@nessframework/minimal` — compact TypeScript starter
+- `@nessframework/api` — NestJS API-first starter with a users resource
+- `@nessframework/dashboard` — dashboard UI with NestJS metrics endpoints
+- `@nessframework/nest` — NestJS server routes, compiler, and production bridge
+- `@nessframework/tailwind` — Tailwind CSS 4 integration
+- `@nessframework/security` — secure development and preview headers
+- `@nessframework/env` — environment validation
+- `@nessframework/compression` — Gzip and Brotli build assets
+- `@nessframework/analyzer` — bundle reports and size budgets
 
-The Webpack-based v5 runtime remains in `@ness/core` for migration compatibility, while new applications use the v6 Vite architecture.
+The Webpack-based v5 runtime remains in `@nessframework/core` for migration compatibility, while new applications use the v6 Vite architecture.
 
 ## Repository layout
 
 ```text
 packages/
-├── assets/        # @ness/assets optimized assets and metadata
-├── cache/         # @ness/cache caching primitives
-├── cli/           # @ness/cli commands and generators
-├── core/          # @ness/core client runtime and compatibility facade
-├── deployment/    # @ness/deployment runtime adapters
-├── instrumentation/ # @ness/instrumentation lifecycle hooks
-├── router/        # @ness/router file routing and Vite integration
-├── server/        # @ness/server request runtime
-└── testing/       # @ness/testing test utilities
+├── assets/        # @nessframework/assets optimized assets and metadata
+├── cache/         # @nessframework/cache caching primitives
+├── cli/           # @nessframework/cli commands and generators
+├── core/          # @nessframework/core client runtime and compatibility facade
+├── deployment/    # @nessframework/deployment runtime adapters
+├── instrumentation/ # @nessframework/instrumentation lifecycle hooks
+├── router/        # @nessframework/router file routing and Vite integration
+├── server/        # @nessframework/server request runtime
+└── testing/       # @nessframework/testing test utilities
 plugins/
 ├── analyzer/      # Bundle reports and budgets
 ├── compression/   # Gzip and Brotli assets
@@ -155,11 +155,11 @@ plugins/
 ├── security/      # Secure server headers
 └── tailwind/      # Tailwind CSS integration
 templates/
-├── default/       # @ness/default JavaScript starter
-├── typescript/    # @ness/typescript starter
-├── minimal/       # @ness/minimal compact starter
-├── api/           # @ness/api API-first starter
-└── dashboard/     # @ness/dashboard admin starter
+├── default/       # @nessframework/default JavaScript starter
+├── typescript/    # @nessframework/typescript starter
+├── minimal/       # @nessframework/minimal compact starter
+├── api/           # @nessframework/api API-first starter
+└── dashboard/     # @nessframework/dashboard admin starter
 examples/
 └── welcome/       # End-to-end framework example
 docs/

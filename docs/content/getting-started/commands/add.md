@@ -6,11 +6,11 @@ Installs a Ness plugin or another npm package in the current project.
 ness add <package> [options]
 ```
 
-Official aliases are expanded to the `@ness/*` scope:
+Official aliases are expanded to the `@nessframework/*` scope:
 
 ```bash
 ness add tailwind --dev
-# npm install --save-dev @ness/tailwind
+# npm install --save-dev @nessframework/tailwind
 
 ness add security --dev --exact
 ness add @company/ness-plugin

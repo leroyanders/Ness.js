@@ -3,7 +3,7 @@
 ## Function cache
 
 ```ts
-import { cached, revalidatePath, revalidateTag } from '@ness/cache';
+import { cached, revalidatePath, revalidateTag } from '@nessframework/cache';
 
 export const getPosts = cached(() => db.post.findMany(), {
   key: 'posts',
@@ -23,7 +23,7 @@ Profiles include `seconds`, `minutes`, `hours`, `days`, `max`, and `default`. Co
 ## Static generation
 
 ```js
-import { defineNessConfig } from '@ness/router';
+import { defineNessConfig } from '@nessframework/router';
 
 export default defineNessConfig({
   router: { prerender: ['/', '/pricing'] },

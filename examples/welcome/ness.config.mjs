@@ -1,10 +1,10 @@
-import analyzer from '@ness/analyzer';
-import compression from '@ness/compression';
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
-import nest from '@ness/nest';
-import { nestServer } from '@ness/nest/server';
-import security from '@ness/security';
+import analyzer from '@nessframework/analyzer';
+import compression from '@nessframework/compression';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import nest from '@nessframework/nest';
+import { nestServer } from '@nessframework/nest/server';
+import security from '@nessframework/security';
 
 const rsc = process.env.NESS_EXPERIMENTAL_RSC === 'true';
 

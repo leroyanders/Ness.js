@@ -1,5 +1,5 @@
 {
-  "name": "@ness/env",
+  "name": "@nessframework/env",
   "version": "1.0.0",
   "description": "Environment variable validation for Ness.js applications.",
   "type": "module",
@@ -15,11 +15,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "plugins/env"
   },
   "peerDependencies": {
-    "@ness/core": ">=6.0.0",
+    "@nessframework/core": ">=6.0.0",
     "vite": ">=5.0.0"
   },
   "engines": {

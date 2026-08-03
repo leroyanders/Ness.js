@@ -35,7 +35,7 @@ export async function action({ request }: { request: Request }) {
 ```
 
 ```tsx
-import { Form } from '@ness/core';
+import { Form } from '@nessframework/core';
 
 export default function NewProduct() {
   return (

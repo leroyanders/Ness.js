@@ -1,5 +1,5 @@
 {
-  "name": "@ness/nest",
+  "name": "@nessframework/nest",
   "version": "1.0.0",
   "description": "NestJS server routes for Ness.js applications",
   "type": "module",
@@ -23,7 +23,7 @@
     "node": ">=16.0.0"
   },
   "peerDependencies": {
-    "@ness/core": ">=6.0.0",
+    "@nessframework/core": ">=6.0.0",
     "@nestjs/common": "^10.4.22",
     "@nestjs/core": "^10.4.22",
     "reflect-metadata": "^0.2.2",

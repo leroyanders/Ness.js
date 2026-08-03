@@ -1,3 +1,3 @@
-import { nessRoutes } from '@ness/router';
+import { nessRoutes } from '@nessframework/router';
 
 export default nessRoutes();

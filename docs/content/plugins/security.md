@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# @ness/security
+# @nessframework/security
 
 Adds secure defaults to the Vite development and preview servers: clickjacking protection, MIME sniffing protection, opener isolation, a restrictive permissions policy, and a safe referrer policy.
 
@@ -11,9 +11,9 @@ ness add security --dev
 ```
 
 ```js title="ness.config.mjs" showLineNumbers
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
-import security from '@ness/security';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import security from '@nessframework/security';
 
 export default defineNessConfig({
   vite: {

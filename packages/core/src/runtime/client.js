@@ -1,6 +1,6 @@
 import React from 'react';
 import * as router from 'react-router';
-import { reportWebVitals } from '@ness/instrumentation';
+import { reportWebVitals } from '@nessframework/instrumentation';
 
 function useNavigationProgress() {
   const navigation = router.useNavigation();

@@ -2,7 +2,7 @@
 sidebar_position: 6
 ---
 
-# @ness/compression
+# @nessframework/compression
 
 Creates precompressed Gzip and Brotli copies of production assets. Compatible servers and CDNs can serve them without compressing every response at runtime.
 
@@ -11,9 +11,9 @@ ness add compression --dev
 ```
 
 ```js title="ness.config.mjs" showLineNumbers
-import compression from '@ness/compression';
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
+import compression from '@nessframework/compression';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
 
 export default defineNessConfig({
   vite: {

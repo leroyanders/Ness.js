@@ -2,7 +2,7 @@
 sidebar_position: 7
 ---
 
-# @ness/analyzer
+# @nessframework/analyzer
 
 Generates machine-readable JSON and human-readable HTML bundle reports. A size budget can fail builds that grow beyond an expected limit.
 
@@ -11,9 +11,9 @@ ness add analyzer --dev
 ```
 
 ```js title="ness.config.mjs" showLineNumbers
-import analyzer from '@ness/analyzer';
-import { defineNessConfig } from '@ness/router';
-import { ness } from '@ness/router/vite';
+import analyzer from '@nessframework/analyzer';
+import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
 
 export default defineNessConfig({
   vite: {

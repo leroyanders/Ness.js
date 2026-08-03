@@ -7,11 +7,11 @@ ness remove <package> [options]
 ness rm <package> [options]
 ```
 
-Official short names use the same `@ness/*` resolution as [`ness add`](./add.md).
+Official short names use the same `@nessframework/*` resolution as [`ness add`](./add.md).
 
 ```bash
 ness remove env
-# Removes @ness/env
+# Removes @nessframework/env
 
 ness rm @company/ness-plugin
 ness remove analyzer --dry-run

@@ -1,11 +1,11 @@
 {
-  "name": "@ness/default",
+  "name": "@nessframework/default",
   "version": "3.0.0",
   "type": "module",
   "description": "The base template for Create Ness App.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/leroyanders/Ness.js.git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "templates/default"
   },
   "engines": {

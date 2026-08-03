@@ -40,7 +40,7 @@ export function resolveDependencyName(spec) {
 
   const match = /^([a-z0-9._-]+)(@.+)?$/i.exec(value);
   if (match && NESS_PACKAGES.has(match[1])) {
-    return `@ness/${match[1]}${match[2] || ''}`;
+    return `@nessframework/${match[1]}${match[2] || ''}`;
   }
   return value;
 }
@@ -65,10 +65,12 @@ export function resolveUpdateDependencies(packages = [], cwd = process.cwd()) {
     'optionalDependencies',
   ]) {
     for (const name of Object.keys(manifest[field] || {})) {
-      if (name.startsWith('@ness/')) installed.add(name);
+      if (name.startsWith('@nessframework/')) installed.add(name);
     }
   }
-  return installed.size ? [...installed].sort() : ['@ness/core', '@ness/cli'];
+  return installed.size
+    ? [...installed].sort()
+    : ['@nessframework/core', '@nessframework/cli'];
 }
 
 function printDryRun(args) {

@@ -1,6 +1,6 @@
 # Client runtime
 
-The framework generates the hydration entry automatically. Application code normally imports navigation primitives from `@ness/core` or `react-router`:
+The framework generates the hydration entry automatically. Application code normally imports navigation primitives from `@nessframework/core` or `react-router`:
 
 ```tsx
 import {
@@ -8,7 +8,7 @@ import {
   useNavigationProgress,
   usePathname,
   useRouter,
-} from '@ness/core';
+} from '@nessframework/core';
 
 export function Navigation() {
   const pathname = usePathname();

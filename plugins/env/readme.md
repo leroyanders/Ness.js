@@ -1,14 +1,14 @@
-# @ness/env
+# @nessframework/env
 
 Fails development or production builds when required environment variables are missing or invalid.
 
 ```bash
-npm install --save-dev @ness/env
+npm install --save-dev @nessframework/env
 ```
 
 ```js
-import env from '@ness/env';
-import { ness } from '@ness/router/vite';
+import env from '@nessframework/env';
+import { ness } from '@nessframework/router/vite';
 
 export default {
   plugins: [

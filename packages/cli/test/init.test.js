@@ -161,23 +161,26 @@ test('dependency commands resolve official aliases and installed Ness packages',
   fs.writeFileSync(
     path.join(workspace, 'package.json'),
     JSON.stringify({
-      dependencies: { '@ness/core': '^6.0.0', react: '^19.0.0' },
-      devDependencies: { '@ness/analyzer': '^1.0.0' },
+      dependencies: { '@nessframework/core': '^6.0.0', react: '^19.0.0' },
+      devDependencies: { '@nessframework/analyzer': '^1.0.0' },
     }),
   );
 
-  assert.equal(resolveDependencyName('tailwind'), '@ness/tailwind');
-  assert.equal(resolveDependencyName('nest'), '@ness/nest');
-  assert.equal(resolveDependencyName('tailwind@next'), '@ness/tailwind@next');
+  assert.equal(resolveDependencyName('tailwind'), '@nessframework/tailwind');
+  assert.equal(resolveDependencyName('nest'), '@nessframework/nest');
+  assert.equal(
+    resolveDependencyName('tailwind@next'),
+    '@nessframework/tailwind@next',
+  );
   assert.equal(resolveDependencyName('@company/plugin'), '@company/plugin');
   assert.equal(resolveDependencyName('vitest'), 'vitest');
   assert.throws(() => resolveDependencyName('--global'), /Invalid package/);
   assert.deepEqual(resolveUpdateDependencies([], workspace), [
-    '@ness/analyzer',
-    '@ness/core',
+    '@nessframework/analyzer',
+    '@nessframework/core',
   ]);
   assert.deepEqual(resolveUpdateDependencies(['security'], workspace), [
-    '@ness/security',
+    '@nessframework/security',
   ]);
 });
 
@@ -209,28 +212,28 @@ test('clean removes only known generated directories and supports dry runs', t =
 
 test('template aliases resolve to package names', () => {
   assert.deepEqual(resolveTemplate(), {
-    name: '@ness/default',
-    spec: '@ness/default',
+    name: '@nessframework/default',
+    spec: '@nessframework/default',
   });
   assert.deepEqual(resolveTemplate('typescript'), {
-    name: '@ness/typescript',
-    spec: '@ness/typescript',
+    name: '@nessframework/typescript',
+    spec: '@nessframework/typescript',
   });
   assert.deepEqual(resolveTemplate('ts'), {
-    name: '@ness/typescript',
-    spec: '@ness/typescript',
+    name: '@nessframework/typescript',
+    spec: '@nessframework/typescript',
   });
   assert.deepEqual(resolveTemplate('minimal'), {
-    name: '@ness/minimal',
-    spec: '@ness/minimal',
+    name: '@nessframework/minimal',
+    spec: '@nessframework/minimal',
   });
   assert.deepEqual(resolveTemplate('api'), {
-    name: '@ness/api',
-    spec: '@ness/api',
+    name: '@nessframework/api',
+    spec: '@nessframework/api',
   });
   assert.deepEqual(resolveTemplate('dashboard'), {
-    name: '@ness/dashboard',
-    spec: '@ness/dashboard',
+    name: '@nessframework/dashboard',
+    spec: '@nessframework/dashboard',
   });
   assert.deepEqual(resolveTemplate('custom'), {
     name: 'ness-template-custom',
@@ -325,7 +328,7 @@ test('local template copying excludes generated files and merges package fields'
     JSON.stringify({
       name: 'application',
       scripts: { dev: 'ness dev' },
-      dependencies: { '@ness/core': '6.0.0' },
+      dependencies: { '@nessframework/core': '6.0.0' },
     }),
   );
   const templatePackage = readTemplatePackage(source, source);

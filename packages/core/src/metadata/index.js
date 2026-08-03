@@ -1,1 +1,1 @@
-export * from '@ness/assets/metadata';
+export * from '@nessframework/assets/metadata';

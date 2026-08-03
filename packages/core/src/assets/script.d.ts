@@ -1,1 +1,1 @@
-export * from '@ness/assets/script';
+export * from '@nessframework/assets/script';

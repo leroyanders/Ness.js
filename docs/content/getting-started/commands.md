@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # CLI commands
 
-The `@ness/cli` package provides application creation, package management, code generation, development, builds, production, and diagnostics through the `ness` executable.
+The `@nessframework/cli` package provides application creation, package management, code generation, development, builds, production, and diagnostics through the `ness` executable.
 
 ```bash
 ness --help
@@ -36,7 +36,7 @@ ness --version
 | ------------------------------------- | --------------------------------------------- |
 | [`ness add`](./commands/add.md)       | Install an official plugin or another package |
 | [`ness remove`](./commands/remove.md) | Uninstall a package                           |
-| [`ness update`](./commands/update.md) | Update installed `@ness/*` packages           |
+| [`ness update`](./commands/update.md) | Update installed `@nessframework/*` packages  |
 
 ## Project utilities
 

@@ -1,5 +1,5 @@
 import { createRequestListener } from '@remix-run/node-fetch-server';
-import '@ness/server/web-api';
+import '@nessframework/server/web-api';
 
 function nodeAdapter(handler) {
   return createRequestListener(handler);

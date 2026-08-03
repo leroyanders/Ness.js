@@ -1,14 +1,14 @@
-# @ness/compression
+# @nessframework/compression
 
 Emits precompressed `.gz` and `.br` files for production assets.
 
 ```bash
-npm install --save-dev @ness/compression
+npm install --save-dev @nessframework/compression
 ```
 
 ```js
-import compression from '@ness/compression';
-import { ness } from '@ness/router/vite';
+import compression from '@nessframework/compression';
+import { ness } from '@nessframework/router/vite';
 
 export default {
   plugins: [ness({ plugins: [compression({ threshold: 1_024 })] })],

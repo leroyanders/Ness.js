@@ -1,9 +1,9 @@
-# @ness/cli
+# @nessframework/cli
 
 The official Ness.js command line interface.
 
 ```bash
-npm install --global @ness/cli
+npm install --global @nessframework/cli
 ness new my-app
 ```
 
@@ -28,7 +28,7 @@ ness info
 
 Generators support React routes and boundaries plus `component`, `action`, `middleware`, `hook`, `context`, `model`, `class`, `interface`, `enum`, and `test`. NestJS backend schematics include `controller`, `resource`, `service`, `module`, and `guard`; the CLI writes them to `app/server` and registers them in the root `AppModule`. Nest-style aliases such as `p`, `co`, `res`, `s`, `mo`, `mi`, `gu`, and `spec` are available.
 
-Official aliases passed to `ness add`, `remove`, or `update` resolve to the `@ness/*` scope, so `ness add tailwind` installs `@ness/tailwind`.
+Official aliases passed to `ness add`, `remove`, or `update` resolve to the `@nessframework/*` scope, so `ness add tailwind` installs `@nessframework/tailwind`.
 
 `--template` accepts the official `default`, `typescript`, `minimal`, `api`, and `dashboard` aliases, npm packages, package-style templates, and direct local directories through relative, absolute, `~/`, or `file:` paths. Official starters keep framework settings in one `ness.config.mjs` file.
 

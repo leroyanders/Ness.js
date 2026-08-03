@@ -42,14 +42,14 @@ export function checkForLatestVersion(packageName) {
 
 export function resolveTemplate(template) {
   const officialTemplates = {
-    default: '@ness/default',
-    javascript: '@ness/default',
-    js: '@ness/default',
-    typescript: '@ness/typescript',
-    ts: '@ness/typescript',
-    minimal: '@ness/minimal',
-    api: '@ness/api',
-    dashboard: '@ness/dashboard',
+    default: '@nessframework/default',
+    javascript: '@nessframework/default',
+    js: '@nessframework/default',
+    typescript: '@nessframework/typescript',
+    ts: '@nessframework/typescript',
+    minimal: '@nessframework/minimal',
+    api: '@nessframework/api',
+    dashboard: '@nessframework/dashboard',
   };
   const officialTemplate = officialTemplates[template || 'default'];
   if (officialTemplate) {
@@ -314,11 +314,11 @@ export async function createApp(
   );
 
   const dependencies = [
-    '@ness/cli',
-    '@ness/cache',
-    '@ness/core',
-    '@ness/nest',
-    '@ness/router',
+    '@nessframework/cli',
+    '@nessframework/cache',
+    '@nessframework/core',
+    '@nessframework/nest',
+    '@nessframework/router',
     '@nestjs/common@10.4.22',
     '@nestjs/core@10.4.22',
     'reflect-metadata@0.2.2',

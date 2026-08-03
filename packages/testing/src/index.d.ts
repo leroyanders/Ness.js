@@ -1,5 +1,5 @@
 import { createRoutesStub } from 'react-router';
-import type { NessCache } from '@ness/cache';
+import type { NessCache } from '@nessframework/cache';
 export { createRoutesStub };
 export function createTestRequest(
   pathname?: string,

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { createRequestHandler as createRouterRequestHandler } from 'react-router';
-import { getCache, normalizeLife } from '@ness/cache';
-import * as instrumentation from '@ness/instrumentation';
+import { getCache, normalizeLife } from '@nessframework/cache';
+import * as instrumentation from '@nessframework/instrumentation';
 import * as responses from './responses.js';
 
 export * from './responses.js';

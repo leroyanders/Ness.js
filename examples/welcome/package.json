@@ -15,11 +15,11 @@
     "check": "ness typegen"
   },
   "dependencies": {
-    "@ness/cache": "^6.0.0",
-    "@ness/cli": "^6.0.0",
-    "@ness/core": "^6.0.0",
-    "@ness/nest": "^1.0.0",
-    "@ness/router": "^6.0.0",
+    "@nessframework/cache": "^6.0.0",
+    "@nessframework/cli": "^6.0.0",
+    "@nessframework/core": "^6.0.0",
+    "@nessframework/nest": "^1.0.0",
+    "@nessframework/router": "^6.0.0",
     "@nestjs/common": "10.4.22",
     "@nestjs/core": "11.1.28",
     "isbot": "^5.2.1",
@@ -30,8 +30,8 @@
     "rxjs": "7.8.2"
   },
   "devDependencies": {
-    "@ness/analyzer": "^1.0.0",
-    "@ness/compression": "^1.0.0",
-    "@ness/security": "^1.0.0"
+    "@nessframework/analyzer": "^1.0.0",
+    "@nessframework/compression": "^1.0.0",
+    "@nessframework/security": "^1.0.0"
   }
 }
