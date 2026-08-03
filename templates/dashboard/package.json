@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/dashboard",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Dashboard starter for Ness.js and NestJS.",
   "repository": {

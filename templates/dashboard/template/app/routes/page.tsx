@@ -1,6 +1,6 @@
 import { useLoaderData } from 'react-router';
 
-export const meta = () => [{ title: 'Overview | Ness dashboard' }];
+export const handle = { title: 'Overview | Ness dashboard' };
 
 export default function Dashboard() {
   const data = useLoaderData<typeof import('./page.server').loader>();

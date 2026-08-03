@@ -1,6 +1,6 @@
 import { Link } from 'react-router';
 
-export const meta = () => [{ title: 'About | Ness.js' }];
+export const handle = { title: 'About | Ness.js' };
 
 export default function About() {
   return (

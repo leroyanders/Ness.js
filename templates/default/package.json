@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/default",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "type": "module",
   "description": "The base template for Create Ness App.",
   "repository": {

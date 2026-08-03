@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
+export const handle = { title: 'Architecture | Ness.js' };
 export const meta = () => [
-  { title: 'Architecture | Ness.js' },
   { name: 'description', content: 'How the Ness.js v6 example is structured.' },
 ];
 
