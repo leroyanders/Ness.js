@@ -385,3 +385,26 @@ test('official template sources use one Ness configuration file', t => {
     }
   }
 });
+
+test('official TypeScript templates accept generated route imports', () => {
+  const templatesDirectory = path.resolve(
+    currentDirectory,
+    '..',
+    '..',
+    '..',
+    'templates',
+  );
+  for (const name of ['typescript', 'minimal', 'api', 'dashboard']) {
+    const tsconfig = JSON.parse(
+      fs.readFileSync(
+        path.join(templatesDirectory, name, 'template', 'tsconfig.json'),
+        'utf8',
+      ),
+    );
+    assert.equal(
+      tsconfig.compilerOptions.allowImportingTsExtensions,
+      true,
+      `${name} must accept imports from generated .tsx route modules`,
+    );
+  }
+});
