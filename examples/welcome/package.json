@@ -20,7 +20,7 @@
     "@nessframework/core": "^6.0.0",
     "@nessframework/nest": "^1.0.0",
     "@nessframework/router": "^6.0.0",
-    "@nestjs/common": "10.4.22",
+    "@nestjs/common": "11.1.28",
     "@nestjs/core": "11.1.28",
     "isbot": "^5.2.1",
     "reflect-metadata": "0.2.2",
