@@ -1,0 +1,21 @@
+{
+  "name": "@ness/instrumentation",
+  "version": "6.0.0",
+  "description": "Server instrumentation and Web Vitals for Ness.js.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}

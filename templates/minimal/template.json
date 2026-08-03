@@ -1,0 +1,17 @@
+{
+  "package": {
+    "description": "A minimal Ness.js application with a NestJS backend.",
+    "scripts": {
+      "format": "prettier --write . --ignore-unknown",
+      "format:check": "prettier --check . --ignore-unknown"
+    },
+    "devDependencies": {
+      "prettier": "^3.9.6"
+    },
+    "prettier": {
+      "singleQuote": true,
+      "arrowParens": "avoid",
+      "trailingComma": "all"
+    }
+  }
+}

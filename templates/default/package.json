@@ -1,0 +1,32 @@
+{
+  "name": "@ness/default",
+  "version": "3.0.0",
+  "type": "module",
+  "description": "The base template for Create Ness App.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leroyanders/Ness.js.git",
+    "directory": "templates/default"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
+  "files": [
+    "template",
+    "template.json"
+  ],
+  "keywords": [
+    "ness",
+    "react",
+    "template",
+    "javascript"
+  ],
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "isbot": "^5"
+  }
+}

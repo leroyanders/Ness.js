@@ -1,22 +1,67 @@
 {
   "private": true,
+  "type": "module",
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "plugins/*",
+    "templates/*",
+    "examples/*",
+    "docs"
   ],
-  "version": "4.0.2",
+  "version": "6.0.0",
   "description": "Newest Experience of Server Side development. Awesome React framework ✨",
   "directories": {
     "doc": "docs",
     "example": "examples"
   },
-  "devEngines": {
-    "node": "^15.x || 16.x || 17.x"
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "overrides": {
+    "@jsonjoy.com/fs-node-builtins": "4.64.0",
+    "serialize-javascript": "^7.0.5",
+    "uuid": "^11.1.1"
+  },
+  "resolutions": {
+    "@jsonjoy.com/fs-node-builtins": "4.64.0",
+    "serialize-javascript": "^7.0.5",
+    "uuid": "^11.1.1"
   },
   "scripts": {
-    "publish:template": "cd templates/ness-template-default && npm publish --access public",
-    "publish:client": "cd packages/create-ness-app && npm publish --access public",
-    "publish:scripts": "cd packages/nessapp && npm publish --access public"
+    "build": "npm run build --workspace @ness/core && npm run build --workspace docs && npm run build --workspace welcome",
+    "check": "npm run format:check && npm test && npm run build",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "test": "npm run test:unit && npm run test:types",
+    "test:unit": "node --test packages/core/test/*.test.js packages/cli/test/*.test.js plugins/*/test/*.test.js",
+    "test:types": "tsc --noEmit --skipLibCheck false --module NodeNext --moduleResolution NodeNext --target ES2022 --lib ES2022,DOM --types node,react --jsx react-jsx packages/core/test/types-smoke.ts plugins/types-smoke.ts",
+    "publish:core": "npm publish --workspace @ness/core --access public",
+    "publish:assets": "npm publish --workspace @ness/assets --access public",
+    "publish:cache": "npm publish --workspace @ness/cache --access public",
+    "publish:deployment": "npm publish --workspace @ness/deployment --access public",
+    "publish:instrumentation": "npm publish --workspace @ness/instrumentation --access public",
+    "publish:router": "npm publish --workspace @ness/router --access public",
+    "publish:server": "npm publish --workspace @ness/server --access public",
+    "publish:testing": "npm publish --workspace @ness/testing --access public",
+    "publish:cli": "npm publish --workspace @ness/cli --access public",
+    "publish:default": "npm publish --workspace @ness/default --access public",
+    "publish:typescript": "npm publish --workspace @ness/typescript --access public",
+    "publish:minimal": "npm publish --workspace @ness/minimal --access public",
+    "publish:api": "npm publish --workspace @ness/api --access public",
+    "publish:dashboard": "npm publish --workspace @ness/dashboard --access public",
+    "publish:tailwind": "npm publish --workspace @ness/tailwind --access public",
+    "publish:nest": "npm publish --workspace @ness/nest --access public",
+    "publish:analyzer": "npm publish --workspace @ness/analyzer --access public",
+    "publish:compression": "npm publish --workspace @ness/compression --access public",
+    "publish:env": "npm publish --workspace @ness/env --access public",
+    "publish:security": "npm publish --workspace @ness/security --access public"
   },
-  "author": "Leroy Wagner <leroy.wagner20@gmail.com>",
+  "devDependencies": {
+    "@vitejs/plugin-rsc": "0.5.27",
+    "prettier": "^3.9.6",
+    "react-server-dom-webpack": "19.2.8",
+    "react-router": "8.3.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT"
 }

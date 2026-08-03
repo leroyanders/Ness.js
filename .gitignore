@@ -1,5 +1,18 @@
-/node_modules/
-/examples/welcome/node_modules/
-/examples/welcome/package-lock.json
-/package-lock.json
-/**/package-lock.json
+# Dependencies
+**/node_modules/
+
+# Build and generated output
+**/dist/
+**/deploy/
+**/build/
+**/.docusaurus/
+**/.react-router/
+**/.ness/
+
+# Local tooling and OS files
+.DS_Store
+.idea/
+*.log
+.cache/
+**/.cache/
+**/coverage/

@@ -5,8 +5,15 @@ export default function Navbar() {
   return (
     <>
       <div className="navbar-ukraine">
-        <p>Support Ukraine 🇺🇦 
-          <a href="https://opensource.fb.com/support-ukraine" target="_blank">Help Provide Humanitarian Aid to Ukraine.</a>
+        <p>
+          <span>Support Ukraine 🇺🇦</span>
+          <a
+            href="https://opensource.fb.com/support-ukraine"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Help provide humanitarian aid
+          </a>
         </p>
       </div>
       <NavbarLayout>

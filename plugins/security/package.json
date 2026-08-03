@@ -1,0 +1,30 @@
+{
+  "name": "@ness/security",
+  "version": "1.0.0",
+  "description": "Secure development and preview headers for Ness.js applications.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/security"
+  },
+  "peerDependencies": {
+    "@ness/core": ">=6.0.0",
+    "vite": ">=5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}

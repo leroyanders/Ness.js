@@ -1,0 +1,34 @@
+{
+  "name": "@ness/tailwind",
+  "version": "1.4.3",
+  "description": "Tailwind CSS integration for Ness.js",
+  "type": "module",
+  "repository": "git+https://github.com/leroyanders/Ness.js.git",
+  "main": "./src/index.js",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./styles/base.css": "./src/styles/base.css"
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "@ness/core": ">=5.1.49",
+    "vite": ">=5.0.0"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
+    "cssnano": "^8.0.2",
+    "mini-css-extract-plugin": "^2.10.2",
+    "tailwindcss": "^4.3.3"
+  }
+}

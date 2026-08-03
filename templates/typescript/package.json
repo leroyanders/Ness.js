@@ -1,0 +1,32 @@
+{
+  "name": "@ness/typescript",
+  "version": "3.0.0",
+  "type": "module",
+  "description": "The typescript template for Create Ness App.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leroyanders/Ness.js.git",
+    "directory": "templates/typescript"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
+  "files": [
+    "template",
+    "template.json"
+  ],
+  "keywords": [
+    "ness",
+    "react",
+    "template",
+    "typescript"
+  ],
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "isbot": "^5"
+  }
+}

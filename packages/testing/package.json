@@ -1,0 +1,26 @@
+{
+  "name": "@ness/testing",
+  "version": "6.0.0",
+  "description": "Test utilities for Ness.js applications.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "dependencies": {
+    "@ness/cache": "^6.0.0",
+    "@ness/server": "^6.0.0",
+    "react-router": "8.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}

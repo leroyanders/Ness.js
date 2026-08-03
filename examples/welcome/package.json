@@ -1,16 +1,37 @@
 {
   "name": "welcome",
-  "version": "4.0.21",
+  "version": "6.0.0",
   "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=16.0.0"
+  },
   "scripts": {
-    "start": "nessapp start",
-    "build": "nessapp build",
-    "start:prod": "nessapp production",
-    "generate": "nessapp generate"
+    "start": "ness dev",
+    "dev": "ness dev",
+    "build": "ness build",
+    "start:prod": "ness start",
+    "typegen": "ness typegen",
+    "check": "ness typegen"
   },
   "dependencies": {
-    "axios": "^0.30.2",
-    "ness-tailwind": "1.4.3",
-    "nessapp": "4.6.32"
+    "@ness/cache": "^6.0.0",
+    "@ness/cli": "^6.0.0",
+    "@ness/core": "^6.0.0",
+    "@ness/nest": "^1.0.0",
+    "@ness/router": "^6.0.0",
+    "@nestjs/common": "10.4.22",
+    "@nestjs/core": "10.4.22",
+    "isbot": "^5.2.1",
+    "reflect-metadata": "0.2.2",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "8.3.0",
+    "rxjs": "7.8.2"
+  },
+  "devDependencies": {
+    "@ness/analyzer": "^1.0.0",
+    "@ness/compression": "^1.0.0",
+    "@ness/security": "^1.0.0"
   }
 }

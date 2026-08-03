@@ -1,0 +1,89 @@
+# NestJS backend
+
+Ness uses NestJS for public server routes while React Router handles the UI, loaders, actions, and SSR. Both frameworks run on the same HTTP server: Nest controllers are mounted first and unmatched requests continue to the React application.
+
+## Project structure
+
+```text
+app/
+├── routes/                     # React pages, layouts, loaders, actions
+└── server/                     # NestJS backend
+    ├── app.module.ts
+    └── users/
+        ├── users.controller.ts
+        ├── users.service.ts
+        └── users.module.ts
+```
+
+New applications include `@ness/nest`, NestJS 10, `reflect-metadata`, and RxJS. NestJS 10 is used because the framework maintains Node.js 16 compatibility; NestJS 11 requires Node.js 20 or newer.
+
+## Root module
+
+```ts title="app/server/app.module.ts"
+import { Module } from '@nestjs/common';
+import { UsersModule } from './users/users.module.js';
+
+@Module({ imports: [UsersModule] })
+export class AppModule {}
+```
+
+Use `.js` in relative TypeScript imports. The Nest compiler resolves the source `.ts` file and emits ESM files that Node can load directly.
+
+## Controller and service
+
+```ts title="app/server/users/users.controller.ts"
+import { Controller, Get } from '@nestjs/common';
+import { UsersService } from './users.service.js';
+
+@Controller('users')
+export class UsersController {
+  constructor(private readonly users: UsersService) {}
+
+  @Get()
+  findAll() {
+    return this.users.findAll();
+  }
+}
+```
+
+```ts title="app/server/users/users.service.ts"
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class UsersService {
+  findAll() {
+    return [];
+  }
+}
+```
+
+All controllers receive the global `/api` prefix by default. Nest decorators for validation, guards, interceptors, exception filters, versioning, and OpenAPI can be used normally.
+
+## Generate backend modules
+
+```bash
+ness g controller users
+ness g service users
+ness g module users
+ness g guard users/auth
+ness g resource products
+```
+
+The generator writes Nest modules under `app/server` and registers controllers, providers, guards, and imported modules in `app/server/app.module.ts` when it exists.
+
+## Development and production
+
+The `@ness/nest` Vite plugin compiles decorators with `emitDecoratorMetadata`, mounts the application during `ness dev`, and reloads it when `app/server` changes. `ness build` writes the ESM backend to `build/nest`.
+
+The production bridge is configured in `ness.config.mjs`:
+
+```js
+import { defineNessConfig } from '@ness/router';
+import { nestServer } from '@ness/nest/server';
+
+export default defineNessConfig({
+  server: { configureServer: nestServer({ prefix: 'api' }) },
+});
+```
+
+The prefix must be non-empty so unknown URLs can continue to the React application. Change it to another namespace such as `v1` when needed.

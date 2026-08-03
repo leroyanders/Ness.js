@@ -1,0 +1,30 @@
+{
+  "name": "@ness/minimal",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Minimal TypeScript starter for Ness.js.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leroyanders/Ness.js.git",
+    "directory": "templates/minimal"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "template",
+    "template.json"
+  ],
+  "keywords": [
+    "ness",
+    "react",
+    "nestjs",
+    "template",
+    "minimal"
+  ],
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "isbot": "^5"
+  }
+}

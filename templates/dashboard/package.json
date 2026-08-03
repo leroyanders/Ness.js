@@ -1,0 +1,30 @@
+{
+  "name": "@ness/dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Dashboard starter for Ness.js and NestJS.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leroyanders/Ness.js.git",
+    "directory": "templates/dashboard"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "template",
+    "template.json"
+  ],
+  "keywords": [
+    "ness",
+    "react",
+    "nestjs",
+    "template",
+    "dashboard"
+  ],
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "isbot": "^5"
+  }
+}

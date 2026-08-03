@@ -1,0 +1,30 @@
+{
+  "name": "@ness/cli",
+  "version": "6.0.0",
+  "license": "MIT",
+  "description": "Develop, build, diagnose, and create Ness.js applications.",
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "repository": "git@github.com:leroyanders/ness.js.git",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "bin": {
+    "ness": "bin/index.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "readme.md"
+  ],
+  "dependencies": {
+    "commander": "^11.1.0",
+    "cross-spawn": "^7.0.6",
+    "envinfo": "^7.21.0",
+    "fs-extra": "^11.4.0",
+    "semver": "^7.8.5"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

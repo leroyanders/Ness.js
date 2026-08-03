@@ -1,75 +1,173 @@
-# Ness.js [![Build Status][build-badge]][build] [![Version][version-badge]][package] [![MIT License][license-badge]][license] [![PRs Welcome][prs-welcome-badge]][prs-welcome]
+# Ness.js
 
-### About
+Ness.js is a full-stack React framework with a NestJS backend. Version 6 combines React 19, React Router Framework Mode, Vite 8, NestJS controllers and DI, streaming SSR, typed loaders and actions, caching, prerendering, image optimization, and self-hosted deployment.
 
-*Ness.js - is an **open source** framework based on React.js, Express.js and Webpack, supports both-side rendering. Supports installing our plugins and plugins from your application directly, will save your development time and provide more-userful experience.*
+## Create an application
 
-## Documentation
+Node.js 16 or newer is required.
 
-- [Getting Started](./docs/docs/getting-started/create-new-app.md)
-- [Commands](./docs/docs/getting-started/commands.md)
-- [Plugins](./docs/docs/plugins/your-own-plugin.md)
-- [Templates](./docs/docs/templates/your-own-template.md)
-- [Examples](./docs/docs/examples/common.md)
-
-You can find full documentation [on the official website](https://nessapp.vercel.com/).  
-
-## Firts view
-
-We have several examples [on the website](https://nessapp.vercel.app/). 
-
-Here is the first one to get you started:
-
-```jsx
-import React from 'react';
-import { Router } from '../router';
-import { 
-  render, 
-  useRefresh, 
-  useRoot, 
-  useContainer 
-} from 'nessapp/client/dom';
-
-render({
-  document: useRoot(<Router/>), 
-  root: useContainer(document.getElementById('root')), 
-  module: useRefresh(module)
-});
+```bash
+npx @ness/cli@latest new my-app
+cd my-app
+npm run dev
 ```
 
-This example will render page based your route into a container on the page.
+Use the TypeScript template:
 
-We're using custom render function instead of classical React DOM render to provide you both-side data fetching.
+```bash
+ness new my-app --template typescript
+```
 
-## Contributing
+Other official starters:
 
-The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of Ness.js happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving Ness.
+```bash
+ness new tiny-app --template minimal
+ness new backend-app --template api
+ness new admin-app --template dashboard
+```
 
-### Code of Conduct
+Use a local template directory:
 
-We has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text on website](https://nessapp.vercel.app/code-of-conduct) so that you can understand what actions will and will not be tolerated.
+```bash
+ness new my-app --template ./templates/company-app
+```
 
-### Contributing Guide
+Experimental React Server Components and Server Functions are opt-in:
 
-Read our [contributing guide](https://nessapp.vercel.app/docs/how-to-contribute) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to Ness.
+```bash
+ness new my-app --template typescript --rsc
+```
 
-### Good First Issues
+Vite, React Router, Nest production mounting, RSC, and instrumentation are configured together in `ness.config.mjs`. TypeScript and Docker retain their native `tsconfig.json` and `Dockerfile` entrypoints.
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/leroywagner/Ness.js/issues/new) that contain bugs that have a relatively limited scope. This is a great place to get started.
+## Route conventions
 
-### License
+```text
+app/
+├── root.tsx
+├── routes.ts
+├── routes/
+│   ├── page.tsx
+│   ├── page.server.ts
+│   ├── loading.tsx
+│   ├── error.tsx
+│   ├── not-found.tsx
+│   └── blog/[slug]/page.tsx
+└── server/
+    ├── app.module.ts
+    └── health/health.controller.ts
+```
 
-Everything inside this repository is [MIT licensed](./license).
+- `page` renders UI; an adjacent `page.server` can export `loader`, `action`, and cache-aware server code.
+- `layout`, `loading`, `error`, `not-found`, `forbidden`, and `unauthorized` create nested route boundaries.
+- NestJS controllers under `app/server` provide public APIs with modules, providers, guards, pipes, and DI.
+- Low-level `route` modules remain available for Web-standard and runtime-specific endpoints.
+- `[id]`, `[...parts]`, `[[...parts]]`, route groups such as `(marketing)`, and private `_folders` are supported.
+- `middleware` runs around loaders, actions, and rendering for its route segment.
 
+```tsx
+// app/routes/products/page.server.ts
+import { cached } from '@ness/cache';
 
-<!-- badges -->
+const getProducts = cached(() => db.product.findMany(), {
+  key: 'products',
+  life: 'minutes',
+  tags: ['products'],
+});
 
-[build-badge]: https://img.shields.io/circleci/project/github/leroywagner/Ness.js/master.svg?style=flat-square
-[build]: https://circleci.com/gh/leroywagner/Ness.js/tree/master
-[version-badge]: https://img.shields.io/npm/v/nessapp.svg?style=flat-square
-[package]: https://www.npmjs.com/package/nessapp
-[license-badge]: https://img.shields.io/npm/l/nessapp?style=flat-square
-[license]: https://opensource.org/licenses/MIT
-[prs-welcome-badge]: https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square
-[prs-welcome]: http://makeapullrequest.com
-[lean-core-badge]: https://img.shields.io/badge/Lean%20Core-Extracted-brightgreen.svg?style=flat-square
+export async function loader() {
+  return getProducts();
+}
+```
+
+## Production features
+
+- NestJS controllers, providers, modules, guards, interceptors, pipes, and dependency injection
+- Streaming SSR, hydration, nested pending UI, error recovery, and automatic route code splitting
+- SSG/prerender plus stale-while-revalidate page caching and tag/path invalidation
+- Metadata helpers for SEO, Open Graph, Twitter, manifests, robots, and sitemaps
+- Responsive `<Image>`, AVIF/WebP optimization, local fonts, and script loading strategies
+- Redirects, rewrites, response headers, route/global middleware, cookies, status helpers, and Web standard APIs
+- Node, Express, serverless, and Edge adapters; Docker-ready templates and graceful shutdown
+- Instrumentation hooks, Core Web Vitals, health checks, route type generation, and test utilities
+
+## CLI
+
+```text
+ness new <app>          Create an application
+ness dev                Start development with HMR
+ness build              Build client and server bundles
+ness start              Run the Ness production server
+ness typegen            Generate route types
+ness routes --json      Inspect the route tree
+ness g page blog/[slug] Generate a route module
+ness g service users    Generate a server service
+ness g controller users Generate and register a Nest controller
+ness add tailwind       Install @ness/tailwind
+ness update             Update installed @ness packages
+ness clean              Remove generated output
+ness doctor             Diagnose an application
+```
+
+## Packages
+
+- `@ness/core` — client runtime and backward-compatible umbrella exports
+- `@ness/router` — unified configuration, file routing, and Vite integration
+- `@ness/server` — Web request handler, middleware, redirects, rewrites, and responses
+- `@ness/cache` — cache profiles, SWR, deduplication, tags, and path invalidation
+- `@ness/assets` — optimized images, fonts, scripts, and metadata
+- `@ness/instrumentation` — lifecycle hooks and Core Web Vitals
+- `@ness/deployment` — Node, Express, serverless, and Edge adapters
+- `@ness/testing` — route, request, cache, and response test helpers
+- `@ness/cli` — the `ness` command
+- `@ness/default` — JavaScript starter
+- `@ness/typescript` — strict TypeScript starter
+- `@ness/minimal` — compact TypeScript starter
+- `@ness/api` — NestJS API-first starter with a users resource
+- `@ness/dashboard` — dashboard UI with NestJS metrics endpoints
+- `@ness/nest` — NestJS server routes, compiler, and production bridge
+- `@ness/tailwind` — Tailwind CSS 4 integration
+- `@ness/security` — secure development and preview headers
+- `@ness/env` — environment validation
+- `@ness/compression` — Gzip and Brotli build assets
+- `@ness/analyzer` — bundle reports and size budgets
+
+The Webpack-based v5 runtime remains in `@ness/core` for migration compatibility, while new applications use the v6 Vite architecture.
+
+## Repository layout
+
+```text
+packages/
+├── assets/        # @ness/assets optimized assets and metadata
+├── cache/         # @ness/cache caching primitives
+├── cli/           # @ness/cli commands and generators
+├── core/          # @ness/core client runtime and compatibility facade
+├── deployment/    # @ness/deployment runtime adapters
+├── instrumentation/ # @ness/instrumentation lifecycle hooks
+├── router/        # @ness/router file routing and Vite integration
+├── server/        # @ness/server request runtime
+└── testing/       # @ness/testing test utilities
+plugins/
+├── analyzer/      # Bundle reports and budgets
+├── compression/   # Gzip and Brotli assets
+├── env/           # Environment validation
+├── nest/          # NestJS backend integration
+├── security/      # Secure server headers
+└── tailwind/      # Tailwind CSS integration
+templates/
+├── default/       # @ness/default JavaScript starter
+├── typescript/    # @ness/typescript starter
+├── minimal/       # @ness/minimal compact starter
+├── api/           # @ness/api API-first starter
+└── dashboard/     # @ness/dashboard admin starter
+examples/
+└── welcome/       # End-to-end framework example
+docs/
+├── content/       # Documentation source
+├── src/           # Documentation UI and theme
+└── static/        # Documentation assets
+```
+
+## Documentation and license
+
+Documentation lives in [`docs/content`](./docs/content). Ness.js is available under the [MIT license](./LICENSE.md).

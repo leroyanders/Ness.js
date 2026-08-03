@@ -1,0 +1,41 @@
+{
+  "name": "@ness/nest",
+  "version": "1.0.0",
+  "description": "NestJS server routes for Ness.js applications",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./server": {
+      "types": "./src/server.d.ts",
+      "default": "./src/server.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "peerDependencies": {
+    "@ness/core": ">=6.0.0",
+    "@nestjs/common": "^10.4.22",
+    "@nestjs/core": "^10.4.22",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "vite": ">=5.0.0"
+  },
+  "dependencies": {
+    "@nestjs/platform-express": "10.4.22",
+    "express": "4.21.2",
+    "fs-extra": "11.4.0",
+    "tinyglobby": "0.2.17",
+    "typescript": "5.7.3"
+  },
+  "license": "MIT"
+}

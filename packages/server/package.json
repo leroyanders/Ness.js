@@ -1,0 +1,35 @@
+{
+  "name": "@ness/server",
+  "version": "6.0.0",
+  "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./responses": {
+      "types": "./src/responses.d.ts",
+      "default": "./src/responses.js"
+    },
+    "./web-api": {
+      "types": "./src/web-api.d.ts",
+      "default": "./src/web-api.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "dependencies": {
+    "@ness/cache": "^6.0.0",
+    "@ness/instrumentation": "^6.0.0",
+    "node-fetch": "^3.3.2",
+    "react-router": "8.3.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}

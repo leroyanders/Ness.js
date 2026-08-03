@@ -1,23 +1,728 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
-
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
+.home {
+  --home-width: min(1180px, calc(100vw - 48px));
   overflow: hidden;
+  background: var(--ness-background);
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
+.hero {
+  position: relative;
+  min-height: 740px;
+  display: grid;
+  align-items: center;
+  border-bottom: 1px solid var(--ness-border);
+  background:
+    linear-gradient(var(--ness-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ness-grid) 1px, transparent 1px),
+    radial-gradient(
+      circle at 78% 30%,
+      rgba(224, 35, 78, 0.18),
+      transparent 30rem
+    ),
+    var(--ness-background);
+  background-size:
+    64px 64px,
+    64px 64px,
+    auto,
+    auto;
+}
+
+.hero::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--ness-background) 0%,
+    transparent 32%,
+    transparent 70%,
+    var(--ness-background) 100%
+  );
+}
+
+.heroGrid {
+  position: relative;
+  z-index: 1;
+  width: var(--home-width);
+  margin: 0 auto;
+  padding: 108px 0 96px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+  gap: clamp(48px, 8vw, 112px);
+  align-items: center;
+}
+
+.heroCopy h1 {
+  max-width: 760px;
+  margin: 22px 0 28px;
+  color: var(--ness-heading);
+  font-family: var(--ness-font-display);
+  font-size: clamp(54px, 6.8vw, 94px);
+  font-weight: 800;
+  letter-spacing: -0.065em;
+  line-height: 0.96;
+}
+
+.heroCopy h1 span {
+  color: var(--ness-accent);
+}
+
+.kicker {
+  margin: 0;
+  color: var(--ness-muted);
+  font-family: var(--ness-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.kicker span {
+  display: inline-flex;
+  margin-right: 12px;
+  padding: 6px 9px;
+  border: 1px solid rgba(255, 75, 110, 0.45);
+  border-radius: 4px;
+  background: rgba(224, 35, 78, 0.1);
+  color: var(--ness-accent-bright);
+}
+
+.heroLead {
+  max-width: 650px;
+  margin: 0;
+  color: var(--ness-copy);
+  font-size: clamp(17px, 1.7vw, 20px);
+  line-height: 1.75;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 22px;
+  border: 1px solid var(--ness-border-strong);
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.primaryAction {
+  border-color: var(--ness-accent);
+  background: var(--ness-accent);
+  color: white;
+  box-shadow: 0 12px 36px rgba(224, 35, 78, 0.22);
+}
+
+.primaryAction:hover {
+  background: var(--ness-accent-bright);
+  color: white;
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.secondaryAction {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--ness-heading);
+}
+
+.secondaryAction:hover {
+  border-color: var(--ness-accent);
+  color: var(--ness-heading);
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.installCommand {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 36px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-left: 2px solid var(--ness-accent);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--ness-muted);
+  font-family: var(--ness-font-mono);
+  font-size: 12px;
+}
+
+.installCommand span {
+  color: var(--ness-accent-bright);
+}
+
+.installCommand code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ness-heading);
+  font-size: inherit;
+}
+
+.installCommand small {
+  padding-left: 10px;
+  border-left: 1px solid var(--ness-border);
+  color: var(--ness-muted);
+  white-space: nowrap;
+}
+
+.heroVisual {
+  position: relative;
+  padding-top: 64px;
+}
+
+.brandOrb {
+  position: absolute;
+  top: -78px;
+  right: -28px;
+  width: 230px;
+  height: 230px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 75, 110, 0.22);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(224, 35, 78, 0.2), transparent 66%);
+  opacity: 0.9;
+}
+
+.brandOrb::before,
+.brandOrb::after {
+  position: absolute;
+  border: 1px solid rgba(255, 75, 110, 0.14);
+  border-radius: inherit;
+  content: '';
+}
+
+.brandOrb::before {
+  inset: 28px;
+}
+
+.brandOrb::after {
+  inset: 58px;
+}
+
+.brandOrb img {
+  width: 92px;
+  filter: invert(1) brightness(2);
+  opacity: 0.9;
+}
+
+.routePanel {
+  --route-accent: var(--ness-accent);
+  --route-ready: #147a48;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  border: 1px solid var(--ness-border-strong);
+  border-radius: 10px;
+  background: var(--ness-surface);
+  box-shadow: var(--ness-shadow);
+  backdrop-filter: blur(18px);
+}
+
+:global(html[data-theme='dark']) .routePanel {
+  --route-accent: var(--ness-accent-bright);
+  --route-ready: #56d68b;
+}
+
+.panelHeader,
+.panelFooter {
+  min-height: 46px;
+  display: grid;
+  align-items: center;
+  padding: 0 16px;
+  color: var(--ness-copy);
+  font-family: var(--ness-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.panelHeader {
+  grid-template-columns: 1fr auto 1fr;
+  border-bottom: 1px solid var(--ness-border);
+}
+
+.panelHeader strong {
+  justify-self: end;
+  color: var(--route-ready);
+  font-weight: 500;
+}
+
+.windowDots {
+  display: flex;
+  gap: 5px;
+}
+
+.windowDots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ness-border-strong);
+}
+
+.windowDots i:first-child {
+  background: var(--ness-accent);
+}
+
+.routeBody {
+  position: relative;
+  padding: 14px 18px 14px 46px;
+}
+
+.routeRail {
+  position: absolute;
+  top: 25px;
+  bottom: 25px;
+  left: 25px;
+  width: 1px;
+  background: linear-gradient(var(--ness-accent), rgba(224, 35, 78, 0.08));
+}
+
+.routeRail::before,
+.routeRail::after,
+.routeRail span {
+  position: absolute;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ness-accent-bright);
+  border-radius: 50%;
+  background: var(--ness-surface);
+  content: '';
+}
+
+.routeRail::before {
+  top: 0;
+}
+
+.routeRail::after {
+  bottom: 0;
+}
+
+.routeRail span {
+  top: 0;
+  border: 0;
+  background: var(--ness-accent-bright);
+  box-shadow: 0 0 18px var(--ness-accent);
+  animation: routePulse 3.2s ease-in-out infinite;
+}
+
+.routeRow {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(130px, 1.2fr) auto;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid var(--ness-border);
+  font-family: var(--ness-font-mono);
+  font-size: 11px;
+}
+
+.routeRow:last-child {
+  border-bottom: 0;
+}
+
+.routeRow code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ness-heading);
+  font-size: inherit;
+}
+
+.routeRow span {
+  overflow: hidden;
+  color: var(--ness-copy);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routeRow em {
+  padding: 3px 6px;
+  border: 1px solid var(--ness-border-strong);
+  border-radius: 3px;
+  color: var(--route-accent);
+  font-size: 9px;
+  font-style: normal;
+  text-transform: uppercase;
+}
+
+.panelFooter {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  border-top: 1px solid var(--ness-border);
+  text-align: center;
+}
+
+.manifestSection,
+.cliSection,
+.finalCta {
+  width: var(--home-width);
+  margin: 0 auto;
+}
+
+.manifestSection {
+  padding: 120px 0;
+}
+
+.sectionHeading {
+  display: grid;
+  grid-template-columns: 0.36fr 1fr;
+  gap: 48px;
+  align-items: start;
+  margin-bottom: 56px;
+}
+
+.sectionHeading > p,
+.cliCopy > .kicker {
+  color: var(--ness-accent-bright);
+  font-family: var(--ness-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sectionHeading h2,
+.cliCopy h2,
+.finalCta h2 {
+  margin: 0;
+  color: var(--ness-heading);
+  font-family: var(--ness-font-display);
+  font-size: clamp(36px, 4.8vw, 64px);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.capabilityGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--ness-border);
+  border-left: 1px solid var(--ness-border);
+}
+
+.capability {
+  min-height: 340px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--ness-border);
+  border-bottom: 1px solid var(--ness-border);
+  background: var(--ness-surface);
+  transition: background 180ms ease;
+}
+
+.capability:hover {
+  background: var(--ness-panel);
+}
+
+.capability > span {
+  color: var(--ness-accent-bright);
+  font-family: var(--ness-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.capability h3 {
+  margin: 72px 0 16px;
+  color: var(--ness-heading);
+  font-family: var(--ness-font-display);
+  font-size: 25px;
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+
+.capability p {
+  color: var(--ness-copy);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.capability a {
+  margin-top: auto;
+  color: var(--ness-muted);
+  font-family: var(--ness-font-mono);
+  font-size: 11px;
+}
+
+.capability a:hover {
+  color: var(--ness-accent-bright);
+  text-decoration: none;
+}
+
+.cliSection {
+  padding: 112px 0;
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: clamp(48px, 9vw, 120px);
+  align-items: center;
+  border-top: 1px solid var(--ness-border);
+}
+
+.cliCopy > p:not(.kicker) {
+  max-width: 520px;
+  margin: 24px 0;
+  color: var(--ness-copy);
+  line-height: 1.8;
+}
+
+.cliCopy h2 {
+  margin-top: 18px;
+  font-size: clamp(38px, 4.2vw, 58px);
+}
+
+.textAction {
+  color: var(--ness-accent-bright);
+  font-family: var(--ness-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.terminal {
+  overflow: hidden;
+  border: 1px solid var(--ness-border-strong);
+  border-radius: 8px;
+  background: #0b0b0e;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.32);
+}
+
+.terminalBar {
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--ness-border);
+  color: var(--ness-muted);
+  font-family: var(--ness-font-mono);
+  font-size: 10px;
+}
+
+.terminalBar span:last-child {
+  color: #56d68b;
+  font-size: 8px;
+}
+
+.terminal pre {
+  margin: 0;
+  padding: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--ness-copy);
+  font-size: clamp(11px, 1.2vw, 13px);
+  line-height: 2.1;
+}
+
+.prompt {
+  color: var(--ness-accent-bright);
+}
+
+.success {
+  color: #56d68b;
+}
+
+.muted {
+  color: var(--ness-muted);
+}
+
+.finalCta {
+  margin-bottom: 96px;
+  padding: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  border: 1px solid rgba(255, 75, 110, 0.26);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(224, 35, 78, 0.14), transparent 55%),
+    var(--ness-surface);
+}
+
+.finalCta span {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--ness-accent-bright);
+  font-family: var(--ness-font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.finalCta h2 {
+  max-width: 700px;
+  font-size: clamp(32px, 4vw, 52px);
+}
+
+@keyframes routePulse {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.25;
+  }
+
+  50% {
+    transform: translateY(180px);
+    opacity: 1;
   }
 }
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+@media (max-width: 996px) {
+  .home {
+    --home-width: min(100% - 32px, 760px);
+  }
+
+  .heroGrid,
+  .cliSection {
+    grid-template-columns: 1fr;
+  }
+
+  .heroGrid {
+    padding-top: 82px;
+  }
+
+  .heroVisual {
+    max-width: 620px;
+    padding-top: 38px;
+  }
+
+  .brandOrb {
+    top: -58px;
+    right: -18px;
+    width: 180px;
+    height: 180px;
+  }
+
+  .sectionHeading {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .capabilityGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .capability {
+    min-height: 270px;
+  }
+
+  .capability h3 {
+    margin-top: 44px;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero {
+    min-height: auto;
+    background-size:
+      40px 40px,
+      40px 40px,
+      auto,
+      auto;
+  }
+
+  .heroGrid {
+    padding: 64px 0 72px;
+  }
+
+  .heroCopy h1 {
+    font-size: clamp(48px, 15vw, 68px);
+  }
+
+  .heroActions,
+  .primaryAction,
+  .secondaryAction {
+    width: 100%;
+  }
+
+  .installCommand {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .installCommand small {
+    width: 100%;
+    padding: 6px 0 0 20px;
+    border-left: 0;
+  }
+
+  .heroVisual {
+    padding-top: 16px;
+  }
+
+  .brandOrb {
+    display: none;
+  }
+
+  .routeBody {
+    padding-left: 36px;
+  }
+
+  .routeRail {
+    left: 19px;
+  }
+
+  .routeRow {
+    grid-template-columns: 1fr auto;
+  }
+
+  .routeRow span {
+    display: none;
+  }
+
+  .panelFooter {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .panelFooter span:not(:first-child) {
+    display: none;
+  }
+
+  .manifestSection,
+  .cliSection {
+    padding: 80px 0;
+  }
+
+  .capability {
+    padding: 24px;
+  }
+
+  .terminal pre {
+    padding: 20px;
+    font-size: 10px;
+  }
+
+  .finalCta {
+    padding: 32px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .routeRail span {
+    animation: none;
+    transform: translateY(90px);
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    transition: none;
+  }
 }

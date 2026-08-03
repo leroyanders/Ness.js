@@ -1,0 +1,49 @@
+{
+  "name": "@ness/assets",
+  "version": "6.0.0",
+  "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./font": {
+      "types": "./src/font.d.ts",
+      "default": "./src/font.js"
+    },
+    "./image": {
+      "types": "./src/image.d.ts",
+      "browser": "./src/image.js",
+      "default": "./src/image-server.js"
+    },
+    "./image/server": {
+      "types": "./src/image-server.d.ts",
+      "default": "./src/image-server.js"
+    },
+    "./metadata": {
+      "types": "./src/metadata.d.ts",
+      "default": "./src/metadata.js"
+    },
+    "./script": {
+      "types": "./src/script.d.ts",
+      "default": "./src/script.js"
+    }
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "dependencies": {
+    "@ness/server": "^6.0.0",
+    "sharp": "0.35.3"
+  },
+  "peerDependencies": {
+    "react": ">=19.2.7"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}
