@@ -143,6 +143,7 @@ ness doctor             Diagnose an application
 - `@nessframework/router` — unified configuration, file routing, i18n, and Vite integration
 - `@nessframework/server` — Web request handler, middleware, redirects, rewrites, and responses
 - `@nessframework/cache` — cache profiles, SWR, tags, and memory, filesystem, SQLite, and Redis adapters
+- `@nessframework/components` — unstyled components for streaming, pending UI, forms, and URL-driven search and pagination
 - `@nessframework/assets` — optimized images, fonts, scripts, and metadata
 - `@nessframework/instrumentation` — lifecycle hooks and Core Web Vitals
 - `@nessframework/deployment` — standalone output, dependency tracing, and Node, Lambda, and Cloudflare Workers adapters

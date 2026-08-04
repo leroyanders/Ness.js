@@ -1,0 +1,40 @@
+{
+  "name": "@nessframework/components",
+  "version": "1.0.0",
+  "description": "Unstyled React components bound to the Ness.js request lifecycle: streaming, pending state, optimistic forms, and URL-driven search and pagination.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "readme.md"
+  ],
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "peerDependencies": {
+    "react": ">=19.2.7",
+    "react-router": ">=8.0.0"
+  },
+  "keywords": [
+    "ness",
+    "react",
+    "components",
+    "headless",
+    "unstyled",
+    "streaming",
+    "forms"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/components"
+  },
+  "author": "Leroy Anders <leroy.anders23@gmail.com>",
+  "license": "MIT"
+}

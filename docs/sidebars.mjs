@@ -59,6 +59,7 @@ const sidebars = {
         'documentation/packages',
         'documentation/router',
         'documentation/data-fetching',
+        'documentation/components',
         'documentation/nest',
         'documentation/client/render',
         'documentation/server/render',

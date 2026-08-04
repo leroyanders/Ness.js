@@ -56,7 +56,8 @@
     "publish:analyzer": "npm publish --workspace @nessframework/analyzer --access public",
     "publish:compression": "npm publish --workspace @nessframework/compression --access public",
     "publish:env": "npm publish --workspace @nessframework/env --access public",
-    "publish:security": "npm publish --workspace @nessframework/security --access public"
+    "publish:security": "npm publish --workspace @nessframework/security --access public",
+    "publish:components": "npm publish --workspace @nessframework/components --access public"
   },
   "devDependencies": {
     "@vitejs/plugin-rsc": "0.5.27",

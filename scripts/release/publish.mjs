@@ -32,6 +32,7 @@ const ROOT = path.resolve(fileURLToPath(new URL('../..', import.meta.url)));
 const TIERS = [
   [
     '@nessframework/cache',
+    '@nessframework/components',
     '@nessframework/instrumentation',
     '@nessframework/router',
   ],

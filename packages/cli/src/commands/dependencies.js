@@ -6,6 +6,7 @@ import { runNpm } from '../lib/process.js';
 const NESS_PACKAGES = new Set([
   'analyzer',
   'cli',
+  'components',
   'compression',
   'core',
   'default',

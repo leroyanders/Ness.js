@@ -39,3 +39,39 @@ export const publicTypeSurface = {
   testing,
   vite,
 };
+
+/* @nessframework/components */
+import {
+  ClientOnly,
+  Form as NessForm,
+  NavigationProgress,
+  Pagination,
+  Pending,
+  SearchField,
+  Streamed,
+  useActivity,
+  useHydrated,
+  useSearchParam,
+  useSubmitOnChange,
+} from '@nessframework/components';
+
+const hydrated: boolean = useHydrated();
+const activity = useActivity();
+const busy: boolean = activity.busy;
+const [query, setQuery] = useSearchParam('q', { defaultValue: '' });
+setQuery('tigers');
+setQuery(2);
+setQuery(undefined);
+const submitOnChange = useSubmitOnChange({ replace: true });
+
+void hydrated;
+void busy;
+void query;
+void submitOnChange;
+void ClientOnly;
+void NessForm;
+void NavigationProgress;
+void Pagination;
+void Pending;
+void SearchField;
+void Streamed;
