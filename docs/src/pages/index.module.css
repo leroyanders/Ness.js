@@ -1,728 +1,499 @@
-.home {
-  --home-width: min(1180px, calc(100vw - 48px));
-  overflow: hidden;
-  background: var(--ness-background);
+/*
+ * The homepage borrows nothing but the site tokens. Its one piece of colour is
+ * the same server/browser pair used in the documentation and the starter page,
+ * applied to the file tree — which is the argument, not decoration.
+ */
+
+/* One tone per subsystem, resolved from a data attribute so a card, a number,
+   and a tree row that describe the same thing always look the same. */
+[data-tone='server'] {
+  --tone: var(--ness-server);
+  --tone-soft: var(--ness-server-soft);
 }
 
-.hero {
+[data-tone='client'] {
+  --tone: var(--ness-client);
+  --tone-soft: var(--ness-client-soft);
+}
+
+[data-tone='data'] {
+  --tone: var(--ness-data);
+  --tone-soft: var(--ness-data-soft);
+}
+
+[data-tone='deploy'] {
+  --tone: var(--ness-deploy);
+  --tone-soft: var(--ness-deploy-soft);
+}
+
+.page {
+  background: var(--ness-paper);
+  /* `clip` rather than `hidden`: it contains the wash without turning the page
+     into a scroll container. */
+  overflow-x: clip;
   position: relative;
-  min-height: 740px;
-  display: grid;
-  align-items: center;
-  border-bottom: 1px solid var(--ness-border);
+}
+
+/*
+ * A quiet wash keyed to the two sides of the request, so the page opens with
+ * colour without a gradient blob doing the talking.
+ *
+ * It lives on the full-width page rather than on the centred hero section:
+ * inside the section its edges were visible as a rectangle, and bleeding it
+ * past the viewport widened the document and produced a horizontal scrollbar.
+ */
+.page::before {
   background:
-    linear-gradient(var(--ness-grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ness-grid) 1px, transparent 1px),
     radial-gradient(
-      circle at 78% 30%,
-      rgba(224, 35, 78, 0.18),
-      transparent 30rem
+      55rem 26rem at 22% 0%,
+      var(--ness-server-soft) 0%,
+      transparent 72%
     ),
-    var(--ness-background);
-  background-size:
-    64px 64px,
-    64px 64px,
-    auto,
-    auto;
-}
-
-.hero::before {
-  position: absolute;
-  inset: 0;
+    radial-gradient(
+      50rem 28rem at 78% 4%,
+      var(--ness-client-soft) 0%,
+      transparent 72%
+    );
   content: '';
+  height: 38rem;
+  inset-inline: 0;
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
   pointer-events: none;
-  background: linear-gradient(
-    90deg,
-    var(--ness-background) 0%,
-    transparent 32%,
-    transparent 70%,
-    var(--ness-background) 100%
-  );
+  position: absolute;
+  top: 0;
+  z-index: 0;
 }
 
-.heroGrid {
+.page > section {
   position: relative;
   z-index: 1;
-  width: var(--home-width);
-  margin: 0 auto;
-  padding: 108px 0 96px;
+}
+
+.page section {
+  margin-inline: auto;
+  max-width: 68rem;
+  padding-inline: 1.5rem;
+}
+
+/* Hero -------------------------------------------------------------------- */
+
+.hero {
+  align-items: start;
   display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
-  gap: clamp(48px, 8vw, 112px);
-  align-items: center;
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+  grid-template-columns: minmax(0, 1fr);
+  padding-block: clamp(3rem, 8vw, 6rem) clamp(2.5rem, 6vw, 4rem);
+  position: relative;
+}
+
+@media (min-width: 62rem) {
+  .hero {
+    /* Centred rather than top-aligned: the tree is shorter than the copy, and
+       hanging it from the top left an empty quarter under it. */
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 28rem);
+  }
+}
+
+.eyebrow {
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  margin: 0 0 1rem;
+  text-transform: uppercase;
 }
 
 .heroCopy h1 {
-  max-width: 760px;
-  margin: 22px 0 28px;
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-size: clamp(54px, 6.8vw, 94px);
-  font-weight: 800;
-  letter-spacing: -0.065em;
-  line-height: 0.96;
-}
-
-.heroCopy h1 span {
-  color: var(--ness-accent);
-}
-
-.kicker {
-  margin: 0;
-  color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.kicker span {
-  display: inline-flex;
-  margin-right: 12px;
-  padding: 6px 9px;
-  border: 1px solid rgba(255, 75, 110, 0.45);
-  border-radius: 4px;
-  background: rgba(224, 35, 78, 0.1);
-  color: var(--ness-accent-bright);
-}
-
-.heroLead {
-  max-width: 650px;
-  margin: 0;
-  color: var(--ness-copy);
-  font-size: clamp(17px, 1.7vw, 20px);
-  line-height: 1.75;
-}
-
-.heroActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 36px;
-}
-
-.primaryAction,
-.secondaryAction {
-  display: inline-flex;
-  min-height: 50px;
-  align-items: center;
-  justify-content: center;
-  padding: 0 22px;
-  border: 1px solid var(--ness-border-strong);
-  border-radius: 6px;
-  font-size: 14px;
+  color: var(--ness-ink);
+  font-size: clamp(2.1rem, 5.2vw, 3.25rem);
   font-weight: 700;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background 160ms ease;
-}
-
-.primaryAction {
-  border-color: var(--ness-accent);
-  background: var(--ness-accent);
-  color: white;
-  box-shadow: 0 12px 36px rgba(224, 35, 78, 0.22);
-}
-
-.primaryAction:hover {
-  background: var(--ness-accent-bright);
-  color: white;
-  text-decoration: none;
-  transform: translateY(-2px);
-}
-
-.secondaryAction {
-  background: rgba(255, 255, 255, 0.02);
-  color: var(--ness-heading);
-}
-
-.secondaryAction:hover {
-  border-color: var(--ness-accent);
-  color: var(--ness-heading);
-  text-decoration: none;
-  transform: translateY(-2px);
-}
-
-.installCommand {
-  width: fit-content;
-  max-width: 100%;
-  margin-top: 36px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 11px 14px;
-  border-left: 2px solid var(--ness-accent);
-  background: rgba(255, 255, 255, 0.025);
-  color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 12px;
-}
-
-.installCommand span {
-  color: var(--ness-accent-bright);
-}
-
-.installCommand code {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ness-heading);
-  font-size: inherit;
-}
-
-.installCommand small {
-  padding-left: 10px;
-  border-left: 1px solid var(--ness-border);
-  color: var(--ness-muted);
-  white-space: nowrap;
-}
-
-.heroVisual {
-  position: relative;
-  padding-top: 64px;
-}
-
-.brandOrb {
-  position: absolute;
-  top: -78px;
-  right: -28px;
-  width: 230px;
-  height: 230px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(255, 75, 110, 0.22);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(224, 35, 78, 0.2), transparent 66%);
-  opacity: 0.9;
-}
-
-.brandOrb::before,
-.brandOrb::after {
-  position: absolute;
-  border: 1px solid rgba(255, 75, 110, 0.14);
-  border-radius: inherit;
-  content: '';
-}
-
-.brandOrb::before {
-  inset: 28px;
-}
-
-.brandOrb::after {
-  inset: 58px;
-}
-
-.brandOrb img {
-  width: 92px;
-  filter: invert(1) brightness(2);
-  opacity: 0.9;
-}
-
-.routePanel {
-  --route-accent: var(--ness-accent);
-  --route-ready: #147a48;
-  position: relative;
-  z-index: 1;
-  overflow: hidden;
-  border: 1px solid var(--ness-border-strong);
-  border-radius: 10px;
-  background: var(--ness-surface);
-  box-shadow: var(--ness-shadow);
-  backdrop-filter: blur(18px);
-}
-
-:global(html[data-theme='dark']) .routePanel {
-  --route-accent: var(--ness-accent-bright);
-  --route-ready: #56d68b;
-}
-
-.panelHeader,
-.panelFooter {
-  min-height: 46px;
-  display: grid;
-  align-items: center;
-  padding: 0 16px;
-  color: var(--ness-copy);
-  font-family: var(--ness-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.panelHeader {
-  grid-template-columns: 1fr auto 1fr;
-  border-bottom: 1px solid var(--ness-border);
-}
-
-.panelHeader strong {
-  justify-self: end;
-  color: var(--route-ready);
-  font-weight: 500;
-}
-
-.windowDots {
-  display: flex;
-  gap: 5px;
-}
-
-.windowDots i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ness-border-strong);
-}
-
-.windowDots i:first-child {
-  background: var(--ness-accent);
-}
-
-.routeBody {
-  position: relative;
-  padding: 14px 18px 14px 46px;
-}
-
-.routeRail {
-  position: absolute;
-  top: 25px;
-  bottom: 25px;
-  left: 25px;
-  width: 1px;
-  background: linear-gradient(var(--ness-accent), rgba(224, 35, 78, 0.08));
-}
-
-.routeRail::before,
-.routeRail::after,
-.routeRail span {
-  position: absolute;
-  left: -3px;
-  width: 7px;
-  height: 7px;
-  border: 1px solid var(--ness-accent-bright);
-  border-radius: 50%;
-  background: var(--ness-surface);
-  content: '';
-}
-
-.routeRail::before {
-  top: 0;
-}
-
-.routeRail::after {
-  bottom: 0;
-}
-
-.routeRail span {
-  top: 0;
-  border: 0;
-  background: var(--ness-accent-bright);
-  box-shadow: 0 0 18px var(--ness-accent);
-  animation: routePulse 3.2s ease-in-out infinite;
-}
-
-.routeRow {
-  min-height: 62px;
-  display: grid;
-  grid-template-columns: minmax(110px, 1fr) minmax(130px, 1.2fr) auto;
-  align-items: center;
-  gap: 14px;
-  border-bottom: 1px solid var(--ness-border);
-  font-family: var(--ness-font-mono);
-  font-size: 11px;
-}
-
-.routeRow:last-child {
-  border-bottom: 0;
-}
-
-.routeRow code {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ness-heading);
-  font-size: inherit;
-}
-
-.routeRow span {
-  overflow: hidden;
-  color: var(--ness-copy);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.routeRow em {
-  padding: 3px 6px;
-  border: 1px solid var(--ness-border-strong);
-  border-radius: 3px;
-  color: var(--route-accent);
-  font-size: 9px;
-  font-style: normal;
-  text-transform: uppercase;
-}
-
-.panelFooter {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  border-top: 1px solid var(--ness-border);
-  text-align: center;
-}
-
-.manifestSection,
-.cliSection,
-.finalCta {
-  width: var(--home-width);
-  margin: 0 auto;
-}
-
-.manifestSection {
-  padding: 120px 0;
-}
-
-.sectionHeading {
-  display: grid;
-  grid-template-columns: 0.36fr 1fr;
-  gap: 48px;
-  align-items: start;
-  margin-bottom: 56px;
-}
-
-.sectionHeading > p,
-.cliCopy > .kicker {
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.sectionHeading h2,
-.cliCopy h2,
-.finalCta h2 {
-  margin: 0;
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-size: clamp(36px, 4.8vw, 64px);
-  font-weight: 750;
-  letter-spacing: -0.045em;
-  line-height: 1.05;
-}
-
-.capabilityGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  border-top: 1px solid var(--ness-border);
-  border-left: 1px solid var(--ness-border);
-}
-
-.capability {
-  min-height: 340px;
-  padding: 30px;
-  display: flex;
-  flex-direction: column;
-  border-right: 1px solid var(--ness-border);
-  border-bottom: 1px solid var(--ness-border);
-  background: var(--ness-surface);
-  transition: background 180ms ease;
-}
-
-.capability:hover {
-  background: var(--ness-panel);
-}
-
-.capability > span {
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.capability h3 {
-  margin: 72px 0 16px;
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-size: 25px;
   letter-spacing: -0.035em;
-  line-height: 1.2;
+  line-height: 1.08;
+  margin: 0 0 1.25rem;
+  text-wrap: balance;
 }
 
-.capability p {
-  color: var(--ness-copy);
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.capability a {
-  margin-top: auto;
+/* The second sentence answers the first, so it gets its own line. Balanced on
+   its own rather than with the first: as one block the browser evens out all
+   three lines and leaves "One filesystem." short of the measure. */
+.heroCopy h1 span {
   color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 11px;
-}
-
-.capability a:hover {
-  color: var(--ness-accent-bright);
-  text-decoration: none;
-}
-
-.cliSection {
-  padding: 112px 0;
-  display: grid;
-  grid-template-columns: 0.82fr 1.18fr;
-  gap: clamp(48px, 9vw, 120px);
-  align-items: center;
-  border-top: 1px solid var(--ness-border);
-}
-
-.cliCopy > p:not(.kicker) {
-  max-width: 520px;
-  margin: 24px 0;
-  color: var(--ness-copy);
-  line-height: 1.8;
-}
-
-.cliCopy h2 {
-  margin-top: 18px;
-  font-size: clamp(38px, 4.2vw, 58px);
-}
-
-.textAction {
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.terminal {
-  overflow: hidden;
-  border: 1px solid var(--ness-border-strong);
-  border-radius: 8px;
-  background: #0b0b0e;
-  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.32);
-}
-
-.terminalBar {
-  height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--ness-border);
-  color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 10px;
-}
-
-.terminalBar span:last-child {
-  color: #56d68b;
-  font-size: 8px;
-}
-
-.terminal pre {
-  margin: 0;
-  padding: 28px;
-  border: 0;
-  background: transparent;
-  color: var(--ness-copy);
-  font-size: clamp(11px, 1.2vw, 13px);
-  line-height: 2.1;
-}
-
-.prompt {
-  color: var(--ness-accent-bright);
-}
-
-.success {
-  color: #56d68b;
-}
-
-.muted {
-  color: var(--ness-muted);
-}
-
-.finalCta {
-  margin-bottom: 96px;
-  padding: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 48px;
-  border: 1px solid rgba(255, 75, 110, 0.26);
-  border-radius: 8px;
-  background:
-    linear-gradient(120deg, rgba(224, 35, 78, 0.14), transparent 55%),
-    var(--ness-surface);
-}
-
-.finalCta span {
   display: block;
-  margin-bottom: 12px;
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 11px;
-  text-transform: uppercase;
+  font-weight: 400;
+  text-wrap: balance;
 }
 
-.finalCta h2 {
-  max-width: 700px;
-  font-size: clamp(32px, 4vw, 52px);
+.lede {
+  color: var(--ness-copy);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  margin: 0 0 1.75rem;
+  max-width: 34rem;
 }
 
-@keyframes routePulse {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.25;
-  }
-
-  50% {
-    transform: translateY(180px);
-    opacity: 1;
-  }
+.command {
+  align-items: center;
+  background: var(--ness-surface);
+  border: 1px solid var(--ness-line);
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  max-width: 34rem;
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
 }
 
-@media (max-width: 996px) {
-  .home {
-    --home-width: min(100% - 32px, 760px);
-  }
-
-  .heroGrid,
-  .cliSection {
-    grid-template-columns: 1fr;
-  }
-
-  .heroGrid {
-    padding-top: 82px;
-  }
-
-  .heroVisual {
-    max-width: 620px;
-    padding-top: 38px;
-  }
-
-  .brandOrb {
-    top: -58px;
-    right: -18px;
-    width: 180px;
-    height: 180px;
-  }
-
-  .sectionHeading {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .capabilityGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .capability {
-    min-height: 270px;
-  }
-
-  .capability h3 {
-    margin-top: 44px;
-  }
+.command code {
+  color: var(--ness-ink);
+  font-family: var(--ness-mono);
+  font-size: 0.8125rem;
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
 }
 
-@media (max-width: 600px) {
-  .hero {
-    min-height: auto;
-    background-size:
-      40px 40px,
-      40px 40px,
-      auto,
-      auto;
-  }
+.command code::before {
+  color: var(--ness-muted);
+  content: '$ ';
+}
 
-  .heroGrid {
-    padding: 64px 0 72px;
-  }
+.copy {
+  align-items: center;
+  background: var(--ness-sunken);
+  border: 1px solid var(--ness-line);
+  border-radius: 6px;
+  color: var(--ness-muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  height: 2rem;
+  justify-content: center;
+  padding: 0;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+  width: 2rem;
+}
 
-  .heroCopy h1 {
-    font-size: clamp(48px, 15vw, 68px);
-  }
+.copy svg {
+  fill: none;
+  height: 1rem;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
+  width: 1rem;
+}
 
-  .heroActions,
-  .primaryAction,
-  .secondaryAction {
-    width: 100%;
-  }
+.copy:hover {
+  border-color: var(--ness-line-strong);
+  color: var(--ness-ink);
+}
 
-  .installCommand {
-    align-items: flex-start;
-    flex-wrap: wrap;
-  }
+.copy[data-state='copied'] {
+  border-color: var(--ness-deploy);
+  color: var(--ness-deploy);
+}
 
-  .installCommand small {
-    width: 100%;
-    padding: 6px 0 0 20px;
-    border-left: 0;
-  }
+.copy[data-state='failed'] {
+  border-color: var(--ness-server);
+  color: var(--ness-server);
+}
 
-  .heroVisual {
-    padding-top: 16px;
-  }
-
-  .brandOrb {
-    display: none;
-  }
-
-  .routeBody {
-    padding-left: 36px;
-  }
-
-  .routeRail {
-    left: 19px;
-  }
-
-  .routeRow {
-    grid-template-columns: 1fr auto;
-  }
-
-  .routeRow span {
-    display: none;
-  }
-
-  .panelFooter {
-    grid-template-columns: 1fr;
-    padding: 10px;
-  }
-
-  .panelFooter span:not(:first-child) {
-    display: none;
-  }
-
-  .manifestSection,
-  .cliSection {
-    padding: 80px 0;
-  }
-
-  .capability {
-    padding: 24px;
-  }
-
-  .terminal pre {
-    padding: 20px;
-    font-size: 10px;
-  }
-
-  .finalCta {
-    padding: 32px 24px;
-    flex-direction: column;
-    align-items: flex-start;
-  }
+.srOnly {
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .routeRail span {
-    animation: none;
-    transform: translateY(90px);
+  .copy {
+    transition: none;
   }
+}
 
-  .primaryAction,
-  .secondaryAction {
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Once the pair no longer fits on one line they stack, and two stacked buttons
+   of different widths read as an accident. Full width makes it a choice. */
+@media (max-width: 30rem) {
+  .actions > * {
+    flex: 1 1 100%;
+    justify-content: center;
+  }
+}
+
+.primary,
+.secondary {
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.65rem 1.1rem;
+  text-decoration: none !important;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.primary {
+  background: var(--ness-ink);
+  border: 1px solid var(--ness-ink);
+  color: var(--ness-paper);
+}
+
+.primary:hover {
+  background: var(--ness-client);
+  border-color: var(--ness-client);
+  color: var(--ness-paper);
+}
+
+.secondary {
+  background: var(--ness-surface);
+  border: 1px solid var(--ness-line);
+  color: var(--ness-ink);
+}
+
+.secondary:hover {
+  border-color: var(--ness-line-strong);
+  color: var(--ness-ink);
+}
+
+/* The file tree ----------------------------------------------------------- */
+
+.tree {
+  background: var(--ness-surface);
+  border: 1px solid var(--ness-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.treeHead,
+.treeFoot {
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.07em;
+  padding: 0.7rem 1rem;
+  text-transform: uppercase;
+}
+
+.treeHead {
+  border-bottom: 1px solid var(--ness-line);
+}
+
+.treeFoot {
+  border-top: 1px solid var(--ness-line);
+  display: flex;
+  gap: 1.25rem;
+}
+
+.treeBody {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0;
+}
+
+.treeRow:has(.server) {
+  background: var(--ness-server-soft);
+}
+
+.treeRow:has(.browser) {
+  background: var(--ness-client-soft);
+}
+
+.treeRow {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: space-between;
+  padding: 0.15rem 1rem;
+}
+
+/* Infima gives every `code` a chip background and border. Here the code is the
+   content, not an inline mention, so it is reset back to plain text. */
+.treeRow code,
+.command code {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+}
+
+.treeRow code {
+  color: var(--ness-ink);
+  font-family: var(--ness-mono);
+  font-size: 0.8125rem;
+  white-space: pre;
+}
+
+/* Where the file runs. The only colour on the page, and it carries the point. */
+.browser,
+.server {
+  align-items: center;
+  display: inline-flex;
+  flex: none;
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  gap: 0.35rem;
+  letter-spacing: 0.04em;
+  text-transform: lowercase;
+}
+
+.browser::before,
+.server::before {
+  border-radius: 50%;
+  content: '';
+  height: 0.375rem;
+  width: 0.375rem;
+}
+
+.browser {
+  color: var(--ness-client);
+}
+
+.browser::before {
+  background: var(--ness-client);
+}
+
+.server {
+  color: var(--ness-server);
+}
+
+.server::before {
+  background: var(--ness-server);
+}
+
+/* Measured ---------------------------------------------------------------- */
+
+.sectionLabel {
+  border-top: 2px solid var(--ness-line);
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 0 0 2rem;
+  padding-top: 1.5rem;
+  text-transform: uppercase;
+}
+
+.measured,
+.capabilities {
+  padding-block: clamp(2rem, 5vw, 3.5rem);
+}
+
+.numbers {
+  display: grid;
+  gap: 2rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  margin: 0 0 2rem;
+}
+
+.numbers dt {
+  color: var(--tone, var(--ness-ink));
+  font-size: clamp(1.6rem, 3.5vw, 2.1rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.numbers dd {
+  color: var(--ness-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 0;
+}
+
+/* The losing rows are in the copy on purpose: a benchmark anyone can re-run is
+   worthless if the published version omits what it would show them. */
+.caveat {
+  border-left: 2px solid var(--ness-line-strong);
+  color: var(--ness-muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 44rem;
+  padding-left: 1rem;
+}
+
+/* Capabilities ------------------------------------------------------------ */
+
+.grid {
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  background: var(--ness-line);
+  border: 1px solid var(--ness-line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.grid article {
+  background: var(--ness-surface);
+  border-top: 3px solid var(--tone, var(--ness-line-strong));
+  padding: 1.4rem 1.5rem 1.5rem;
+}
+
+.cardLabel {
+  color: var(--tone, var(--ness-muted));
+  font-family: var(--ness-mono);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.6rem;
+  text-transform: uppercase;
+}
+
+.grid h3 {
+  color: var(--ness-ink);
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  margin: 0 0 0.5rem;
+}
+
+.grid p {
+  color: var(--ness-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Close ------------------------------------------------------------------- */
+
+.close {
+  border-top: 1px solid var(--ness-line);
+  padding-block: clamp(3rem, 7vw, 5rem);
+  text-align: center;
+}
+
+.close h2 {
+  color: var(--ness-ink);
+  font-size: clamp(1.5rem, 3.5vw, 2rem);
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+}
+
+.close p {
+  color: var(--ness-muted);
+  margin: 0 auto 1.75rem;
+  max-width: 34rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary {
     transition: none;
   }
 }

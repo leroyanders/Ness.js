@@ -1,0 +1,69 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>repro</title>
+<style>
+  body { font-family: system-ui; padding: 20px; background: #f6f7f9; }
+  /* ---- stock Infima (subset, verbatim) ---- */
+  .menu__list-item-collapsible { flex-wrap: wrap; position: relative; border-radius: .25rem; display: flex; }
+  .menu__link { color: #5c6675; flex: 1; line-height: 1.25; padding: .375rem .75rem; align-items: center; border-radius: .25rem; display: flex; }
+  .menu__link--sublist-caret:after {
+    content: ''; margin-left: auto; min-width: 1.25rem;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" viewBox="0 0 24 24"><path fill="rgba(0,0,0,0.5)" d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"></path></svg>') 50% / 2rem 2rem;
+    height: 1.25rem; transform: rotate(180deg); width: 1.25rem;
+  }
+  /* ---- custom.css (verbatim, lines 371-399) ---- */
+  .menu__list-item-collapsible > .menu__link--sublist {
+    align-items: center; color: #10131a; display: flex; font-family: monospace;
+    font-size: .6875rem; font-weight: 600; gap: .5rem; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .menu__list-item-collapsible > .menu__link--sublist::after {
+    border-radius: 2px; content: ''; height: .75rem; order: -1; width: 3px;
+  }
+  .lvl1:nth-of-type(1) > div > .menu__link--sublist::after { background: #2c7a51; }
+
+  .box { width: 280px; background: #fff; border: 1px solid #e0e4ea; }
+
+  /* ---- focus ring clipping ---- */
+  :focus-visible { outline: 2px solid #0b6b7d; outline-offset: 2px; border-radius: 4px; }
+  .codeBlockContainer { border: 1px solid #e0e4ea; border-radius: 10px; overflow: hidden; margin-top: 24px; width: 320px; }
+  .codeBlockContent { position: relative; border-radius: inherit; }
+  pre.codeBlock { margin: 0; padding: 0; background: #fff; overflow: auto; }
+  code.codeBlockLines { display:block; padding: 1rem; font: 13px/1.7 monospace; }
+  .noclip { overflow: visible; }
+</style>
+
+<h3>A. sidebar category marker</h3>
+<ul class="box" style="list-style:none;margin:0;padding:8px">
+  <li class="lvl1">
+    <div class="menu__list-item-collapsible">
+      <a href="#" class="menu__link menu__link--sublist menu__link--sublist-caret"><span>Getting Started</span></a>
+    </div>
+  </li>
+  <li><a href="#" class="menu__link">intro</a></li>
+</ul>
+
+<h3>B. code block focus ring (Tab into the pre)</h3>
+<div class="codeBlockContainer">
+  <div class="codeBlockContent"><pre class="codeBlock" tabindex="0"><code class="codeBlockLines">const a = 1;</code></pre></div>
+</div>
+<div class="codeBlockContainer noclip">
+  <div class="codeBlockContent"><pre class="codeBlock" tabindex="0"><code class="codeBlockLines">overflow:visible control</code></pre></div>
+</div>
+
+<script>
+  window.report = () => {
+    const after = getComputedStyle(document.querySelector('.menu__link--sublist'), '::after');
+    const label = document.querySelector('.menu__link--sublist span').getBoundingClientRect();
+    const link  = document.querySelector('.menu__link--sublist').getBoundingClientRect();
+    return {
+      afterWidth: after.width, afterHeight: after.height,
+      afterMarginLeft: after.marginLeft, afterMinWidth: after.minWidth,
+      afterBackgroundImage: after.backgroundImage.slice(0, 40),
+      afterBackgroundColor: after.backgroundColor,
+      linkLeft: link.left, linkRight: link.right,
+      labelLeft: label.left, labelRight: label.right,
+      gapLeftOfLabel: label.left - link.left,
+      gapRightOfLabel: link.right - label.right,
+    };
+  };
+</script>

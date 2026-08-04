@@ -1,73 +1,169 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from '@docusaurus/Link';
 import Layout from '@theme/Layout';
 import styles from './index.module.css';
 
-const capabilities = [
+const INSTALL = 'npx @nessframework/cli@latest new my-app';
+
+/**
+ * The command with a copy button.
+ *
+ * `navigator.clipboard` is unavailable outside a secure context, so a failure
+ * says so instead of silently pretending to have copied — the reader would
+ * otherwise paste whatever was on the clipboard before.
+ */
+const CopyIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <rect x="9" y="9" width="11" height="11" rx="2" />
+    <path d="M5 15V6a2 2 0 0 1 2-2h9" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="m5 13 4.5 4.5L19 7" />
+  </svg>
+);
+
+const AlertIcon = () => (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M12 7v6" />
+    <path d="M12 17h.01" />
+    <circle cx="12" cy="12" r="9" />
+  </svg>
+);
+
+function InstallCommand() {
+  const [state, setState] = useState('idle');
+  const timer = useRef(undefined);
+
+  useEffect(() => () => clearTimeout(timer.current), []);
+
+  const copy = async () => {
+    clearTimeout(timer.current);
+    try {
+      await navigator.clipboard.writeText(INSTALL);
+      setState('copied');
+    } catch {
+      setState('failed');
+    }
+    timer.current = setTimeout(() => setState('idle'), 2000);
+  };
+
+  // The button shows only an icon, so its name has to come from the label —
+  // otherwise a screen reader announces nothing but "button".
+  const label = {
+    idle: `Copy the install command: ${INSTALL}`,
+    copied: 'Copied to the clipboard',
+    failed: 'Could not copy. Select the command and press ⌘C.',
+  }[state];
+
+  const Icon = { idle: CopyIcon, copied: CheckIcon, failed: AlertIcon }[state];
+
+  return (
+    <div className={styles.command}>
+      <code>{INSTALL}</code>
+      <button
+        type="button"
+        className={styles.copy}
+        onClick={copy}
+        data-state={state}
+        aria-label={label}
+        title={label}
+      >
+        <Icon />
+      </button>
+      {/* Announced on change; the button's own name is not re-read until focus
+          moves, so the result would otherwise be silent. */}
+      <span role="status" aria-live="polite" className={styles.srOnly}>
+        {state === 'idle' ? '' : label}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The hero is the file tree, because the file tree is the argument. A React
+ * route and a NestJS controller in one project is the thing no other framework
+ * can show you, and it needs no adjectives.
+ *
+ * `where` marks which side of the request a file runs on, in the same two hues
+ * the documentation and the starter page use.
+ */
+const TREE = [
+  { text: 'app/' },
+  { text: '├── routes/' },
+  { text: '│   ├── page.tsx', where: 'browser', note: 'renders' },
+  { text: '│   ├── page.server.ts', where: 'server', note: 'loader, action' },
+  { text: '│   └── blog/[slug]/page.tsx', where: 'browser' },
+  { text: '└── server/' },
+  { text: '    ├── app.module.ts', where: 'server' },
   {
-    label: 'Routing',
-    title: 'The filesystem is the architecture.',
-    description:
-      'React pages and NestJS controllers stay in one application without collapsing into one bundle.',
-  },
-  {
-    label: 'Server data',
-    title: 'Request and Response all the way down.',
-    description:
-      'Loaders and actions use standard Web APIs, with typed route data and progressive enhancement built in.',
-  },
-  {
-    label: 'Delivery',
-    title: 'Stream first. Cache with intent.',
-    description:
-      'SSR, prerendering, ISR and tagged invalidation share one predictable production runtime.',
+    text: '    └── api.controller.ts',
+    where: 'server',
+    note: 'GET /api/health',
   },
 ];
 
-function RoutePanel() {
+const MEASURED = [
+  {
+    value: '1.9–2.2×',
+    label: 'Throughput on server-rendered routes',
+    tone: 'server',
+  },
+  { value: '2.7×', label: 'Faster production builds', tone: 'deploy' },
+  { value: '44%', label: 'Less client JavaScript', tone: 'client' },
+  { value: '51%', label: 'Smaller install', tone: 'deploy' },
+];
+
+const CAPABILITIES = [
+  {
+    tone: 'server',
+    label: 'Routing',
+    title: 'Routes and controllers, one tree',
+    body: 'React pages with loaders and actions beside NestJS controllers with modules, guards, and dependency injection. One process, one build, one deployment.',
+  },
+  {
+    tone: 'data',
+    label: 'Caching',
+    title: 'Caching that survives a second instance',
+    body: 'Filesystem, SQLite, and Redis adapters with tag and path invalidation, an optional in-process tier, and eviction broadcast between instances.',
+  },
+  {
+    tone: 'deploy',
+    label: 'Deployment',
+    title: 'Ships as one directory',
+    body: 'ness bundle node traces the production dependency graph and writes a self-contained folder. It runs on a bare Node image with no install step.',
+  },
+  {
+    tone: 'client',
+    label: 'Runtime',
+    title: 'Web APIs, not wrappers',
+    body: 'Loaders and actions receive a Request and return a Response. Middleware, cookies, headers, and redirects are the platform’s, not a framework dialect.',
+  },
+];
+
+function Tree() {
   return (
     <div
-      className={styles.routePanel}
-      aria-label="Example Ness.js route manifest"
+      className={styles.tree}
+      role="img"
+      aria-label="A Ness.js project: React routes and NestJS controllers in one file tree"
     >
-      <div className={styles.panelHeader}>
-        <span className={styles.windowDots} aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-        <span>route manifest</span>
-        <strong>ready</strong>
-      </div>
-      <div className={styles.routeBody}>
-        <div className={styles.routeRail} aria-hidden="true">
-          <span />
-        </div>
-        <div className={styles.routeRow}>
-          <code>/</code>
-          <span>page.jsx</span>
-          <em>SSR</em>
-        </div>
-        <div className={styles.routeRow}>
-          <code>/docs/:slug</code>
-          <span>[slug]/page.tsx</span>
-          <em>dynamic</em>
-        </div>
-        <div className={styles.routeRow}>
-          <code>/api/health</code>
-          <span>health.controller.ts</span>
-          <em>NestJS</em>
-        </div>
-        <div className={styles.routeRow}>
-          <code>/*</code>
-          <span>not-found.tsx</span>
-          <em>404</em>
-        </div>
-      </div>
-      <div className={styles.panelFooter}>
-        <span>streaming SSR</span>
-        <span>ISR cache</span>
-        <span>NestJS APIs</span>
+      <div className={styles.treeHead}>a Ness.js project</div>
+      <ul className={styles.treeBody}>
+        {TREE.map(row => (
+          <li key={row.text} className={styles.treeRow}>
+            <code>{row.text}</code>
+            {row.where ? (
+              <span className={styles[row.where]}>{row.note || row.where}</span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+      <div className={styles.treeFoot}>
+        <span className={styles.browser}>browser</span>
+        <span className={styles.server}>server</span>
       </div>
     </div>
   );
@@ -76,117 +172,85 @@ function RoutePanel() {
 export default function Home() {
   return (
     <Layout
-      title="Full-stack React framework"
-      description="Ness.js combines React file routes, NestJS controllers, streaming SSR and a production server runtime."
+      title="Full-stack React with a NestJS backend"
+      description="Ness.js runs React routes and NestJS controllers from one filesystem, streams on the server, and deploys as a single self-contained directory."
     >
-      <main className={styles.home}>
+      <main className={styles.page}>
         <section className={styles.hero}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroCopy}>
-              <p className={styles.kicker}>
-                <span>Ness.js 7</span>
-                Full-stack React framework
-              </p>
-              <h1>
-                Build React apps that own the <span>whole request.</span>
-              </h1>
-              <p className={styles.heroLead}>
-                Route the interface, server data and public APIs from one
-                filesystem. Ness keeps the Web platform visible and the
-                production runtime included.
-              </p>
-              <div className={styles.heroActions}>
-                <Link className={styles.primaryAction} to="/docs/intro">
-                  Read the documentation
-                </Link>
-                <a
-                  className={styles.secondaryAction}
-                  href="https://github.com/leroyanders/Ness.js"
-                >
-                  View source
-                </a>
-              </div>
-              <div className={styles.installCommand}>
-                <span>$</span>
-                <code>npm install -g @nessframework/cli</code>
-                <small>Node 16+</small>
-              </div>
-            </div>
-            <div className={styles.heroVisual}>
-              <div className={styles.brandOrb} aria-hidden="true">
-                <img src="/img/logo.svg" alt="" />
-              </div>
-              <RoutePanel />
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Ness.js 7</p>
+            <h1>
+              One filesystem.
+              <span>Both sides of the request.</span>
+            </h1>
+            <p className={styles.lede}>
+              React routes render the interface. NestJS controllers serve the
+              API. They live in the same tree, build together, and deploy as one
+              directory — without becoming one bundle.
+            </p>
+
+            <InstallCommand />
+
+            <div className={styles.actions}>
+              <Link
+                className={styles.primary}
+                to="/docs/getting-started/create-new-app"
+              >
+                Get started
+              </Link>
+              <Link className={styles.secondary} to="/docs">
+                Read the documentation
+              </Link>
             </div>
           </div>
+
+          <Tree />
         </section>
 
-        <section className={styles.manifestSection}>
-          <div className={styles.sectionHeading}>
-            <p>One application, end to end</p>
-            <h2>The framework stays out of the platform’s way.</h2>
-          </div>
-          <div className={styles.capabilityGrid}>
-            {capabilities.map(capability => (
-              <article className={styles.capability} key={capability.label}>
-                <span>{capability.label}</span>
-                <h3>{capability.title}</h3>
-                <p>{capability.description}</p>
-                <Link to="/docs/documentation/router">
-                  Explore the primitive →
-                </Link>
+        <section className={styles.measured}>
+          <h2 className={styles.sectionLabel}>
+            Measured against Next.js on the same application
+          </h2>
+          <dl className={styles.numbers}>
+            {MEASURED.map(item => (
+              <div key={item.label} data-tone={item.tone}>
+                <dt>{item.value}</dt>
+                <dd>{item.label}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className={styles.caveat}>
+            Both self-hosted on Node, both rendering every request. Ness is
+            behind on cold start — 541 ms against 192 ms — and ships a larger
+            deployment bundle. The harness is in the repository:{' '}
+            <Link to="/docs/documentation/performance">
+              see how the numbers are produced
+            </Link>
+            .
+          </p>
+        </section>
+
+        <section className={styles.capabilities}>
+          <h2 className={styles.sectionLabel}>What you get</h2>
+          <div className={styles.grid}>
+            {CAPABILITIES.map(item => (
+              <article key={item.title} data-tone={item.tone}>
+                <p className={styles.cardLabel}>{item.label}</p>
+                <h3>{item.title}</h3>
+                <p>{item.body}</p>
               </article>
             ))}
           </div>
         </section>
 
-        <section className={styles.cliSection}>
-          <div className={styles.cliCopy}>
-            <p className={styles.kicker}>One CLI for the workflow</p>
-            <h2>From empty directory to production route tree.</h2>
-            <p>
-              Create the app, add official plugins, generate route and server
-              modules, update packages, verify configuration and serve the same
-              build you deploy.
-            </p>
-            <Link
-              className={styles.textAction}
-              to="/docs/getting-started/commands"
-            >
-              Explore the Ness CLI
-            </Link>
-          </div>
-          <div className={styles.terminal} aria-label="Ness CLI example">
-            <div className={styles.terminalBar}>
-              <span>ness — zsh</span>
-              <span>●</span>
-            </div>
-            <pre>
-              <code>
-                <span className={styles.prompt}>$</span> ness new studio
-                --template typescript
-                {'\n'}
-                <span className={styles.success}>✓</span> Installed
-                @nessframework/core and @nessframework/cli
-                {'\n'}
-                <span className={styles.prompt}>$</span> ness g controller users
-                {'\n'}
-                <span className={styles.success}>✓</span>{' '}
-                app/server/users/users.controller.ts
-                {'\n'}
-                <span className={styles.prompt}>$</span> ness add tailwind --dev
-              </code>
-            </pre>
-          </div>
-        </section>
-
-        <section className={styles.finalCta}>
-          <div>
-            <span>Ness.js v7</span>
-            <h2>Use React on both sides of the response.</h2>
-          </div>
+        <section className={styles.close}>
+          <h2>Start with a working application.</h2>
+          <p>
+            Every starter is scaffolded, built, served, bundled, and served
+            again from the bundle on every commit.
+          </p>
           <Link
-            className={styles.primaryAction}
+            className={styles.primary}
             to="/docs/getting-started/create-new-app"
           >
             Create an application

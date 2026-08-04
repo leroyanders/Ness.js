@@ -1,137 +1,176 @@
+/*
+ * Two hues carry meaning and nothing else does: warm for what happens on the
+ * server, cool for what happens in the browser. It is the same pair the starter
+ * page uses, so the framework and its documentation read as one system — and in
+ * a codebase where `page.server.ts` sits beside `page.tsx`, that distinction is
+ * worth a colour.
+ *
+ * Everything else is paper, ink, and one hairline.
+ */
+
 :root {
-  --ness-font-display: 'Manrope', sans-serif;
-  --ness-font-body: 'Inter', sans-serif;
-  --ness-font-mono: 'JetBrains Mono', monospace;
-  --ness-background: #f7f7f8;
+  --ness-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    sans-serif;
+  --ness-mono:
+    'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --ness-paper: #f6f7f9;
   --ness-surface: #ffffff;
-  --ness-panel: #f0f1f3;
-  --ness-panel-strong: #e8e9ec;
-  --ness-border: #dedfe4;
-  --ness-border-strong: #c7c9d0;
-  --ness-grid: rgba(16, 16, 20, 0.045);
-  --ness-heading: #101014;
-  --ness-copy: #484a53;
-  --ness-muted: #747782;
-  --ness-accent: #d91f49;
-  --ness-accent-bright: #ef365f;
-  --ness-accent-soft: rgba(217, 31, 73, 0.1);
-  --ness-shadow: 0 20px 60px rgba(18, 18, 24, 0.08);
-  --ifm-color-primary: #d91f49;
-  --ifm-color-primary-dark: #c41c42;
-  --ifm-color-primary-darker: #b91a3e;
-  --ifm-color-primary-darkest: #981633;
-  --ifm-color-primary-light: #e52e57;
-  --ifm-color-primary-lighter: #e83a61;
-  --ifm-color-primary-lightest: #ed5e7c;
-  --ifm-background-color: var(--ness-background);
+  --ness-sunken: #f0f2f5;
+  --ness-ink: #10131a;
+  --ness-copy: #3d4552;
+  --ness-muted: #5c6675;
+  --ness-line: #e0e4ea;
+  --ness-line-strong: #cdd3dc;
+
+  /*
+   * Four hues, one per subsystem, so a colour always answers "which part of the
+   * framework is this?" rather than decorating. They are used the same way in
+   * the sidebar, the admonitions, the cards, and the homepage.
+   *
+   *   client   the browser: components, hydration, navigation
+   *   server   the server: loaders, actions, NestJS controllers
+   *   data     caching, revalidation, and the data layer
+   *   deploy   building, bundling, and shipping
+   */
+  --ness-client: #0b6b7d;
+  --ness-client-soft: #e4f2f5;
+  --ness-server: #a2560c;
+  --ness-server-soft: #fdf2e6;
+  --ness-data: #6b46b8;
+  --ness-data-soft: #f1ecfd;
+  --ness-deploy: #2c7a51;
+  --ness-deploy-soft: #e8f5ee;
+
+  --ifm-color-primary: var(--ness-client);
+  --ifm-color-primary-dark: #0a606f;
+  --ifm-color-primary-darker: #095864;
+  --ifm-color-primary-darkest: #074753;
+  --ifm-color-primary-light: #0d7889;
+  --ifm-color-primary-lighter: #0e8194;
+  --ifm-color-primary-lightest: #12a0b8;
+
+  --ifm-background-color: var(--ness-paper);
   --ifm-background-surface-color: var(--ness-surface);
-  --ifm-font-family-base: var(--ness-font-body);
-  --ifm-font-family-monospace: var(--ness-font-mono);
-  --ifm-heading-font-family: var(--ness-font-display);
+  --ifm-font-family-base: var(--ness-sans);
+  --ifm-font-family-monospace: var(--ness-mono);
+  --ifm-heading-font-family: var(--ness-sans);
   --ifm-font-color-base: var(--ness-copy);
-  --ifm-heading-color: var(--ness-heading);
-  --ifm-code-font-size: 90%;
-  --ifm-code-background: var(--ness-panel);
-  --ifm-navbar-background-color: rgba(247, 247, 248, 0.9);
-  --ifm-navbar-height: 4.25rem;
+  --ifm-heading-color: var(--ness-ink);
+  --ifm-line-height-base: 1.7;
+
+  --ifm-code-font-size: 0.875em;
+  --ifm-code-background: var(--ness-sunken);
+  --ifm-code-padding-horizontal: 0.35rem;
+  --ifm-code-padding-vertical: 0.15rem;
+
+  --ifm-navbar-background-color: color-mix(
+    in srgb,
+    var(--ness-paper) 88%,
+    transparent
+  );
+  --ifm-navbar-height: 3.75rem;
   --ifm-navbar-shadow: none;
+
   --ifm-menu-color: var(--ness-muted);
-  --ifm-menu-color-active: var(--ness-heading);
-  --ifm-footer-background-color: #09090b;
-  --ifm-footer-color: #9799a3;
-  --ifm-footer-link-color: #bfc1c8;
-  --ifm-footer-title-color: #ffffff;
-  --ifm-global-radius: 0.25rem;
-  --ifm-global-shadow-lw: 0 1px 0 var(--ness-border);
-  --doc-sidebar-width: 18rem !important;
+  --ifm-menu-color-active: var(--ness-ink);
+  --ifm-menu-color-background-active: transparent;
+  --ifm-menu-color-background-hover: transparent;
+
+  --ifm-toc-border-color: var(--ness-line);
+  --ifm-global-radius: 8px;
+  --ifm-global-shadow-lw: none;
+  --ifm-hr-border-color: var(--ness-line);
+  --ifm-table-border-color: var(--ness-line);
+  --ifm-blockquote-color: var(--ness-muted);
+  --ifm-blockquote-border-color: var(--ness-line-strong);
+
+  --doc-sidebar-width: 17.5rem !important;
 }
 
 html[data-theme='dark'] {
-  --ness-background: #09090b;
-  --ness-surface: #0f1014;
-  --ness-panel: #15161b;
-  --ness-panel-strong: #1b1c22;
-  --ness-border: #24252b;
-  --ness-border-strong: #373943;
-  --ness-grid: rgba(255, 255, 255, 0.035);
-  --ness-heading: #f7f7f8;
-  --ness-copy: #b4b6bf;
-  --ness-muted: #7e818c;
-  --ness-accent: #e0234e;
-  --ness-accent-bright: #ff4b6e;
-  --ness-accent-soft: rgba(224, 35, 78, 0.13);
-  --ness-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
-  --ifm-color-primary: #ff4b6e;
-  --ifm-color-primary-dark: #ff294f;
-  --ifm-color-primary-darker: #ff183f;
-  --ifm-color-primary-darkest: #e5002c;
-  --ifm-color-primary-light: #ff6d89;
-  --ifm-color-primary-lighter: #ff7e97;
-  --ifm-color-primary-lightest: #ffb1c0;
-  --ifm-navbar-background-color: rgba(9, 9, 11, 0.9);
-  --ifm-code-background: #18191f;
-}
+  --ness-paper: #0c0f14;
+  --ness-surface: #12161d;
+  --ness-sunken: #161b23;
+  --ness-ink: #e9edf4;
+  --ness-copy: #b3bcc9;
+  --ness-muted: #8b94a3;
+  --ness-line: #212832;
+  --ness-line-strong: #313a47;
 
-* {
-  box-sizing: border-box;
+  --ness-client: #5cc7db;
+  --ness-client-soft: #0c1f24;
+  --ness-server: #e6a35a;
+  --ness-server-soft: #251a0e;
+  --ness-data: #b49bee;
+  --ness-data-soft: #191330;
+  --ness-deploy: #6ec894;
+  --ness-deploy-soft: #0e2118;
+
+  --ifm-color-primary: var(--ness-client);
+  --ifm-color-primary-dark: #3bb8ce;
+  --ifm-color-primary-darker: #2fb0c7;
+  --ifm-color-primary-darkest: #2691a4;
+  --ifm-color-primary-light: #75d0e1;
+  --ifm-color-primary-lighter: #83d5e5;
+  --ifm-color-primary-lightest: #a8e2ee;
 }
 
 html {
-  background: var(--ness-background);
-  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--ness-background);
-  color: var(--ness-copy);
-  font-family: var(--ness-font-body);
-  letter-spacing: -0.01em;
-  text-rendering: optimizeLegibility;
-}
-
-::selection {
-  background: rgba(224, 35, 78, 0.35);
-  color: var(--ness-heading);
-}
-
-:focus-visible {
-  outline: 2px solid var(--ness-accent-bright);
-  outline-offset: 3px;
-}
-
-a {
-  transition:
-    color 160ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease;
+  background: var(--ness-paper);
+  font-size: 16px;
 }
 
 .main-wrapper {
-  background: var(--ness-background);
+  background: var(--ness-paper);
 }
 
+::selection {
+  background: var(--ness-client-soft);
+  color: var(--ness-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ness-client);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Banner ------------------------------------------------------------------ */
+
+/*
+ * No z-index. The banner sits above the navbar in the document, and the navbar
+ * carries --ifm-z-index-fixed, so anything higher here paints over both the
+ * sticky header on scroll and the open mobile drawer — which is exactly what a
+ * `calc(var(--ifm-z-index-fixed) + 1)` here used to do: it sliced the top off
+ * the drawer's brand row and its close button.
+ */
 .navbar-ukraine {
   align-items: center;
-  background: #111216;
-  border-bottom: 1px solid #26272d;
-  color: #d7d8dc;
+  background: var(--ness-surface);
+  color: var(--ness-muted);
   display: flex;
-  font-family: var(--ness-font-mono);
-  font-size: 0.64rem;
-  height: 1.875rem;
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  height: 2rem;
   justify-content: center;
-  letter-spacing: 0.045em;
+  letter-spacing: 0.02em;
   position: relative;
-  z-index: calc(var(--ifm-z-index-fixed) + 1);
 }
 
+/* The flag stripe is the banner's bottom edge, so it stays inside the banner's
+   own box rather than overlapping the navbar to reach the full 2px. */
 .navbar-ukraine::before {
-  background: linear-gradient(90deg, #0057b8 0 50%, #ffd700 50% 100%);
+  background: linear-gradient(90deg, #0057b8 0 50%, #ffd700 50%);
   bottom: 0;
   content: '';
-  height: 1px;
+  height: 2px;
   left: 0;
-  opacity: 0.8;
   position: absolute;
   right: 0;
 }
@@ -139,22 +178,39 @@ a {
 .navbar-ukraine p {
   align-items: center;
   display: flex;
-  gap: 0.65rem;
+  gap: 0.6rem;
   margin: 0;
 }
 
 .navbar-ukraine a {
-  color: #ffffff;
+  color: var(--ness-ink);
   text-decoration: underline;
-  text-decoration-color: rgba(255, 255, 255, 0.3);
   text-underline-offset: 3px;
 }
 
+/* Navbar ------------------------------------------------------------------ */
+
 .navbar {
-  backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--ness-border);
-  box-shadow: none;
+  border-bottom: 1px solid var(--ness-line);
   padding: 0 1.5rem;
+}
+
+/*
+ * The blur lives on a pseudo-element rather than on `.navbar` itself.
+ *
+ * `backdrop-filter` makes an element the containing block for its
+ * `position: fixed` descendants, and the mobile drawer and its backdrop are
+ * both children of `.navbar`. On the navbar their `top: 0; bottom: 0` resolved
+ * against a 60px bar instead of the viewport, so the open menu was a sliver
+ * under the header with the page showing through beneath it.
+ */
+.navbar::before {
+  backdrop-filter: blur(14px);
+  content: '';
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
 }
 
 .navbar__inner {
@@ -163,380 +219,577 @@ a {
 }
 
 .navbar__brand {
-  margin-right: 2.25rem;
+  margin-right: 2rem;
 }
 
+/* The mark is gone; the wordmark carries the identity on its own. */
 .navbar__logo {
-  align-items: center;
-  display: flex;
-  height: 1.8rem;
-  margin-right: 0.7rem;
-  width: 1.8rem;
-}
-
-html[data-theme='dark'] .navbar__logo img {
-  filter: invert(1);
+  display: none;
 }
 
 .navbar__title {
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-size: 1rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
+  color: var(--ness-ink);
+  font-family: var(--ness-mono);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .navbar__link {
   color: var(--ness-muted);
-  font-size: 0.81rem;
-  font-weight: 600;
-  letter-spacing: -0.015em;
-  padding-left: 0.75rem;
-  padding-right: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0 0.7rem;
 }
 
 .navbar__link:hover,
 .navbar__link--active {
-  color: var(--ness-heading);
+  color: var(--ness-ink);
 }
 
 .navbar-version {
-  background: var(--ness-accent-soft);
-  border: 1px solid rgba(224, 35, 78, 0.25);
+  border: 1px solid var(--ness-line-strong);
   border-radius: 999px;
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 0.64rem;
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
   line-height: 1;
-  margin-right: 0.25rem;
-  padding: 0.45rem 0.62rem !important;
+  margin-right: 0.35rem;
+  padding: 0.4rem 0.6rem !important;
+}
+
+.navbar-version:hover {
+  border-color: var(--ness-client);
+  color: var(--ness-client);
 }
 
 .header-github-link {
   align-items: center;
+  color: var(--ness-muted);
   display: flex;
   font-size: 0;
   justify-content: center;
-  padding: 0.55rem !important;
+  padding: 0.5rem !important;
+}
+
+.header-github-link:hover {
+  color: var(--ness-ink);
 }
 
 .header-github-link::before {
   background-color: currentColor;
   content: '';
-  height: 1.15rem;
+  height: 1.125rem;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 .7A11.5 11.5 0 0 0 8.36 23.1c.58.1.79-.25.79-.56v-2.23c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.71.08-.71 1.17.08 1.78 1.2 1.78 1.2 1.04 1.78 2.72 1.27 3.38.97.11-.75.41-1.27.74-1.56-2.58-.29-5.29-1.29-5.29-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18A10.95 10.95 0 0 1 12 6.11c.98 0 1.96.13 2.88.39 2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.4-2.72 5.38-5.31 5.67.42.36.79 1.07.79 2.16v3.25c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z'/%3E%3C/svg%3E")
     center / contain no-repeat;
-  width: 1.15rem;
+  width: 1.125rem;
 }
 
 .navbar-sidebar {
-  background: var(--ness-background);
+  background: var(--ness-paper);
 }
 
 .navbar-sidebar__brand {
-  border-bottom: 1px solid var(--ness-border);
+  border-bottom: 1px solid var(--ness-line);
   box-shadow: none;
 }
 
-.navbar-sidebar__backdrop {
-  backdrop-filter: blur(3px);
-}
+/* Sidebar: a file tree ----------------------------------------------------
+ *
+ * The documentation's structure mirrors the framework's own file conventions,
+ * so it is drawn as one — hairline connectors in the mono face, the way the
+ * route trees inside these pages are.
+ */
 
 .theme-doc-sidebar-container {
-  background: color-mix(in srgb, var(--ness-surface) 84%, transparent);
-  border-right: 1px solid var(--ness-border) !important;
+  background: var(--ness-paper);
+  border-right: 1px solid var(--ness-line) !important;
 }
 
 .theme-doc-sidebar-menu {
-  padding: 1.6rem 1rem 4rem;
+  font-size: 0.875rem;
+  padding: 1rem 0.75rem 3rem;
 }
 
 .menu {
-  font-size: 0.78rem;
-  font-weight: 500;
-}
-
-.menu__list {
-  margin: 0;
+  padding: 0.5rem !important;
 }
 
 .menu__list .menu__list {
-  border-left: 1px solid var(--ness-border);
-  margin-left: 0.55rem;
-  padding-left: 0.65rem;
+  margin-left: 0.65rem;
+  padding-left: 0.75rem;
+  position: relative;
 }
 
-.menu__list-item:not(:first-child) {
-  margin-top: 0.15rem;
+/* The trunk. */
+.menu__list .menu__list::before {
+  background: var(--ness-line);
+  bottom: 0.9rem;
+  content: '';
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 1px;
 }
 
-.menu__list-item-collapsible > .menu__link,
-.menu__list-item-collapsible > .menu__caret {
-  color: var(--ness-heading);
+/* The branch into each item. */
+.menu__list .menu__list > .menu__list-item > .menu__link::before,
+.menu__list
+  .menu__list
+  > .menu__list-item
+  > .menu__list-item-collapsible
+  > .menu__link::before {
+  background: var(--ness-line);
+  content: '';
+  height: 1px;
+  left: -0.75rem;
+  position: absolute;
+  top: 50%;
+  width: 0.5rem;
 }
 
-.menu__list-item-collapsible > .menu__link {
-  font-family: var(--ness-font-mono);
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.menu__list-item {
+  margin-top: 0.05rem;
 }
 
 .menu__link {
-  border-left: 2px solid transparent;
-  border-radius: 0 0.2rem 0.2rem 0;
+  border-radius: 6px;
   color: var(--ness-muted);
-  line-height: 1.4;
-  padding: 0.5rem 0.65rem;
+  font-weight: 400;
+  line-height: 1.45;
+  padding: 0.36rem 0.6rem;
+  position: relative;
 }
 
 .menu__link:hover {
-  background: var(--ness-panel);
-  color: var(--ness-heading);
+  background: var(--ness-sunken);
+  color: var(--ness-ink);
 }
 
 .menu__link--active,
 .menu__link--active:hover {
-  background: var(--ness-accent-soft);
-  border-left-color: var(--ness-accent-bright);
-  color: var(--ness-accent-bright);
+  background: var(--ness-client-soft);
+  color: var(--ness-client);
+  font-weight: 500;
+}
+
+/* Category headings are labels, not links: mono, and each carries a marker in
+   its section's hue so the sidebar is scannable by colour as well as by text. */
+.menu__list-item-collapsible > .menu__link--sublist {
+  align-items: center;
+  color: var(--ness-ink);
+  display: flex;
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  gap: 0.5rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/*
+ * The marker is a ::before. ::after belongs to Infima's expand/collapse caret —
+ * taking it over cost the top-level categories their caret, and the marker came
+ * out a 20px block regardless, because the stock rule carries
+ * `min-width: 1.25rem` and min-width beats width.
+ */
+.theme-doc-sidebar-item-category-level-1
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  background: var(--ness-line-strong);
+  border-radius: 2px;
+  content: '';
+  flex: none;
+  height: 0.75rem;
+  width: 3px;
+}
+
+.theme-doc-sidebar-item-category-level-1 {
+  margin-top: 1.5rem;
+}
+
+/*
+ * One hue per section, cycling so a category added later is never colourless.
+ * `nth-of-type` counts every `li` in the list and the list opens with the
+ * standalone intro link, so the four categories land on positions 2 through 5.
+ */
+.theme-doc-sidebar-item-category-level-1:nth-of-type(4n + 2)
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  background: var(--ness-deploy);
+}
+
+.theme-doc-sidebar-item-category-level-1:nth-of-type(4n + 3)
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  background: var(--ness-client);
+}
+
+.theme-doc-sidebar-item-category-level-1:nth-of-type(4n)
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  background: var(--ness-data);
+}
+
+.theme-doc-sidebar-item-category-level-1:nth-of-type(4n + 1)
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  background: var(--ness-server);
+}
+
+.theme-doc-sidebar-item-category-level-1:first-child {
+  margin-top: 0.25rem;
 }
 
 .menu__caret::before,
 .menu__link--sublist-caret::after {
-  background-size: 1.1rem 1.1rem;
-  opacity: 0.65;
+  background: var(--ifm-menu-link-sublist-icon) 50% / 0.75rem 0.75rem no-repeat;
+  opacity: 0.5;
 }
 
-.theme-doc-sidebar-item-category-level-1 {
-  margin-bottom: 1rem;
-}
+/* Breadcrumbs ------------------------------------------------------------- */
 
 .theme-doc-breadcrumbs {
-  margin-bottom: 2rem !important;
+  margin-bottom: 1.75rem;
 }
 
 .breadcrumbs__item {
-  font-family: var(--ness-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.02em;
+  font-family: var(--ness-mono);
+  font-size: 0.75rem;
 }
 
 .breadcrumbs__link {
   background: transparent;
   color: var(--ness-muted);
+  padding: 0.2rem 0.35rem;
+}
+
+.breadcrumbs__link:hover {
+  background: var(--ness-sunken);
+  color: var(--ness-ink);
 }
 
 .breadcrumbs__item--active .breadcrumbs__link {
-  color: var(--ness-copy);
+  background: transparent;
+  color: var(--ness-ink);
 }
+
+.breadcrumbs__item:not(:last-child)::after {
+  opacity: 0.45;
+}
+
+/* Article ----------------------------------------------------------------- */
 
 .theme-doc-markdown {
-  font-size: 1rem;
-  line-height: 1.82;
-  max-width: 50rem;
-}
-
-.theme-doc-markdown > header + p,
-.theme-doc-markdown > h1 + p {
   color: var(--ness-copy);
-  font-size: 1.1rem;
-  line-height: 1.75;
 }
 
 .theme-doc-markdown h1,
 .theme-doc-markdown h2,
 .theme-doc-markdown h3,
 .theme-doc-markdown h4 {
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-weight: 750;
-  letter-spacing: -0.045em;
+  color: var(--ness-ink);
+  letter-spacing: -0.022em;
+  text-wrap: balance;
 }
 
 .theme-doc-markdown h1 {
-  font-size: clamp(2.35rem, 5vw, 3.35rem);
-  line-height: 1.05;
-  margin-bottom: 1.5rem;
+  font-size: clamp(1.9rem, 3.6vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+}
+
+/* The opening paragraph is the summary; set it as one. */
+.theme-doc-markdown > header + p,
+.theme-doc-markdown > h1 + p {
+  color: var(--ness-ink);
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  max-width: 44rem;
 }
 
 .theme-doc-markdown h2 {
-  border-top: 1px solid var(--ness-border);
-  font-size: 1.85rem;
-  line-height: 1.2;
-  margin-top: 3.75rem;
-  padding-top: 2.2rem;
+  border-top: 1px solid var(--ness-line);
+  font-size: 1.4rem;
+  font-weight: 650;
+  margin-top: 3.25rem;
+  padding-top: 2rem;
 }
 
 .theme-doc-markdown h3 {
-  font-size: 1.28rem;
-  line-height: 1.35;
-  margin-top: 2.4rem;
+  font-size: 1.1rem;
+  font-weight: 650;
+  margin-top: 2.25rem;
+}
+
+.theme-doc-markdown p,
+.theme-doc-markdown li {
+  max-width: 46rem;
 }
 
 .theme-doc-markdown a:not(.hash-link) {
-  color: var(--ness-heading);
+  color: var(--ness-client);
   text-decoration: underline;
-  text-decoration-color: rgba(224, 35, 78, 0.5);
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.22em;
+  text-decoration-color: color-mix(
+    in srgb,
+    var(--ness-client) 35%,
+    transparent
+  );
+  text-underline-offset: 3px;
 }
 
 .theme-doc-markdown a:not(.hash-link):hover {
-  color: var(--ness-accent-bright);
-  text-decoration-color: currentColor;
+  text-decoration-color: var(--ness-client);
 }
 
 .hash-link {
-  color: var(--ness-accent-bright);
+  color: var(--ness-line-strong);
 }
 
 .theme-doc-markdown strong {
-  color: var(--ness-heading);
-  font-weight: 650;
+  color: var(--ness-ink);
+  font-weight: 600;
 }
 
 .theme-doc-markdown li::marker {
-  color: var(--ness-accent);
+  color: var(--ness-line-strong);
 }
 
 .theme-doc-markdown hr {
-  background: var(--ness-border);
-  height: 1px;
-  margin: 3rem 0;
+  border: 0;
+  border-top: 1px solid var(--ness-line);
+  margin: 2.5rem 0;
 }
 
 .theme-doc-markdown blockquote {
-  background: linear-gradient(90deg, var(--ness-accent-soft), transparent);
-  border-left: 2px solid var(--ness-accent);
-  color: var(--ness-copy);
-  margin: 1.75rem 0;
-  padding: 1rem 1.25rem;
+  background: var(--ness-sunken);
+  border-left: 2px solid var(--ness-line-strong);
+  border-radius: 0 6px 6px 0;
+  color: var(--ness-muted);
+  padding: 0.9rem 1.1rem;
 }
 
-:not(pre) > code {
-  background: var(--ness-panel-strong);
-  border: 1px solid var(--ness-border);
-  border-radius: 0.22rem;
-  color: var(--ness-accent-bright);
-  font-family: var(--ness-font-mono);
-  font-size: 0.82em;
-  padding: 0.12rem 0.36rem;
+/*
+ * Inline code is a noun in this prose, so it is set to read as one.
+ *
+ * `:not(pre) >` is load-bearing. Infima cancels the chip inside code blocks with
+ * `pre code`, which is two element selectors — a bare `.theme-doc-markdown code`
+ * outranks it and puts the border, the radius, and a mismatched background back
+ * on the `<code>` inside every block, drawn as a second frame inside the card.
+ */
+.theme-doc-markdown :not(pre) > code {
+  background: var(--ness-sunken);
+  border: 1px solid var(--ness-line);
+  border-radius: 5px;
+  color: var(--ness-ink);
 }
+
+.theme-doc-markdown a > code {
+  color: inherit;
+}
+
+/* Code blocks: editor files ------------------------------------------------
+ *
+ * Nearly every block in these pages has a `title` that is a real path in a real
+ * project. Presenting it as the file's tab, rather than a caption, matches how
+ * the reader will actually meet the code.
+ */
 
 div[class*='codeBlockContainer'] {
-  background: #111216;
-  border: 1px solid var(--ness-border-strong);
-  border-radius: 0.35rem;
-  box-shadow: var(--ness-shadow);
-  margin: 1.75rem 0;
+  border: 1px solid var(--ness-line);
+  border-radius: 10px;
+  box-shadow: none;
+  margin-bottom: 1.5rem;
   overflow: hidden;
 }
 
 div[class*='codeBlockTitle'] {
-  background: #18191f;
-  border-bottom: 1px solid #292a31;
-  color: #979aa5;
-  font-family: var(--ness-font-mono);
-  font-size: 0.65rem;
-  letter-spacing: 0.035em;
-  padding: 0.7rem 1rem;
+  background: var(--ness-sunken);
+  border-bottom: 1px solid var(--ness-line);
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  padding: 0.55rem 1rem;
 }
 
-pre,
-pre code {
-  font-family: var(--ness-font-mono);
-  font-size: 0.82rem;
-  line-height: 1.75;
+div[class*='codeBlockContent'] pre {
+  background: var(--ness-surface) !important;
+}
+
+html[data-theme='dark'] div[class*='codeBlockContent'] pre {
+  background: #0f141b !important;
+}
+
+/*
+ * No `div` qualifier: Docusaurus puts this class on the `<code>` inside the
+ * `<pre>`, so `div[class*='codeBlockLines']` matched nothing and the type scale
+ * below never applied.
+ *
+ * Token colours are not here. prism-react-renderer writes them as inline styles,
+ * which no stylesheet can outrank without `!important`, so the palette is a JS
+ * theme object in docusaurus.config.mjs — see `nessPrismTheme` there.
+ */
+pre[class*='codeBlock'] > code[class*='codeBlockLines'] {
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  padding: 1rem;
 }
 
 .theme-code-block-highlighted-line {
-  background: rgba(224, 35, 78, 0.12);
-  border-left: 2px solid var(--ness-accent-bright);
+  background: var(--ness-client-soft);
+  box-shadow: inset 2px 0 0 var(--ness-client);
 }
 
 .code-block-error-line {
-  background: rgba(255, 75, 110, 0.12);
+  background: var(--ness-server-soft);
+  box-shadow: inset 2px 0 0 var(--ness-server);
 }
 
-.table-wrapper,
+button[class*='copyButton'] {
+  background: var(--ness-surface);
+  border: 1px solid var(--ness-line);
+  color: var(--ness-muted);
+}
+
+/* Tables ------------------------------------------------------------------ */
+
 .theme-doc-markdown table {
-  display: block;
-  margin: 1.75rem 0;
-  overflow-x: auto;
+  border: 1px solid var(--ness-line);
+  border-collapse: separate;
+  border-radius: 10px;
+  border-spacing: 0;
+  display: table;
+  overflow: hidden;
   width: 100%;
 }
 
-.theme-doc-markdown table {
-  border: 1px solid var(--ness-border);
-  border-collapse: collapse;
-  display: table;
-}
-
 .theme-doc-markdown th {
-  background: var(--ness-panel);
-  color: var(--ness-heading);
-  font-family: var(--ness-font-mono);
-  font-size: 0.68rem;
-  letter-spacing: 0.05em;
+  background: var(--ness-sunken);
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .theme-doc-markdown td,
 .theme-doc-markdown th {
-  border-color: var(--ness-border);
-  padding: 0.85rem 1rem;
+  border: 0;
+  border-bottom: 1px solid var(--ness-line);
+  padding: 0.7rem 1rem;
+  text-align: left;
+  vertical-align: top;
 }
 
+.theme-doc-markdown tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Admonitions: warm means the server, cool means the browser --------------- */
+
 .alert {
-  background: var(--ness-panel);
-  border: 1px solid var(--ness-border);
-  border-left: 2px solid var(--ifm-alert-border-color);
-  border-radius: 0.25rem;
+  border: 1px solid var(--ness-line);
+  border-left-width: 2px;
+  border-radius: 0 8px 8px 0;
   box-shadow: none;
   color: var(--ness-copy);
+  padding: 1rem 1.15rem;
 }
 
 .alert__heading {
-  color: var(--ness-heading);
-  font-family: var(--ness-font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  color: var(--ness-ink);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
+.alert a {
+  color: inherit;
+}
+
+.alert--info {
+  background: var(--ness-client-soft);
+  border-left-color: var(--ness-client);
+}
+
+.alert--info .alert__heading {
+  color: var(--ness-client);
+}
+
+.alert--secondary {
+  background: var(--ness-data-soft);
+  border-left-color: var(--ness-data);
+}
+
+.alert--secondary .alert__heading {
+  color: var(--ness-data);
+}
+
+.alert--warning,
+.alert--danger {
+  background: var(--ness-server-soft);
+  border-left-color: var(--ness-server);
+}
+
+.alert--warning .alert__heading,
+.alert--danger .alert__heading {
+  color: var(--ness-server);
+}
+
+.alert--success {
+  background: var(--ness-deploy-soft);
+  border-left-color: var(--ness-deploy);
+}
+
+.alert--success .alert__heading {
+  color: var(--ness-deploy);
+}
+
+/* Tabs -------------------------------------------------------------------- */
+
 .tabs {
-  border-bottom: 1px solid var(--ness-border);
+  border-bottom: 1px solid var(--ness-line);
+  gap: 0.25rem;
 }
 
 .tabs__item {
-  border-bottom-width: 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
   color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 0.72rem;
+  font-family: var(--ness-mono);
+  font-size: 0.8125rem;
+  padding: 0.5rem 0.75rem;
 }
 
 .tabs__item--active {
-  color: var(--ness-heading);
+  border-bottom-color: var(--ness-client);
+  color: var(--ness-ink);
 }
 
+/* Table of contents ------------------------------------------------------- */
+
 .table-of-contents {
-  border-left: 1px solid var(--ness-border);
-  font-size: 0.73rem;
-  line-height: 1.55;
-  padding-left: 1.1rem;
+  border-left: 1px solid var(--ness-line);
+  font-size: 0.8125rem;
+  padding-left: 1rem;
 }
 
 .table-of-contents::before {
-  color: var(--ness-heading);
-  content: 'ON THIS PAGE';
+  color: var(--ness-muted);
+  content: 'On this page';
   display: block;
-  font-family: var(--ness-font-mono);
-  font-size: 0.59rem;
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
   font-weight: 600;
-  letter-spacing: 0.09em;
-  margin-bottom: 0.8rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
 }
 
 .table-of-contents__link {
@@ -545,182 +798,120 @@ pre code {
 
 .table-of-contents__link:hover,
 .table-of-contents__link--active {
-  color: var(--ness-accent-bright);
+  color: var(--ness-client);
 }
 
+/* Footer of the article --------------------------------------------------- */
+
 .theme-doc-footer {
-  border-top: 1px solid var(--ness-border);
-  margin-top: 4rem;
+  border-top: 1px solid var(--ness-line);
+  margin-top: 3rem;
   padding-top: 1.5rem;
 }
 
 .theme-edit-this-page,
 .theme-last-updated {
   color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 0.67rem;
+  font-size: 0.8125rem;
 }
 
 .pagination-nav {
-  gap: 0.85rem;
-  margin-top: 2.5rem;
+  gap: 1rem;
 }
 
 .pagination-nav__link {
   background: var(--ness-surface);
-  border: 1px solid var(--ness-border);
-  border-radius: 0.3rem;
-  padding: 1rem 1.15rem;
+  border: 1px solid var(--ness-line);
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  transition: border-color 0.15s ease;
 }
 
 .pagination-nav__link:hover {
-  background: var(--ness-panel);
-  border-color: var(--ness-accent);
+  border-color: var(--ness-client);
 }
 
 .pagination-nav__sublabel {
   color: var(--ness-muted);
-  font-family: var(--ness-font-mono);
-  font-size: 0.6rem;
-  letter-spacing: 0.06em;
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 
 .pagination-nav__label {
-  color: var(--ness-heading);
-  font-family: var(--ness-font-display);
-  font-size: 0.9rem;
+  color: var(--ness-ink);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
+/* Site footer ------------------------------------------------------------- */
+
 .footer {
-  border-top: 1px solid #25262c;
-  padding: 4rem 1.5rem 2rem;
+  background: var(--ness-surface);
+  border-top: 1px solid var(--ness-line);
+  color: var(--ness-muted);
+  padding: 3rem 0 2.5rem;
 }
 
 .footer__links {
-  margin: 0 auto 3rem;
-  max-width: 72rem;
+  margin-bottom: 2rem;
 }
 
 .footer__title {
-  font-family: var(--ness-font-mono);
-  font-size: 0.66rem;
+  color: var(--ness-ink);
+  font-family: var(--ness-mono);
+  font-size: 0.6875rem;
+  font-weight: 600;
   letter-spacing: 0.08em;
-  margin-bottom: 1rem;
   text-transform: uppercase;
 }
 
 .footer__item {
-  margin-top: 0.55rem;
+  font-size: 0.875rem;
 }
 
 .footer__link-item {
-  font-size: 0.79rem;
+  color: var(--ness-muted);
 }
 
 .footer__link-item:hover {
-  color: #ffffff;
-  text-decoration: none;
+  color: var(--ness-client);
 }
 
 .footer__copyright {
-  border-top: 1px solid #202126;
-  color: #686b75;
-  font-family: var(--ness-font-mono);
-  font-size: 0.62rem;
-  letter-spacing: 0.02em;
-  margin: 0 auto;
-  max-width: 72rem;
+  border-top: 1px solid var(--ness-line);
+  color: var(--ness-muted);
+  font-size: 0.8125rem;
+  margin-top: 2rem;
   padding-top: 1.5rem;
-  text-align: left;
 }
 
-::-webkit-scrollbar {
-  height: 0.55rem;
-  width: 0.55rem;
+/* Search ------------------------------------------------------------------ */
+
+.DocSearch-Button {
+  background: var(--ness-surface);
+  border: 1px solid var(--ness-line);
+  border-radius: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--ness-background);
+.DocSearch-Button-Keys kbd {
+  background: var(--ness-sunken);
+  border: 1px solid var(--ness-line);
+  color: var(--ness-muted);
+  font-family: var(--ness-mono);
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--ness-border-strong);
-  border: 2px solid var(--ness-background);
-  border-radius: 999px;
-}
-
-@media (min-width: 997px) {
-  .theme-doc-markdown {
-    padding-top: 0.35rem;
-  }
-
-  .theme-doc-toc-desktop {
-    padding-top: 1.75rem;
-  }
-}
+/* Narrow screens ---------------------------------------------------------- */
 
 @media (max-width: 996px) {
-  :root {
-    --ifm-navbar-height: 3.75rem;
+  .theme-doc-markdown h2 {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
   }
 
   .navbar {
     padding: 0 1rem;
-  }
-
-  .navbar__brand {
-    margin-right: auto;
-  }
-
-  .navbar-version,
-  .header-github-link {
-    display: none;
-  }
-
-  .theme-doc-markdown h1 {
-    font-size: clamp(2.15rem, 9vw, 3rem);
-  }
-
-  .theme-doc-markdown h2 {
-    font-size: 1.65rem;
-  }
-}
-
-@media (max-width: 600px) {
-  .navbar-ukraine {
-    font-size: 0.56rem;
-  }
-
-  .navbar-ukraine p {
-    gap: 0.4rem;
-  }
-
-  .navbar-ukraine span {
-    display: none;
-  }
-
-  .theme-doc-markdown {
-    font-size: 0.94rem;
-  }
-
-  .pagination-nav {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
   }
 }

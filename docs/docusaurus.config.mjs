@@ -2,7 +2,62 @@
 // Note: type annotations allow type checking and IDEs autocompletion
 
 import { fileURLToPath } from 'node:url';
-import { themes as prismThemes } from 'prism-react-renderer';
+// Syntax highlighting stays inside the site's two hues — warm for keywords and
+// literals, cool for strings — because a rainbow theme would be a third palette
+// on the page and would drown the one distinction that carries meaning here.
+// prism-react-renderer writes inline styles, so this cannot be done in CSS.
+function nessPrismTheme({ background, plain, muted, warm, cool, strong }) {
+  return {
+    plain: { color: plain, backgroundColor: background },
+    styles: [
+      {
+        types: ['comment', 'prolog', 'cdata'],
+        style: { color: muted, fontStyle: 'italic' },
+      },
+      { types: ['punctuation', 'operator'], style: { color: muted } },
+      {
+        types: ['keyword', 'atrule', 'rule', 'important', 'selector'],
+        style: { color: warm },
+      },
+      {
+        types: ['string', 'char', 'attr-value', 'regex', 'url'],
+        style: { color: cool },
+      },
+      {
+        types: ['number', 'boolean', 'constant', 'symbol'],
+        style: { color: warm },
+      },
+      {
+        types: ['function', 'class-name', 'tag', 'builtin'],
+        style: { color: strong },
+      },
+      {
+        types: ['property', 'attr-name', 'variable', 'parameter'],
+        style: { color: plain },
+      },
+      { types: ['deleted'], style: { color: warm } },
+      { types: ['inserted'], style: { color: cool } },
+    ],
+  };
+}
+
+const nessLight = nessPrismTheme({
+  background: '#ffffff',
+  plain: '#3d4552',
+  muted: '#8b94a3',
+  warm: '#a2560c',
+  cool: '#0b6b7d',
+  strong: '#10131a',
+});
+
+const nessDark = nessPrismTheme({
+  background: '#0f141b',
+  plain: '#b3bcc9',
+  muted: '#6c7789',
+  warm: '#e0a154',
+  cool: '#58c4d8',
+  strong: '#e9edf4',
+});
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -12,7 +67,7 @@ const config = {
   baseUrl: '/',
   stylesheets: [
     {
-      href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Manrope:wght@500;600;700;800&display=swap',
+      href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;650;700&family=JetBrains+Mono:wght@400;500;600&display=swap',
       type: 'text/css',
     },
   ],
@@ -66,12 +121,6 @@ const config = {
       },
       navbar: {
         title: 'Ness.js',
-        logo: {
-          alt: 'Ness.js logo',
-          src: 'img/logo.svg',
-          width: 28,
-          height: 28,
-        },
         items: [
           {
             type: 'doc',
@@ -150,8 +199,8 @@ const config = {
         copyright: `Released under the MIT License · Copyright © ${new Date().getFullYear()} Ness.js`,
       },
       prism: {
-        theme: prismThemes.github,
-        darkTheme: prismThemes.vsDark,
+        theme: nessLight,
+        darkTheme: nessDark,
       },
       docs: {
         sidebar: {
