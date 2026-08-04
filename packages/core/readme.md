@@ -1,4 +1,10 @@
-# @nessframework/core
+<p align="center">
+  <img src="https://raw.githubusercontent.com/leroyanders/Ness.js/master/docs/static/img/logo.png" alt="" width="96" height="96" />
+</p>
+
+<h1 align="center">@nessframework/core</h1>
+
+<p align="center">The framework core: Vite integration, configuration, and the server runtime for Ness.js.</p>
 
 The Ness.js v7 client runtime and umbrella package. Framework subsystems are published as focused `@nessframework/*` packages and re-exported here for convenience.
 

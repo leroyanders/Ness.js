@@ -1,4 +1,10 @@
-# @nessframework/cli
+<p align="center">
+  <img src="https://raw.githubusercontent.com/leroyanders/Ness.js/master/docs/static/img/logo.png" alt="" width="96" height="96" />
+</p>
+
+<h1 align="center">@nessframework/cli</h1>
+
+<p align="center">Develop, build, diagnose, and create Ness.js applications.</p>
 
 The official Ness.js command line interface.
 

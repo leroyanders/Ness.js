@@ -1,6 +1,10 @@
-# @nessframework/components
+<p align="center">
+  <img src="https://raw.githubusercontent.com/leroyanders/Ness.js/master/docs/static/img/logo.png" alt="" width="96" height="96" />
+</p>
 
-Unstyled React components bound to the Ness.js request lifecycle.
+<h1 align="center">@nessframework/components</h1>
+
+<p align="center">Unstyled React components bound to the Ness.js request lifecycle: streaming, pending state, optimistic forms, and URL-driven search and pagination.</p>
 
 These are not a UI kit. There is no CSS in this package and nothing here has an
 opinion about how your application looks — pair it with Tailwind, CSS Modules,

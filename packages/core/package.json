@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/core",
-  "description": "Newest Experience of Server Side development. Awesome React framework ✨",
+  "description": "The framework core: Vite integration, configuration, and the server runtime for Ness.js.",
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "repository": {
@@ -8,7 +8,7 @@
     "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "packages/core"
   },
-  "version": "7.0.1",
+  "version": "7.0.2",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

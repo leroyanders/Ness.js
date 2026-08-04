@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/server",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
   "type": "module",
   "exports": {

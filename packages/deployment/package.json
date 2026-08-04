@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/deployment",
-  "version": "7.0.1",
+  "version": "7.0.2",
   "description": "Standalone output, dependency tracing, and Node, Lambda, and Cloudflare Workers adapters for Ness.js.",
   "type": "module",
   "exports": {

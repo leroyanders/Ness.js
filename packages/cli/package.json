@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/cli",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",

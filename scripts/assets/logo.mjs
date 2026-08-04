@@ -35,11 +35,18 @@ const MARK_COPIES = [
   'examples/welcome/public/assets/logo.svg',
 ];
 
-/** PNGs with the corners left transparent, at the size each consumer asks for. */
+/**
+ * PNGs with the corners left transparent, at the size each consumer asks for.
+ *
+ * logo.png exists for the package readmes. They are rendered by npm, which
+ * resolves no relative path and strips SVG, so those headers point at this file
+ * over https instead of at the source beside them.
+ */
 const PNGS = [
   ['docs/static/img/favicon-16x16.png', 16],
   ['docs/static/img/favicon-32x32.png', 32],
   ['docs/static/img/favicon.png', 512],
+  ['docs/static/img/logo.png', 512],
   ['docs/static/img/android-chrome-192x192.png', 192],
   ['docs/static/img/android-chrome-512x512.png', 512],
 ];

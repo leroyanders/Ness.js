@@ -1,4 +1,10 @@
-# @nessframework/env
+<p align="center">
+  <img src="https://raw.githubusercontent.com/leroyanders/Ness.js/master/docs/static/img/logo.png" alt="" width="96" height="96" />
+</p>
+
+<h1 align="center">@nessframework/env</h1>
+
+<p align="center">Environment variable validation for Ness.js applications.</p>
 
 Fails development or production builds when required environment variables are missing or invalid.
 

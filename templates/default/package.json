@@ -1,8 +1,8 @@
 {
   "name": "@nessframework/default",
-  "version": "4.1.1",
+  "version": "4.1.2",
   "type": "module",
-  "description": "The base template for Create Ness App.",
+  "description": "Official JavaScript starter for Ness.js.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",

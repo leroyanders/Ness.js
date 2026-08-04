@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/instrumentation",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "Server instrumentation and Web Vitals for Ness.js.",
   "type": "module",
   "exports": {

@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/compression",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Gzip and Brotli build assets for Ness.js applications.",
   "type": "module",
   "exports": {

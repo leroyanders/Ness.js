@@ -1,6 +1,10 @@
-# @nessframework/typescript
+<p align="center">
+  <img src="https://raw.githubusercontent.com/leroyanders/Ness.js/master/docs/static/img/logo.png" alt="" width="96" height="96" />
+</p>
 
-The starter `ness new` scaffolds by default: strict TypeScript, end to end.
+<h1 align="center">@nessframework/typescript</h1>
+
+<p align="center">Official strict TypeScript starter for Ness.js, and what ness new scaffolds by default.</p>
 
 It includes typed React routes, a NestJS backend and health controller, streaming SSR, a cached server loader, route boundaries, prerendering, optional RSC mode, instrumentation, a unified `ness.config.mjs`, and a production Dockerfile.
 
