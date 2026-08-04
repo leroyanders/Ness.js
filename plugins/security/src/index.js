@@ -33,19 +33,5 @@ function security(options = {}) {
   };
 }
 
-function install(config, options = {}) {
-  if (options.target && options.target !== 'web') return config;
-  const headers = securityHeaders(options);
-  const existing = config.devServer?.headers;
-  config.devServer = {
-    ...(config.devServer || {}),
-    headers:
-      typeof existing === 'function'
-        ? async (...args) => ({ ...(await existing(...args)), ...headers })
-        : { ...(existing || {}), ...headers },
-  };
-  return config;
-}
-
-export { DEFAULT_HEADERS, install, security, securityHeaders };
+export { DEFAULT_HEADERS, security, securityHeaders };
 export default security;

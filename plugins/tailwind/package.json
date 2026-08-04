@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/tailwind",
-  "version": "1.4.3",
+  "version": "2.0.0",
   "description": "Tailwind CSS integration for Ness.js",
   "type": "module",
   "repository": {
@@ -23,10 +23,10 @@
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "peerDependencies": {
-    "@nessframework/core": ">=5.1.49",
+    "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"
   },
   "dependencies": {

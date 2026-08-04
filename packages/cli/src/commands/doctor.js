@@ -10,7 +10,7 @@ export async function doctor(cwd = process.cwd()) {
   const add = (name, ok, detail) => checks.push({ name, ok, detail });
   add(
     'Node.js',
-    semver.satisfies(process.version, '>=16.0.0'),
+    semver.satisfies(process.version, '>=20.19.0'),
     process.version,
   );
   add('package.json', fs.existsSync(path.join(cwd, 'package.json')), cwd);

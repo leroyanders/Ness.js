@@ -10,12 +10,24 @@ function expressAdapter(handler) {
   return (request, response) => listener(request, response);
 }
 
-function serverlessAdapter(handler) {
-  return async function serverless(request) {
-    return handler(request);
-  };
+/**
+ * Adapts a Web-standard handler to AWS Lambda (API Gateway v2 / Function URL).
+ *
+ * Loaded on demand so importing this package on an edge runtime does not pull
+ * in the Node buffer path the conversion needs.
+ */
+async function serverlessAdapter(handler) {
+  const { createLambdaHandler } = await import('./lambda.js');
+  return createLambdaHandler(handler);
 }
 
+/**
+ * Shapes a handler as an edge module export. This is the whole adapter on
+ * runtimes that already speak Request/Response — Cloudflare Workers, Deno
+ * Deploy, Netlify Edge. For Workers specifically, use
+ * `@nessframework/deployment/cloudflare`, which also wires the static assets
+ * binding.
+ */
 function edgeAdapter(handler) {
   return { fetch: handler };
 }

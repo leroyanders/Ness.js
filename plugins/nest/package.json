@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/nest",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "NestJS server routes for Ness.js applications",
   "type": "module",
   "main": "./src/index.js",
@@ -20,19 +20,19 @@
     "readme.md"
   ],
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "peerDependencies": {
-    "@nessframework/core": ">=6.0.0",
+    "@nessframework/core": ">=7.0.0",
     "@nestjs/common": "^11.1.28",
-    "@nestjs/core": "^10.4.22",
+    "@nestjs/core": "^11.1.28",
+    "express": "^5.1.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "vite": ">=5.0.0"
   },
   "dependencies": {
     "@nestjs/platform-express": "11.1.28",
-    "express": "4.21.2",
     "fs-extra": "11.4.0",
     "tinyglobby": "0.2.17",
     "typescript": "5.7.3"

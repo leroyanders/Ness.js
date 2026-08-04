@@ -71,11 +71,18 @@ function normalizeLife(life = 'default') {
   return normalized;
 }
 
+function matchesPath(entryPath, pathname) {
+  if (!entryPath) return false;
+  return entryPath === pathname || entryPath.startsWith(`${pathname}/`);
+}
+
 class MemoryCacheAdapter {
   constructor({ clock = Date.now } = {}) {
     this.clock = clock;
     this.entries = new Map();
     this.pending = new Map();
+    this.tagIndex = new Map();
+    this.pathIndex = new Map();
   }
 
   async get(key) {
@@ -83,10 +90,28 @@ class MemoryCacheAdapter {
   }
 
   async set(key, entry) {
+    this.#unindex(key);
     this.entries.set(key, entry);
+    for (const tag of entry.tags || []) {
+      let keys = this.tagIndex.get(tag);
+      if (!keys) {
+        keys = new Set();
+        this.tagIndex.set(tag, keys);
+      }
+      keys.add(key);
+    }
+    if (entry.path) {
+      let keys = this.pathIndex.get(entry.path);
+      if (!keys) {
+        keys = new Set();
+        this.pathIndex.set(entry.path, keys);
+      }
+      keys.add(key);
+    }
   }
 
   async delete(key) {
+    this.#unindex(key);
     this.entries.delete(key);
   }
 
@@ -97,6 +122,38 @@ class MemoryCacheAdapter {
   async clear() {
     this.entries.clear();
     this.pending.clear();
+    this.tagIndex.clear();
+    this.pathIndex.clear();
+  }
+
+  async keysByTag(tag) {
+    return [...(this.tagIndex.get(tag) || [])];
+  }
+
+  async keysByPath(pathname) {
+    const matched = [];
+    for (const [indexed, keys] of this.pathIndex) {
+      if (matchesPath(indexed, pathname)) matched.push(...keys);
+    }
+    return matched;
+  }
+
+  #unindex(key) {
+    const previous = this.entries.get(key);
+    if (!previous) return;
+    for (const tag of previous.tags || []) {
+      const keys = this.tagIndex.get(tag);
+      if (!keys) continue;
+      keys.delete(key);
+      if (keys.size === 0) this.tagIndex.delete(tag);
+    }
+    if (previous.path) {
+      const keys = this.pathIndex.get(previous.path);
+      if (keys) {
+        keys.delete(key);
+        if (keys.size === 0) this.pathIndex.delete(previous.path);
+      }
+    }
   }
 }
 
@@ -164,16 +221,28 @@ class NessCache {
     return removed;
   }
 
-  revalidateTag(tag) {
+  async #deleteKeys(keys) {
+    let removed = 0;
+    for (const key of new Set(keys)) {
+      if (!(await this.adapter.get(key))) continue;
+      await this.adapter.delete(key);
+      removed += 1;
+    }
+    return removed;
+  }
+
+  async revalidateTag(tag) {
+    if (typeof this.adapter.keysByTag === 'function') {
+      return this.#deleteKeys(await this.adapter.keysByTag(tag));
+    }
     return this.invalidate(entry => entry.tags.includes(tag));
   }
 
-  revalidatePath(pathname) {
-    return this.invalidate(
-      entry =>
-        entry.path === pathname ||
-        (entry.path && entry.path.startsWith(`${pathname}/`)),
-    );
+  async revalidatePath(pathname) {
+    if (typeof this.adapter.keysByPath === 'function') {
+      return this.#deleteKeys(await this.adapter.keysByPath(pathname));
+    }
+    return this.invalidate(entry => matchesPath(entry.path, pathname));
   }
 
   delete(key) {

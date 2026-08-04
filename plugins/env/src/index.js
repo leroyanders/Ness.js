@@ -57,13 +57,5 @@ function env(options = {}) {
   };
 }
 
-function install(config, options = {}) {
-  validateEnvironment(options.schema, {
-    ...process.env,
-    ...(options.values || {}),
-  });
-  return config;
-}
-
-export { env, install, validateEnvironment };
+export { env, validateEnvironment };
 export default env;

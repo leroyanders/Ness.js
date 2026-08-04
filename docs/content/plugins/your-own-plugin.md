@@ -45,19 +45,16 @@ Plugins can use any Vite hook, including `config`, `transform`, `generateBundle`
 }
 ```
 
-## Legacy Webpack support
+## Migrating a Ness 5 plugin
 
-Plugins that also support the Ness 5 compatibility runtime may export an asynchronous `install(config, options)` function:
+Ness 5 plugins exported an `install(config, options)` function that mutated a Webpack configuration. That runtime was removed in Ness 6, and `install` is no longer called.
 
-```js
-export function install(config, options) {
-  if (options.target !== 'web') return config;
-  config.resolve.alias = {
-    ...config.resolve.alias,
-    '@example': options.directory,
-  };
-  return config;
-}
-```
+Rewrite the plugin as a Vite plugin. Most of the mapping is direct:
 
-Legacy plugins are enabled from `ness.config.js`. Options include `target`, `env`, and `dev`.
+| Ness 5 (`install`)            | Vite plugin                                      |
+| ----------------------------- | ------------------------------------------------ |
+| `config.resolve.alias`        | return `{ resolve: { alias } }` from `config()`  |
+| `config.module.rules`         | `transform(code, id)`                            |
+| `config.plugins.push(...)`    | a Rollup hook such as `generateBundle`           |
+| `config.devServer.headers`    | return `{ server: { headers } }` from `config()` |
+| `options.dev` / `options.env` | the `environment.command` argument to `config()` |

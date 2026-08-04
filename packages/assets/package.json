@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/assets",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
   "type": "module",
   "exports": {
@@ -35,14 +35,14 @@
     "readme.md"
   ],
   "dependencies": {
-    "@nessframework/server": "^6.0.0",
+    "@nessframework/server": "^7.0.0",
     "sharp": "0.35.3"
   },
   "peerDependencies": {
     "react": ">=19.2.7"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT"

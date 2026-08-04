@@ -63,42 +63,5 @@ function compression(options = {}) {
   };
 }
 
-class NessWebpackCompressionPlugin {
-  constructor(options) {
-    this.options = options;
-  }
-
-  apply(compiler) {
-    const pluginName = 'NessCompression';
-    compiler.hooks.thisCompilation.tap(pluginName, compilation => {
-      const stage =
-        compiler.webpack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_TRANSFER;
-      compilation.hooks.processAssets.tap({ name: pluginName, stage }, () => {
-        for (const asset of compilation.getAssets()) {
-          for (const compressed of compressAsset(
-            asset.name,
-            asset.source.source(),
-            this.options,
-          )) {
-            compilation.emitAsset(
-              compressed.filename,
-              new compiler.webpack.sources.RawSource(compressed.source),
-            );
-          }
-        }
-      });
-    });
-  }
-}
-
-function install(config, options = {}) {
-  if (options.dev) return config;
-  config.plugins = [
-    ...(config.plugins || []),
-    new NessWebpackCompressionPlugin(options),
-  ];
-  return config;
-}
-
-export { compressAsset, compression, install };
+export { compressAsset, compression };
 export default compression;

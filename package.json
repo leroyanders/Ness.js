@@ -8,14 +8,14 @@
     "examples/*",
     "docs"
   ],
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "Newest Experience of Server Side development. Awesome React framework ✨",
   "directories": {
     "doc": "docs",
     "example": "examples"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "overrides": {
     "@jsonjoy.com/fs-node-builtins": "4.64.0",
@@ -28,12 +28,14 @@
     "uuid": "^11.1.1"
   },
   "scripts": {
-    "build": "npm run build --workspace @nessframework/core && npm run build --workspace docs && npm run build --workspace welcome",
+    "build": "npm run build --workspace docs && npm run build --workspace welcome",
     "check": "npm run format:check && npm test && npm run build",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "test": "npm run test:unit && npm run test:types",
-    "test:unit": "node --test packages/core/test/*.test.js packages/cli/test/*.test.js plugins/*/test/*.test.js",
+    "test:e2e": "node scripts/e2e/smoke.mjs",
+    "release": "node scripts/release/publish.mjs",
+    "test:unit": "node --test packages/*/test/*.test.js plugins/*/test/*.test.js",
     "test:types": "tsc --noEmit --skipLibCheck false --module NodeNext --moduleResolution NodeNext --target ES2022 --lib ES2022,DOM --types node,react --jsx react-jsx packages/core/test/types-smoke.ts plugins/types-smoke.ts",
     "publish:core": "npm publish --workspace @nessframework/core --access public",
     "publish:assets": "npm publish --workspace @nessframework/assets --access public",

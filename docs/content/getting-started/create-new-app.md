@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Create a new application
 
-Install Node.js 16 or newer, then run:
+Install Node.js 20.19 or newer, then run:
 
 ```bash
 npx @nessframework/cli@latest new my-app

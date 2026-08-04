@@ -18,6 +18,13 @@ export interface CacheAdapter {
   delete(key: string): Promise<void> | void;
   keys(): Promise<string[]> | string[];
   clear(): Promise<void> | void;
+  /**
+   * Optional tag index. When present, `revalidateTag` resolves the affected
+   * keys directly instead of scanning and reading every cached entry.
+   */
+  keysByTag?(tag: string): Promise<string[]> | string[];
+  /** Optional path index, matching a pathname and its descendants. */
+  keysByPath?(pathname: string): Promise<string[]> | string[];
 }
 
 export type CacheProfile =
@@ -38,6 +45,8 @@ export class MemoryCacheAdapter implements CacheAdapter {
   delete(key: string): Promise<void>;
   keys(): Promise<string[]>;
   clear(): Promise<void>;
+  keysByTag(tag: string): Promise<string[]>;
+  keysByPath(pathname: string): Promise<string[]>;
 }
 
 export class NessCache {

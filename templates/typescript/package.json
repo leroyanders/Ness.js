@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/typescript",
-  "version": "3.0.2",
+  "version": "4.0.0",
   "type": "module",
   "description": "The typescript template for Create Ness App.",
   "repository": {

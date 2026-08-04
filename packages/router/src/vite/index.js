@@ -1,7 +1,23 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import rsc from '@vitejs/plugin-rsc';
 import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
+import { nessErrorOverlay } from './overlay.js';
+
+/**
+ * `@vitejs/plugin-rsc` is an optional peer: only RSC applications install it.
+ * Vite accepts a promise in the plugin array, so importing it lazily keeps a
+ * non-RSC build from failing on a package it never needed.
+ */
+function rscPlugin() {
+  return import('@vitejs/plugin-rsc').then(
+    module => (module.default || module)(),
+    () => {
+      throw new Error(
+        'RSC mode requires @vitejs/plugin-rsc. Install it with: npm install -D @vitejs/plugin-rsc',
+      );
+    },
+  );
+}
 
 function nessVitePlugin(options = {}) {
   const configFile = options.configFile || 'ness.config.mjs';
@@ -52,22 +68,31 @@ function nessVitePlugin(options = {}) {
 }
 
 function ness(options = {}) {
-  const { plugins = [], ...frameworkOptions } = options;
+  const { plugins = [], overlay = {}, ...frameworkOptions } = options;
   const integrations = [plugins].flat(Infinity).filter(Boolean);
+  // The overlay registers its middleware after Vite's own, so it must come
+  // last in the plugin array to be configured last.
+  const errorOverlay =
+    overlay === false
+      ? []
+      : [nessErrorOverlay(overlay === true ? {} : overlay)];
+
   if (!frameworkOptions.rsc) {
     return [
       nessVitePlugin(frameworkOptions),
       ...reactRouter(),
       ...integrations,
+      ...errorOverlay,
     ];
   }
   return [
     nessVitePlugin(frameworkOptions),
     ...unstable_reactRouterRSC(),
-    rsc(),
+    rscPlugin(),
     ...integrations,
+    ...errorOverlay,
   ];
 }
 
-export { ness, nessVitePlugin };
+export { ness, nessErrorOverlay, nessVitePlugin };
 export default ness;

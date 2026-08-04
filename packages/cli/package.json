@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/cli",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
@@ -29,6 +29,6 @@
     "semver": "^7.8.5"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   }
 }

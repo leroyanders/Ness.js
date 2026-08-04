@@ -19,5 +19,4 @@ export function compressAsset(
   source: string | Uint8Array,
   options?: CompressionOptions,
 ): CompressedAsset[];
-export function install(config: object, options?: CompressionOptions): object;
 export default compression;

@@ -1,6 +1,3 @@
-import fs from 'node:fs';
-import path from 'node:path';
-
 function byteLength(source) {
   if (source == null) return 0;
   if (typeof source === 'string') return Buffer.byteLength(source);
@@ -83,47 +80,5 @@ function analyzer(options = {}) {
   };
 }
 
-class NessWebpackAnalyzerPlugin {
-  constructor(options) {
-    this.options = options;
-  }
-
-  apply(compiler) {
-    compiler.hooks.done.tap('NessBundleAnalyzer', stats => {
-      const data = stats.toJson({ all: false, assets: true });
-      const entries = (data.assets || [])
-        .map(asset => ({
-          file: asset.name,
-          type: 'asset',
-          size: Number(asset.size) || 0,
-        }))
-        .sort((left, right) => right.size - left.size);
-      const report = createReport(entries);
-      if (this.options.maxSize && report.totalSize > this.options.maxSize) {
-        throw new Error(
-          `Ness bundle size ${report.totalSize} bytes exceeds the ${this.options.maxSize} byte budget.`,
-        );
-      }
-      const outputDirectory = compiler.options.output?.path || process.cwd();
-      fs.mkdirSync(outputDirectory, { recursive: true });
-      fs.writeFileSync(
-        path.join(
-          outputDirectory,
-          this.options.reportFile || 'ness-bundle-report.json',
-        ),
-        `${JSON.stringify(report, null, 2)}\n`,
-      );
-    });
-  }
-}
-
-function install(config, options = {}) {
-  config.plugins = [
-    ...(config.plugins || []),
-    new NessWebpackAnalyzerPlugin(options),
-  ];
-  return config;
-}
-
-export { analyzer, bundleEntries, createReport, install };
+export { analyzer, bundleEntries, createReport };
 export default analyzer;

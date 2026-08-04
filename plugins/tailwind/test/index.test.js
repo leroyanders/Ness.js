@@ -1,17 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { install, tailwind } from '../src/index.js';
+import { tailwind } from '../src/index.js';
 
-test('tailwind configures PostCSS for Vite builds', () => {
-  const config = tailwind().config({}, { command: 'build' });
-  assert.equal(config.css.postcss.plugins.length, 2);
+test('tailwind adds cssnano only for production builds', () => {
+  const build = tailwind().config({}, { command: 'build' });
+  assert.equal(build.css.postcss.plugins.length, 2);
+
+  const serve = tailwind().config({}, { command: 'serve' });
+  assert.equal(serve.css.postcss.plugins.length, 1);
 });
 
-test('tailwind configures the legacy PostCSS loader', () => {
-  const loader = { loader: 'postcss-loader', options: {} };
-  const config = {
-    module: { rules: [{ use: [loader] }] },
-  };
-  install(config, { target: 'web', dev: true });
-  assert.equal(loader.options.postcssOptions.plugins.length, 1);
+test('minify overrides the command-derived default', () => {
+  const forced = tailwind({ minify: true }).config({}, { command: 'serve' });
+  assert.equal(forced.css.postcss.plugins.length, 2);
+
+  const disabled = tailwind({ minify: false }).config({}, { command: 'build' });
+  assert.equal(disabled.css.postcss.plugins.length, 1);
 });

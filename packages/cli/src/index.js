@@ -3,10 +3,13 @@ import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
 import semver from 'semver';
 import {
+  applyPackageOverrides,
   checkForLatestVersion,
   createApp,
+  normalizePackageOverrides,
   resolveTemplate,
 } from './commands/create.js';
+import { bundle, TARGETS as BUNDLE_TARGETS } from './commands/bundle.js';
 import { cleanProject } from './commands/clean.js';
 import {
   addDependency,
@@ -16,6 +19,7 @@ import {
   updateDependencies,
 } from './commands/dependencies.js';
 import { doctor, printEnvironmentInfo } from './commands/doctor.js';
+import { migrateFromNext } from './commands/migrate.js';
 import {
   generate,
   GENERATOR_TYPES,
@@ -51,6 +55,11 @@ export async function init() {
       'default',
     )
     .option('--rsc', 'enable experimental React Server Components')
+    .option(
+      '--package-override <name=spec>',
+      'install a specific version, tag, or tarball of a framework package (repeatable)',
+      (value, previous) => [...(previous || []), value],
+    )
     .action(async (projectName, options) => {
       commandExecuted = true;
       const latest = await checkForLatestVersion(packageJson.name).catch(
@@ -122,6 +131,26 @@ export async function init() {
     .action(async options => {
       commandExecuted = true;
       await startProductionServer(options);
+    });
+
+  program
+    .command('bundle')
+    .description('package an existing build for deployment')
+    .argument(
+      '[target]',
+      `deployment target: ${BUNDLE_TARGETS.join(', ')}`,
+      'node',
+    )
+    .option('--output <dir>', 'output directory (node target)')
+    .option('--build-directory <dir>', 'build directory', 'build')
+    .option('--name <name>', 'worker name (cloudflare target)')
+    .action(async (target, options) => {
+      commandExecuted = true;
+      await bundle(target, {
+        output: options.output,
+        buildDirectory: options.buildDirectory,
+        name: options.name,
+      });
     });
 
   program
@@ -218,6 +247,23 @@ export async function init() {
     });
 
   program
+    .command('migrate')
+    .description('migrate an application from another framework')
+    .argument('<framework>', 'source framework: next')
+    .argument('[directory]', 'application directory', '.')
+    .option('--dry-run', 'print the plan without changing any file')
+    .option('--force', 'run even with a dirty or absent git working tree')
+    .action(async (framework, directory, options) => {
+      commandExecuted = true;
+      if (framework !== 'next') {
+        throw new Error(
+          `Unsupported migration source: ${framework}. Only "next" is supported.`,
+        );
+      }
+      await migrateFromNext(directory, options);
+    });
+
+  program
     .command('doctor')
     .description('diagnose the current Ness.js application')
     .action(async () => {
@@ -241,10 +287,15 @@ export async function init() {
 export {
   addDependency,
   cleanProject,
+  applyPackageOverrides,
+  bundle,
+  BUNDLE_TARGETS,
   createApp,
   doctor,
   generate,
   GENERATOR_TYPES,
+  migrateFromNext,
+  normalizePackageOverrides,
   removeDependency,
   resolveDependencyName,
   resolveGeneratorType,
