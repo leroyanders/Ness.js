@@ -1,8 +1,18 @@
 {
   "name": "@nessframework/cli",
-  "version": "7.1.1",
+  "version": "7.2.0",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "cli",
+    "scaffold",
+    "generator",
+    "react",
+    "nestjs",
+    "create-app"
+  ],
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "repository": {
     "type": "git",

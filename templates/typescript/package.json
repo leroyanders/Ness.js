@@ -1,8 +1,17 @@
 {
   "name": "@nessframework/typescript",
-  "version": "4.1.2",
+  "version": "4.2.0",
   "type": "module",
   "description": "Official strict TypeScript starter for Ness.js, and what ness new scaffolds by default.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "template",
+    "starter",
+    "react",
+    "nestjs",
+    "typescript"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",
@@ -17,12 +26,6 @@
   "files": [
     "template",
     "template.json"
-  ],
-  "keywords": [
-    "ness",
-    "react",
-    "template",
-    "typescript"
   ],
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",

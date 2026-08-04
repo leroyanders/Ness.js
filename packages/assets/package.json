@@ -1,7 +1,18 @@
 {
   "name": "@nessframework/assets",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "react",
+    "images",
+    "image-optimization",
+    "fonts",
+    "metadata",
+    "sitemap",
+    "seo"
+  ],
   "type": "module",
   "exports": {
     ".": {

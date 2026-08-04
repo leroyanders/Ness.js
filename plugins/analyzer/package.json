@@ -1,7 +1,16 @@
 {
   "name": "@nessframework/analyzer",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "description": "Bundle reports and size budgets for Ness.js applications.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "plugin",
+    "bundle-analyzer",
+    "bundle-size",
+    "performance-budget",
+    "vite"
+  ],
   "type": "module",
   "exports": {
     ".": {

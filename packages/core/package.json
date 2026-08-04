@@ -1,6 +1,18 @@
 {
   "name": "@nessframework/core",
   "description": "The framework core: Vite integration, configuration, and the server runtime for Ness.js.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "framework",
+    "full-stack",
+    "react",
+    "react-router",
+    "nestjs",
+    "vite",
+    "ssr",
+    "typescript"
+  ],
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "repository": {
@@ -8,7 +20,7 @@
     "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "packages/core"
   },
-  "version": "7.0.2",
+  "version": "7.1.0",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -75,15 +87,5 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4"
-  },
-  "keywords": [
-    "nodejs",
-    "express",
-    "ssr",
-    "ness",
-    "react",
-    "typescript",
-    "react-router",
-    "vite"
-  ]
+  }
 }

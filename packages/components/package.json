@@ -1,7 +1,18 @@
 {
   "name": "@nessframework/components",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Unstyled React components bound to the Ness.js request lifecycle: streaming, pending state, optimistic forms, and URL-driven search and pagination.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "react",
+    "components",
+    "headless",
+    "unstyled",
+    "streaming",
+    "forms",
+    "pagination"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -21,15 +32,6 @@
     "react": ">=19.2.7",
     "react-router": ">=8.0.0"
   },
-  "keywords": [
-    "ness",
-    "react",
-    "components",
-    "headless",
-    "unstyled",
-    "streaming",
-    "forms"
-  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",

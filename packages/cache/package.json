@@ -1,7 +1,17 @@
 {
   "name": "@nessframework/cache",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "description": "Caching, stale-while-revalidate, tags, and path invalidation for Ness.js.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "cache",
+    "isr",
+    "stale-while-revalidate",
+    "revalidation",
+    "redis",
+    "sqlite"
+  ],
   "type": "module",
   "exports": {
     ".": {

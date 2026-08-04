@@ -1,7 +1,16 @@
 {
   "name": "@nessframework/tailwind",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "Tailwind CSS integration for Ness.js",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "plugin",
+    "tailwind",
+    "tailwindcss",
+    "css",
+    "vite"
+  ],
   "type": "module",
   "repository": {
     "type": "git",

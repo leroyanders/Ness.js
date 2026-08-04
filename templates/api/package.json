@@ -1,8 +1,18 @@
 {
   "name": "@nessframework/api",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "type": "module",
   "description": "NestJS API-first starter for Ness.js.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "template",
+    "starter",
+    "react",
+    "nestjs",
+    "api",
+    "rest"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",
@@ -14,13 +24,6 @@
   "files": [
     "template",
     "template.json"
-  ],
-  "keywords": [
-    "ness",
-    "react",
-    "nestjs",
-    "template",
-    "api"
   ],
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",

@@ -1,7 +1,16 @@
 {
   "name": "@nessframework/testing",
-  "version": "7.0.1",
+  "version": "7.1.0",
   "description": "Test utilities for Ness.js applications.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "testing",
+    "test-utils",
+    "loader",
+    "action",
+    "integration-testing"
+  ],
   "type": "module",
   "exports": {
     ".": {

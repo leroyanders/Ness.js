@@ -1,7 +1,16 @@
 {
   "name": "@nessframework/nest",
-  "version": "2.0.2",
+  "version": "2.1.0",
   "description": "NestJS server routes for Ness.js applications",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "plugin",
+    "nestjs",
+    "dependency-injection",
+    "controllers",
+    "backend"
+  ],
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

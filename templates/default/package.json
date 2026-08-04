@@ -1,8 +1,17 @@
 {
   "name": "@nessframework/default",
-  "version": "4.1.2",
+  "version": "4.2.0",
   "type": "module",
   "description": "Official JavaScript starter for Ness.js.",
+  "keywords": [
+    "ness",
+    "nessjs",
+    "template",
+    "starter",
+    "react",
+    "nestjs",
+    "javascript"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",
@@ -17,12 +26,6 @@
   "files": [
     "template",
     "template.json"
-  ],
-  "keywords": [
-    "ness",
-    "react",
-    "template",
-    "javascript"
   ],
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",
