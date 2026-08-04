@@ -14,6 +14,7 @@
  *   npm run release                       # authenticate when npm asks
  *   npm run release -- --otp=123456       # skip the prompt with a code
  *   npm run release -- --dry-run          # pack and validate, publish nothing
+ *   npm run release -- --verify-timeout=600   # wait longer for the registry
  *
  * Already-published versions are reported and skipped rather than failing the
  * run, so an interrupted release can be resumed by running it again.
@@ -61,17 +62,31 @@ const TIERS = [
   ],
 ];
 
+/** How long the final check waits for the registry to catch up, in seconds. */
+const DEFAULT_VERIFY_TIMEOUT = 300;
+
 function parseArguments(argv) {
-  const options = { dryRun: false };
+  const options = { dryRun: false, verifyTimeout: DEFAULT_VERIFY_TIMEOUT };
   for (const argument of argv) {
     if (argument === '--dry-run') options.dryRun = true;
     else if (argument.startsWith('--otp='))
       options.otp = argument.slice('--otp='.length);
+    else if (argument.startsWith('--verify-timeout=')) {
+      const seconds = Number(argument.slice('--verify-timeout='.length));
+      if (!Number.isFinite(seconds) || seconds < 0) {
+        throw new Error(
+          `--verify-timeout takes a number of seconds: ${argument}`,
+        );
+      }
+      options.verifyTimeout = seconds;
+    }
   }
   return options;
 }
 
 const log = message => console.log(`\x1b[36m[release]\x1b[0m ${message}`);
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 /** Captures output. Only for non-interactive queries such as `npm view`. */
 function capture(command, args) {
@@ -121,9 +136,51 @@ function workspaceVersions() {
   return versions;
 }
 
+/**
+ * `--prefer-online` is not optional here. npm serves the packument it already
+ * has in its cache until that entry goes stale, so straight after a publish the
+ * answer can be the version this run just replaced — reported as "not visible
+ * on npm" for a package that published perfectly well.
+ */
 async function publishedVersion(name) {
-  const { code, output } = await capture('npm', ['view', name, 'version']);
+  const { code, output } = await capture('npm', [
+    'view',
+    name,
+    'version',
+    '--prefer-online',
+  ]);
   return code === 0 ? output.trim() : undefined;
+}
+
+/**
+ * Waits for every package to read back at its expected version.
+ *
+ * A publish is not visible the instant `npm publish` returns: the registry's
+ * read replicas trail the write, and how far they trail varies per package.
+ * Checking once and failing turned a completely successful release into a red
+ * exit — the packages were on npm, the replica serving this machine had simply
+ * not caught up. Only the ones still behind are re-checked, and the wait backs
+ * off so a slow replica is not hammered.
+ *
+ * Returns the names that never appeared before the deadline.
+ */
+async function waitForRegistry(expected, timeoutSeconds) {
+  const pending = new Map(expected);
+  const deadline = Date.now() + timeoutSeconds * 1000;
+  let delay = 2000;
+
+  for (;;) {
+    for (const [name, version] of [...pending]) {
+      if ((await publishedVersion(name)) === version) pending.delete(name);
+    }
+    if (!pending.size) return [];
+    if (Date.now() >= deadline) return [...pending.keys()];
+
+    const waiting = [...pending.keys()].join(', ');
+    log(`  waiting for the registry to catch up: ${waiting}`);
+    await sleep(delay);
+    delay = Math.min(delay * 2, 15000);
+  }
 }
 
 async function main() {
@@ -200,14 +257,16 @@ async function main() {
   if (options.dryRun) return;
 
   // Confirm the registry agrees, rather than trusting the exit codes.
-  log('verifying the registry');
-  const wrong = [];
-  for (const [name, version] of versions) {
-    if ((await publishedVersion(name)) !== version) wrong.push(name);
-  }
-  if (wrong.length) {
+  log(`verifying the registry (up to ${options.verifyTimeout}s)`);
+  const missing = await waitForRegistry(versions, options.verifyTimeout);
+
+  if (missing.length) {
     throw new Error(
-      `Not visible on npm at the expected version yet: ${wrong.join(', ')}`,
+      `Still not visible on npm after ${options.verifyTimeout}s: ${missing.join(', ')}\n` +
+        'Nothing here needs undoing — every publish above succeeded, and this run ' +
+        'skips whatever is already live. Check https://www.npmjs.com/package/' +
+        `${missing[0]} , then either re-run this script or wait it out with ` +
+        '`npm run release -- --verify-timeout=900`.',
     );
   }
   log('\x1b[32mall packages are live at the expected versions\x1b[0m');
