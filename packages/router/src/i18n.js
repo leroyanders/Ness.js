@@ -88,15 +88,22 @@ function matchAcceptLanguage(header, i18n) {
     .split(',')
     .map(part => {
       const [tag, ...parameters] = part.trim().split(';');
+      // The parameter name is case-insensitive per RFC 9110; `Q=` is valid.
       const quality = parameters
         .map(parameter => parameter.trim())
-        .find(parameter => parameter.startsWith('q='));
+        .find(parameter => parameter.toLowerCase().startsWith('q='));
       return {
         tag: tag.trim(),
         quality: quality ? Number(quality.slice(2)) : 1,
       };
     })
-    .filter(candidate => candidate.tag && Number.isFinite(candidate.quality))
+    // q=0 means "not acceptable", so such a tag must never be chosen.
+    .filter(
+      candidate =>
+        candidate.tag &&
+        Number.isFinite(candidate.quality) &&
+        candidate.quality > 0,
+    )
     .sort((left, right) => right.quality - left.quality);
 
   const available = new Map(

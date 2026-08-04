@@ -5,19 +5,19 @@ Load: 40 concurrent connections for 8s per route, both servers self-hosted on No
 
 | Metric                          | Ness.js  | Next.js  |
 | ------------------------------- | -------- | -------- |
-| Build time                      | 4.2 s    | 11.3 s   |
-| Cold start to first response    | 2406 ms  | 521 ms   |
-| Deployable output               | 116.7 MB | 43.2 MB  |
-| node_modules (dev)              | 202.1 MB | 330.8 MB |
+| Build time                      | 1.8 s    | 4.9 s    |
+| Cold start to first response    | 541 ms   | 192 ms   |
+| Deployable output               | 67.2 MB  | 43.2 MB  |
+| node_modules (dev)              | 163.7 MB | 330.8 MB |
 | Client assets                   | 312 KB   | 560 KB   |
-| list page (SSR) — req/s         | 2317     | 229      |
-| list page (SSR) — TTFB p50      | 2.0 ms   | 6.2 ms   |
-| list page (SSR) — latency p95   | 24.7 ms  | 274.7 ms |
-| detail page (SSR) — req/s       | 2878     | 291      |
-| detail page (SSR) — TTFB p50    | 2.2 ms   | 5.8 ms   |
-| detail page (SSR) — latency p95 | 19.1 ms  | 162.8 ms |
-| JSON endpoint — req/s           | 3727     | 1086     |
-| JSON endpoint — TTFB p50        | 1.7 ms   | 3.0 ms   |
-| JSON endpoint — latency p95     | 15.0 ms  | 65.7 ms  |
+| list page (SSR) — req/s         | 2361     | 1256     |
+| list page (SSR) — TTFB p50      | 1.7 ms   | 1.2 ms   |
+| list page (SSR) — latency p95   | 30.0 ms  | 40.5 ms  |
+| detail page (SSR) — req/s       | 3657     | 1636     |
+| detail page (SSR) — TTFB p50    | 2.7 ms   | 0.9 ms   |
+| detail page (SSR) — latency p95 | 16.2 ms  | 29.6 ms  |
+| JSON endpoint — req/s           | 10129    | 6396     |
+| JSON endpoint — TTFB p50        | 1.4 ms   | 1.5 ms   |
+| JSON endpoint — latency p95     | 7.3 ms   | 10.6 ms  |
 
 Absolute numbers depend on the machine. Re-run the script rather than quoting these.

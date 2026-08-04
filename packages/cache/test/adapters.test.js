@@ -3,7 +3,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { MemoryCacheAdapter, NessCache, normalizeLife } from '../src/index.js';
+import {
+  MemoryCacheAdapter,
+  NessCache,
+  cached,
+  normalizeLife,
+  withCache,
+} from '../src/index.js';
 import { FileSystemCacheAdapter } from '../src/adapters/filesystem.js';
 import { RedisCacheAdapter } from '../src/adapters/redis.js';
 import {
@@ -255,6 +261,8 @@ test('an invalidation bus evicts local copies on other instances', async () => {
 
 test('the redis invalidation bus ignores messages it published itself', async () => {
   const listeners = [];
+  // node-redis shape: subscribe() takes the message listener directly, and
+  // pSubscribe is what distinguishes it from ioredis.
   const client = {
     publish: (_channel, payload) => {
       for (const listener of listeners) listener(payload);
@@ -262,6 +270,7 @@ test('the redis invalidation bus ignores messages it published itself', async ()
     subscribe: (_channel, listener) => {
       listeners.push(listener);
     },
+    pSubscribe: () => {},
   };
   const bus = createRedisInvalidationBus(client, client, { id: 'instance-1' });
   const received = [];
@@ -272,6 +281,128 @@ test('the redis invalidation bus ignores messages it published itself', async ()
     JSON.stringify({ type: 'evict', key: 'peer', id: 'instance-2' }),
   );
 
+  assert.deepEqual(
+    received.map(message => message.key),
+    ['peer'],
+  );
+});
+
+/* Regressions found by adversarial review of the adapters. */
+
+test('concurrent writes of the same key do not collide on a temp file', async t => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-cache-'));
+  t.after(() => fs.rmSync(directory, { recursive: true, force: true }));
+  const adapter = new FileSystemCacheAdapter({ directory });
+
+  // A cache stampede after an invalidation: several requests miss and all
+  // write the same key at once.
+  await Promise.all([
+    adapter.set('k', entry('a')),
+    adapter.set('k', entry('b')),
+    adapter.set('k', entry('c')),
+  ]);
+
+  const stored = await adapter.get('k');
+  assert.ok(['a', 'b', 'c'].includes(stored.value), 'one writer wins cleanly');
+  assert.deepEqual(
+    fs
+      .readdirSync(path.join(directory, 'entries'))
+      .filter(f => f.endsWith('.tmp')),
+    [],
+    'no temp file is left behind',
+  );
+});
+
+test('an index entry that no longer carries the tag is not deleted', async () => {
+  const adapter = new MemoryCacheAdapter();
+  const cache = new NessCache(adapter);
+  await cache.write('k', 'v1', { tags: ['old'] });
+
+  // Simulate a shared store whose index outlived the entry: the key is still
+  // listed under the old tag, but the entry itself has been rewritten.
+  const stale = adapter.keysByTag.bind(adapter);
+  adapter.keysByTag = async tag =>
+    tag === 'old' ? ['k', ...(await stale(tag))] : stale(tag);
+  await cache.write('k', 'v2', { tags: ['new'] });
+
+  assert.equal(await cache.revalidateTag('old'), 0);
+  assert.equal((await adapter.get('k')).value, 'v2', 'the entry survives');
+  assert.equal(await cache.revalidateTag('new'), 1);
+});
+
+test('a tiered adapter over an unindexed store still invalidates by scanning', async () => {
+  const memory = new MemoryCacheAdapter();
+  const unindexed = {
+    get: key => memory.get(key),
+    set: (key, value) => memory.set(key, value),
+    delete: key => memory.delete(key),
+    keys: () => memory.keys(),
+    clear: () => memory.clear(),
+  };
+  const cache = new NessCache(new TieredCacheAdapter(unindexed));
+
+  await cache.write('a', 1, { tags: ['posts'] });
+  await cache.write('b', 2, { path: '/blog/post' });
+
+  assert.equal(
+    await cache.revalidateTag('posts'),
+    1,
+    'wrapping must not advertise an index the shared store cannot back',
+  );
+  assert.equal(await cache.revalidatePath('/blog'), 1);
+});
+
+test("revalidatePath('/') invalidates the whole tree", async () => {
+  const cache = new NessCache(new MemoryCacheAdapter());
+  await cache.write('home', 1, { path: '/' });
+  await cache.write('deep', 2, { path: '/blog/post' });
+
+  assert.equal(await cache.revalidatePath('/'), 2);
+});
+
+test('Map and Set arguments produce distinct cache keys', async () => {
+  const cache = new NessCache(new MemoryCacheAdapter());
+  const calls = [];
+  const load = cached(
+    async value => {
+      calls.push(value);
+      return calls.length;
+    },
+    { key: 'collection' },
+  );
+
+  await withCache(cache, async () => {
+    await load(new Map([['a', 1]]));
+    await load(new Map([['b', 2]]));
+    await load(new Set([1]));
+    await load(new Set([2]));
+  });
+
+  assert.equal(calls.length, 4, 'each distinct collection is its own key');
+});
+
+test('the redis bus tolerates an ioredis subscriber', () => {
+  const listeners = [];
+  // ioredis: subscribe() takes a completion callback, messages arrive as events.
+  const subscriber = {
+    subscribe: (_channel, done) => {
+      done?.(null, 1);
+      return Promise.resolve(1);
+    },
+    on: (event, listener) => {
+      if (event === 'message') listeners.push(listener);
+    },
+  };
+  const publisher = { publish: () => Promise.resolve(1) };
+  const bus = createRedisInvalidationBus(publisher, subscriber, { id: 'self' });
+
+  const received = [];
+  assert.doesNotThrow(() => bus.subscribe(message => received.push(message)));
+
+  listeners[0](
+    'ness:cache:invalidate',
+    JSON.stringify({ type: 'evict', key: 'peer', id: 'other' }),
+  );
   assert.deepEqual(
     received.map(message => message.key),
     ['peer'],

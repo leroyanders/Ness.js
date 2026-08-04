@@ -394,20 +394,12 @@ export async function createApp(
   }
 
   const overrides = normalizePackageOverrides(createOptions.packageOverride);
-  // The dev list only rewrites specs it already has; unmatched overrides are
-  // appended once, to the runtime list.
+  // Overrides rewrite specs that are already being installed; they never add a
+  // package. Appending an unmatched one would put something the template never
+  // asked for into runtime dependencies — and build-only packages landing
+  // there is exactly what the dev/runtime split above exists to prevent.
   applyPackageOverrides(developmentDependencies, overrides, { append: false });
-  const devNames = new Set(
-    developmentDependencies.map(entry =>
-      entry.startsWith('@')
-        ? `@${entry.slice(1).split('@')[0]}`
-        : entry.split('@')[0],
-    ),
-  );
-  applyPackageOverrides(
-    dependencies,
-    new Map([...overrides].filter(([name]) => !devNames.has(name))),
-  );
+  applyPackageOverrides(dependencies, overrides, { append: false });
 
   console.log(`Creating a new Ness app in ${paint('blue', root)}.`);
   if (template.local) {

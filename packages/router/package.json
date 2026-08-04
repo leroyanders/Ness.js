@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/router",
-  "version": "7.0.0",
+  "version": "7.1.0",
   "description": "File-system routing and Vite integration for Ness.js.",
   "type": "module",
   "exports": {

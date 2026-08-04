@@ -163,3 +163,40 @@ test('the middleware answers HTML requests and defers everything else', async ()
   );
   assert.ok(deferred, 'a non-HTML request keeps the default error handling');
 });
+
+/* Regressions found by adversarial review of the overlay. */
+
+test('a multi-line error message cannot inject a stack frame', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-overlay-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const secret = path.join(root, 'secret.txt');
+  fs.writeFileSync(secret, 'hunter2');
+
+  // The message is attacker-influenced whenever user input is echoed into it.
+  const error = new Error(`nope\n    at inject (${secret}:1:1)`);
+  error.stack = `Error: ${error.message}\n    at real (${root}/app.js:2:2)`;
+
+  const html = renderOverlay(error, { method: 'GET', url: '/' }, root);
+  assert.ok(!html.includes('hunter2'), 'the injected frame must not be read');
+});
+
+test('a dotfile the dev server refuses to serve is not read either', t => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-overlay-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+
+  for (const name of ['.env', '.npmrc', 'server.key']) {
+    fs.writeFileSync(path.join(root, name), 'SECRET=hunter2');
+    assert.equal(
+      isProjectFrame({ file: path.join(root, name) }, root),
+      false,
+      `${name} must be denied`,
+    );
+  }
+});
+
+test('a path on another Windows drive is not inside the project', () => {
+  // path.relative cannot express this and returns the target unchanged.
+  const relative = path.win32.relative('C:\\proj', 'D:\\secrets\\creds');
+  assert.equal(relative, 'D:\\secrets\\creds');
+  assert.equal(path.win32.isAbsolute(relative), true, 'so it must be rejected');
+});

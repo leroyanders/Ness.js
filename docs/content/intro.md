@@ -17,6 +17,8 @@ The framework uses React 19, React Router Framework Mode, Vite 8, and standard `
 - Production runtime that can be self-hosted without a platform-specific service
 - Escape hatches through Vite plugins, React Router configuration, middleware, and deployment adapters
 
+On the same application, self-hosted on Node, Ness serves server-rendered routes at roughly twice the throughput of Next.js, builds in about a third of the time, and ships 44% less client JavaScript. It is behind on cold start. The harness, the method, and both sides of the comparison are in [Performance](./documentation/performance.md).
+
 Start with [Create a new application](./getting-started/create-new-app.md).
 
 The [Ness CLI](./getting-started/commands.md) can then install official plugins, generate routes and services, inspect the route tree, update framework packages, and diagnose the project.

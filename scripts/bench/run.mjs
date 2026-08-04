@@ -237,11 +237,16 @@ async function prepareNess(workdir, tarballs) {
     { cwd: appDirectory },
   );
 
-  // Replace the template routes with the benchmark fixture.
+  // Replace the template routes and config with the benchmark fixture. The
+  // config matters as much as the routes: see the note in it about caching.
   fs.rmSync(path.join(appDirectory, 'app', 'routes'), {
     recursive: true,
     force: true,
   });
+  fs.copyFileSync(
+    path.join(FIXTURES, 'ness', 'ness.config.mjs'),
+    path.join(appDirectory, 'ness.config.mjs'),
+  );
   copyDirectory(
     path.join(FIXTURES, 'ness', 'app'),
     path.join(appDirectory, 'app'),
@@ -373,6 +378,20 @@ async function measure(target, options) {
   try {
     for (const route of ROUTES) {
       const url = `${base}${route.path}`;
+
+      // Guard the comparison itself: if the server answers from a response
+      // cache, the run measures a memory read against the other framework's
+      // render. Both sides must be rendering for the numbers to mean anything.
+      const probe = await fetch(url);
+      await probe.arrayBuffer();
+      const cacheState = probe.headers.get('x-ness-cache');
+      if (cacheState && cacheState !== 'MISS') {
+        throw new Error(
+          `${target.name} served ${route.path} from its response cache (x-ness-cache: ${cacheState}). ` +
+            'The benchmark would be comparing a cache read against a render. Disable the page cache in the fixture.',
+        );
+      }
+
       // Warm the route so JIT and lazy module loading do not land in the sample.
       await measureThroughput(url, { duration: 1, connections: 8 });
       const ttfb = await measureTtfb(url);

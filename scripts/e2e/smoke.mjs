@@ -12,7 +12,7 @@
  * the published tarball fails here instead of in a user's first install.
  *
  *   node scripts/e2e/smoke.mjs
- *   node scripts/e2e/smoke.mjs --templates default,minimal --keep
+ *   node scripts/e2e/smoke.mjs --templates=default,minimal --keep
  */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -53,6 +53,12 @@ function parseArguments(argv) {
     if (argument === '--keep') options.keep = true;
     else if (argument.startsWith('--templates=')) {
       options.templates = argument.slice('--templates='.length).split(',');
+    } else if (argument === '--templates' || argument === '--workdir') {
+      // The space-separated form is documented; accepting only `=` meant the
+      // documented invocation silently ran everything.
+      throw new Error(
+        `${argument} needs its value attached, as ${argument}=<value>.`,
+      );
     } else if (argument.startsWith('--workdir=')) {
       options.workdir = path.resolve(argument.slice('--workdir='.length));
     }

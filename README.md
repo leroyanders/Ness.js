@@ -97,6 +97,23 @@ export async function loader() {
 
 Every template is scaffolded, built, served, bundled, and served again from the bundle on each commit — see `.github/workflows/ci.yml` and `scripts/e2e/smoke.mjs`.
 
+## Performance
+
+Measured against Next.js on the same application, both self-hosted on Node, both rendering every request. Reproduce with `node scripts/bench/run.mjs`.
+
+|                      | Ness.js         | Next.js     |             |
+| -------------------- | --------------- | ----------- | ----------- |
+| List page (SSR)      | **2361 req/s**  | 1256 req/s  | 1.9×        |
+| Detail page (SSR)    | **3657 req/s**  | 1636 req/s  | 2.2×        |
+| JSON endpoint        | **10129 req/s** | 6396 req/s  | 1.6×        |
+| Build time           | **1.8 s**       | 4.9 s       | 2.7× faster |
+| Client assets        | **312 KB**      | 560 KB      | 44% smaller |
+| `node_modules` (dev) | **163.7 MB**    | 330.8 MB    | 51% smaller |
+| Cold start           | 541 ms          | **192 ms**  | 2.8× slower |
+| Deployable output    | 67.2 MB         | **43.2 MB** | 1.6× larger |
+
+Ness is behind on cold start and bundle size; both rows are explained in [the performance docs](https://nessjs.com/docs/documentation/performance) rather than omitted. Absolute values depend on the machine — compare the columns of one run, not numbers across runs.
+
 React Server Components stay behind `--rsc`. The pipeline builds and serves, and is covered by the same end-to-end suite, but it sits on two pre-stable upstream APIs (`@vitejs/plugin-rsc` 0.x and React Router's `unstable_reactRouterRSC`), and prerendering and standalone bundling are unavailable in that mode.
 
 ## CLI

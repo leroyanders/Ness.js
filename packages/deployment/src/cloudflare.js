@@ -39,7 +39,12 @@ function createWorkerHandler({
         if (asset.status !== 404) return asset;
       }
 
-      const loadContext = await getLoadContext?.({ request, env, context });
+      // Workers hand `env` to fetch(), not to module scope, so this is the only
+      // place an application can reach its bindings. Default to passing them
+      // through: without it a Worker has no way to see KV, D1, or a secret.
+      const loadContext = getLoadContext
+        ? await getLoadContext({ request, env, context })
+        : { env, ctx: context };
       return handler(request, loadContext);
     },
   };
@@ -61,7 +66,7 @@ function createWorkerConfig({
   name = 'ness-app',
   compatibilityDate = '2025-01-01',
   buildDirectory = 'build',
-  main = 'build/worker/index.js',
+  main = `${buildDirectory}/worker/index.js`,
 } = {}) {
   return {
     name,

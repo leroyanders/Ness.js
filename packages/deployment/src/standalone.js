@@ -35,8 +35,21 @@ function copyDirectory(source, destination, { filter } = {}) {
     if (entry.isDirectory()) {
       copyDirectory(from, to, { filter });
     } else if (entry.isSymbolicLink()) {
-      const target = fs.readlinkSync(from);
-      fs.symlinkSync(target, to);
+      // Recreating the link verbatim leaves it dangling whenever the target
+      // lies outside the copied tree — which is every link under a pnpm
+      // install, where node_modules is a farm of links into a store. Copy what
+      // the link points at instead.
+      const resolved = (() => {
+        try {
+          return fs.statSync(from);
+        } catch {
+          return undefined;
+        }
+      })();
+      if (!resolved) continue;
+      if (resolved.isDirectory())
+        copyDirectory(fs.realpathSync(from), to, { filter });
+      else fs.copyFileSync(from, to);
     } else {
       fs.copyFileSync(from, to);
     }
@@ -48,7 +61,14 @@ function directorySize(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
     const target = path.join(directory, entry.name);
     if (entry.isDirectory()) total += directorySize(target);
-    else if (entry.isFile()) total += fs.statSync(target).size;
+    else if (entry.isFile()) {
+      try {
+        total += fs.statSync(target).size;
+      } catch {
+        // A file can vanish between the listing and the stat; size is a report,
+        // not a correctness signal.
+      }
+    }
   }
   return total;
 }
@@ -98,6 +118,20 @@ async function createStandaloneOutput({
   const manifest = readManifest(absoluteRoot);
   if (!manifest) throw new Error(`No package.json found in ${absoluteRoot}`);
 
+  // The output directory is wiped, and it comes from the caller (`--output`).
+  // `path.resolve(root, '.')` is the project itself and '..' is worse, so
+  // refuse anything that is the project or contains it before deleting.
+  const relativeToRoot = path.relative(output, absoluteRoot);
+  if (
+    output === absoluteRoot ||
+    relativeToRoot === '' ||
+    (!relativeToRoot.startsWith('..') && !path.isAbsolute(relativeToRoot))
+  ) {
+    throw new Error(
+      `Refusing to write the standalone bundle to ${output}: it is the project directory or contains it, and the bundle directory is emptied before it is written.`,
+    );
+  }
+
   fs.rmSync(output, { recursive: true, force: true });
   fs.mkdirSync(output, { recursive: true });
 
@@ -123,7 +157,7 @@ async function createStandaloneOutput({
     }
   }
 
-  const { packages, missing } = traceDependencies(absoluteRoot, {
+  const { packages, conflicts, missing } = traceDependencies(absoluteRoot, {
     manifest: includeDevDependencies
       ? {
           ...manifest,
@@ -137,18 +171,24 @@ async function createStandaloneOutput({
   });
 
   const modulesDirectory = path.join(output, 'node_modules');
+  const packageFilter = (_from, entry) =>
+    !SKIPPED_PACKAGE_ENTRIES.has(entry.name) && entry.name !== 'node_modules';
+
   for (const [name, directory] of packages) {
     copyDirectory(directory, path.join(modulesDirectory, name), {
-      filter: (_from, entry) =>
-        !SKIPPED_PACKAGE_ENTRIES.has(entry.name) &&
-        entry.name !== 'node_modules',
+      filter: packageFilter,
     });
-    // Nested node_modules only exist where a version conflict forced them, so
-    // they must be preserved rather than flattened.
-    const nested = path.join(directory, 'node_modules');
-    if (fs.existsSync(nested)) {
-      copyDirectory(nested, path.join(modulesDirectory, name, 'node_modules'));
-    }
+  }
+
+  // A second version of a name cannot share the top level, so it is nested
+  // under the package that asked for it — exactly where Node's resolver looks.
+  for (const { name, directory, requiredBy } of conflicts) {
+    if (!packages.has(requiredBy)) continue;
+    copyDirectory(
+      directory,
+      path.join(modulesDirectory, requiredBy, 'node_modules', name),
+      { filter: packageFilter },
+    );
   }
 
   fs.writeFileSync(path.join(output, 'server.mjs'), LAUNCHER);

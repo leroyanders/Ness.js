@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
@@ -61,9 +61,19 @@ class FileSystemCacheAdapter {
     await this.#unindex(key);
     await fs.mkdir(this.entriesDirectory, { recursive: true });
     const filename = this.#entryFile(key);
-    const temporary = `${filename}.${process.pid}.tmp`;
-    await fs.writeFile(temporary, encodeEntry(key, entry));
-    await fs.rename(temporary, filename);
+    // Unique per call, not per process: two concurrent writes of the same key
+    // — an ordinary cache stampede after an invalidation — would otherwise
+    // share one temp path, and the second rename would fail with ENOENT after
+    // the first consumed it. Worker threads share a pid, so that is not enough
+    // to disambiguate either.
+    const temporary = `${filename}.${process.pid}.${randomUUID()}.tmp`;
+    try {
+      await fs.writeFile(temporary, encodeEntry(key, entry));
+      await fs.rename(temporary, filename);
+    } finally {
+      // A failed rename must not leave the temp file behind.
+      await fs.rm(temporary, { force: true }).catch(() => {});
+    }
     await Promise.all([
       ...(entry.tags || []).map(tag =>
         this.#mark(this.tagsDirectory, tag, key),

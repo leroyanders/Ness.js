@@ -31,6 +31,22 @@ function stableSerialize(value, seen = new WeakSet()) {
     serialized = `Date(${value.toISOString()})`;
   } else if (value instanceof URL) {
     serialized = `URL(${value.href})`;
+  } else if (value instanceof Map) {
+    // Object.keys is empty for a Map, so without this every Map argument
+    // serializes to '{}' and distinct arguments share one cache key.
+    serialized = `Map(${[...value.entries()]
+      .map(([entryKey, entryValue]) => [
+        stableSerialize(entryKey, seen),
+        stableSerialize(entryValue, seen),
+      ])
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(pair => pair.join(':'))
+      .join(',')})`;
+  } else if (value instanceof Set) {
+    serialized = `Set(${[...value]
+      .map(item => stableSerialize(item, seen))
+      .sort()
+      .join(',')})`;
   } else {
     serialized = `{${Object.keys(value)
       .sort()
@@ -73,7 +89,10 @@ function normalizeLife(life = 'default') {
 
 function matchesPath(entryPath, pathname) {
   if (!entryPath) return false;
-  return entryPath === pathname || entryPath.startsWith(`${pathname}/`);
+  if (entryPath === pathname) return true;
+  // Without this, '/' would build the prefix '//' and match nothing.
+  const prefix = pathname.endsWith('/') ? pathname : `${pathname}/`;
+  return entryPath.startsWith(prefix);
 }
 
 class MemoryCacheAdapter {
@@ -221,10 +240,17 @@ class NessCache {
     return removed;
   }
 
-  async #deleteKeys(keys) {
+  /**
+   * An index is a list of candidates, not the truth. The entry itself decides:
+   * a shared store can outlive its index (a key expires by TTL while its tag
+   * set does not), and deleting on index membership alone would then evict an
+   * entry that never carried the tag.
+   */
+  async #deleteKeys(keys, matches) {
     let removed = 0;
     for (const key of new Set(keys)) {
-      if (!(await this.adapter.get(key))) continue;
+      const entry = await this.adapter.get(key);
+      if (!entry || !matches(entry)) continue;
       await this.adapter.delete(key);
       removed += 1;
     }
@@ -232,17 +258,21 @@ class NessCache {
   }
 
   async revalidateTag(tag) {
+    const matches = entry => (entry.tags || []).includes(tag);
     if (typeof this.adapter.keysByTag === 'function') {
-      return this.#deleteKeys(await this.adapter.keysByTag(tag));
+      const candidates = await this.adapter.keysByTag(tag);
+      if (candidates) return this.#deleteKeys(candidates, matches);
     }
-    return this.invalidate(entry => entry.tags.includes(tag));
+    return this.invalidate(matches);
   }
 
   async revalidatePath(pathname) {
+    const matches = entry => matchesPath(entry.path, pathname);
     if (typeof this.adapter.keysByPath === 'function') {
-      return this.#deleteKeys(await this.adapter.keysByPath(pathname));
+      const candidates = await this.adapter.keysByPath(pathname);
+      if (candidates) return this.#deleteKeys(candidates, matches);
     }
-    return this.invalidate(entry => matchesPath(entry.path, pathname));
+    return this.invalidate(matches);
   }
 
   delete(key) {

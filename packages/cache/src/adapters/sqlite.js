@@ -137,11 +137,16 @@ class SqliteCacheAdapter {
   }
 
   async keysByPath(pathname) {
+    // `_` and `%` are LIKE wildcards and appear in real URLs, so a path such as
+    // /docs/get_started would otherwise match /docs/getXstarted. ESCAPE makes
+    // the comparison literal.
+    const prefix = pathname.endsWith('/') ? pathname : `${pathname}/`;
+    const pattern = `${prefix.replaceAll('\\', '\\\\').replaceAll('%', '\\%').replaceAll('_', '\\_')}%`;
     return this.database
       .prepare(
-        'SELECT key FROM ness_cache_entries WHERE path = ? OR path LIKE ?',
+        "SELECT key FROM ness_cache_entries WHERE path = ? OR path LIKE ? ESCAPE '\\'",
       )
-      .all(pathname, `${pathname}/%`)
+      .all(pathname, pattern)
       .map(row => row.key);
   }
 

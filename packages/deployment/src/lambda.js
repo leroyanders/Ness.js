@@ -8,8 +8,15 @@ const BINARY_TYPES = [
   /^application\/(?:octet-stream|pdf|zip|wasm)$/,
 ];
 
+/**
+ * A content-type header carries parameters — `image/png; charset=binary`, or a
+ * multipart boundary — so the media type has to be isolated before matching.
+ * Anchoring the pattern against the whole header would classify those as text
+ * and corrupt the body.
+ */
 function isBinary(contentType = '') {
-  return BINARY_TYPES.some(pattern => pattern.test(contentType));
+  const mediaType = contentType.split(';')[0].trim().toLowerCase();
+  return BINARY_TYPES.some(pattern => pattern.test(mediaType));
 }
 
 /**

@@ -29,6 +29,13 @@ function createClientShim(client) {
   const sRem = pick(client, 'sRem', 'srem');
   const sMembers = pick(client, 'sMembers', 'smembers');
   const scan = pick(client, 'scan');
+  // Optional: only used to bound index growth, never for correctness.
+  const pExpire =
+    typeof client.pExpire === 'function'
+      ? client.pExpire.bind(client)
+      : typeof client.pexpire === 'function'
+        ? client.pexpire.bind(client)
+        : async () => 0;
 
   return {
     get,
@@ -36,6 +43,7 @@ function createClientShim(client) {
     sAdd,
     sRem,
     sMembers,
+    pExpire,
     async set(key, value, ttl) {
       if (!ttl) return set(key, value);
       return isNodeRedis
@@ -62,11 +70,16 @@ function createClientShim(client) {
  * connection, TLS, and pooling, and this package stays dependency-free.
  */
 class RedisCacheAdapter {
-  constructor(client, { prefix = 'ness:cache:', scanCount = 256 } = {}) {
+  constructor(
+    client,
+    { prefix = 'ness:cache:', scanCount = 256, indexGrace = 60_000 } = {},
+  ) {
     if (!client) throw new TypeError('RedisCacheAdapter requires a client.');
     this.client = createClientShim(client);
     this.prefix = prefix;
     this.scanCount = scanCount;
+    /** How long an index set outlives its longest-lived member, in ms. */
+    this.indexGrace = indexGrace;
   }
 
   #entryKey(key) {
@@ -91,11 +104,13 @@ class RedisCacheAdapter {
 
   async set(key, entry) {
     await this.#unindex(key);
-    await this.client.set(
-      this.#entryKey(key),
-      encodeEntry(key, entry),
-      expiryMs(entry),
-    );
+    const ttl = expiryMs(entry);
+    await this.client.set(this.#entryKey(key), encodeEntry(key, entry), ttl);
+
+    const indexes = [
+      ...(entry.tags || []).map(tag => this.#tagKey(tag)),
+      ...(entry.path ? [this.#pathKey(entry.path), this.#pathRegistry] : []),
+    ];
     await Promise.all([
       ...(entry.tags || []).map(tag =>
         this.client.sAdd(this.#tagKey(tag), key),
@@ -107,6 +122,20 @@ class RedisCacheAdapter {
           ]
         : []),
     ]);
+
+    // An index set outlives the entries it points at: Redis drops an entry on
+    // its own TTL and nothing then removes the membership. Correctness is
+    // already handled — NessCache treats the index as candidates and re-reads
+    // each entry — but without an expiry these sets grow without bound on a
+    // rotating key space. Each write pushes the expiry out, so a set always
+    // outlives its longest-lived member.
+    if (ttl) {
+      await Promise.all(
+        indexes.map(name =>
+          this.client.pExpire(name, ttl + this.indexGrace).catch(() => {}),
+        ),
+      );
+    }
   }
 
   async delete(key) {

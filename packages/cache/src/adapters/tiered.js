@@ -31,6 +31,14 @@ class TieredCacheAdapter {
     this.clock = clock;
     this.localWrites = new Map();
     this.unsubscribe = bus?.subscribe(message => this.#applyRemote(message));
+
+    // NessCache decides whether an index exists by probing for these methods.
+    // A class always carries them on its prototype, so wrapping an adapter
+    // that has no tag index would advertise one that returns nothing — turning
+    // revalidateTag into a silent no-op instead of falling back to a scan.
+    // Shadow them with own properties when the shared adapter cannot back them.
+    if (typeof shared.keysByTag !== 'function') this.keysByTag = undefined;
+    if (typeof shared.keysByPath !== 'function') this.keysByPath = undefined;
   }
 
   async get(key) {
@@ -141,6 +149,7 @@ function createRedisInvalidationBus(
     },
     subscribe(handler) {
       const receive = payload => {
+        if (typeof payload !== 'string') return;
         let message;
         try {
           message = JSON.parse(payload);
@@ -148,17 +157,27 @@ function createRedisInvalidationBus(
           return;
         }
         // Ignore our own broadcast; the local tier is already consistent.
-        if (message.id === id) return;
+        if (!message || message.id === id) return;
         handler(message);
       };
-      // node-redis takes the listener as the second argument; ioredis emits
-      // a 'message' event instead.
-      const result = subscribeTo(channel, receive);
-      if (typeof subscriber.on === 'function' && result?.then) {
-        subscriber.on('message', (incoming, payload) => {
+
+      // The two clients disagree about the second argument to subscribe():
+      // node-redis takes a message listener, ioredis takes a node-style
+      // completion callback and emits 'message' events instead. Passing a
+      // listener to ioredis gets it invoked once as (err, count).
+      // pSubscribe exists only on node-redis, which is what distinguishes them
+      // — both return a promise and both are EventEmitters, so neither of those
+      // tells them apart.
+      const isNodeRedis = typeof subscriber.pSubscribe === 'function';
+      if (isNodeRedis) {
+        subscribeTo(channel, receive);
+      } else {
+        subscribeTo(channel);
+        subscriber.on?.('message', (incoming, payload) => {
           if (incoming === channel) receive(payload);
         });
       }
+
       return async () => {
         await subscriber.unsubscribe?.(channel);
       };

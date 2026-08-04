@@ -1,8 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import sharp from 'sharp';
 import * as image from './image.js';
 import '@nessframework/server/web-api';
+
+/**
+ * sharp is a native module and costs roughly 700 ms to load — by a wide margin
+ * the largest single item in a server's cold start. Applications that never
+ * serve an optimized image should not pay it at all, and those that do should
+ * pay it on the first image request rather than before accepting traffic.
+ */
+let sharpModule;
+function loadSharp() {
+  sharpModule ??= import('sharp').then(module => module.default || module);
+  return sharpModule;
+}
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -96,6 +107,7 @@ function createImageHandler({
         signal: request.signal,
       });
       const accept = request.headers.get('accept') || '';
+      const sharp = await loadSharp();
       const pipeline = sharp(input)
         .rotate()
         .resize({ width, withoutEnlargement: true });

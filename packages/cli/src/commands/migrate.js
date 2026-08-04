@@ -145,10 +145,16 @@ function gitIsClean(root) {
  */
 function rewriteImports(source, file, findings) {
   let output = source;
+  // Decided from the original source: only a file that actually imported
+  // next/link should have its <Link> props rewritten.
+  const importsNextLink = /from\s+(['"`])next\/link\1/.test(source);
 
   for (const rule of IMPORT_REWRITES) {
+    // Anchored to a module specifier position. A bare quoted-string match would
+    // also rewrite the same text inside a comment or an ordinary string.
+    const specifier = rule.from.replaceAll('/', '\\/');
     const pattern = new RegExp(
-      `(['"\`])${rule.from.replaceAll('/', '\\/')}\\1`,
+      `((?:from|import)\\s*\\(?\\s*)(['"\`])${specifier}\\2`,
       'g',
     );
     if (!pattern.test(output)) continue;
@@ -165,7 +171,51 @@ function rewriteImports(source, file, findings) {
       continue;
     }
 
-    output = output.replace(pattern, `$1${rule.to}$1`);
+    // A default import has to become a named one: `import Link from 'next/link'`
+    // is `import { Link } from 'react-router'`. Swapping only the specifier
+    // would emit an import of an export that does not exist.
+    const defaultName = rule.named?.default;
+    if (defaultName) {
+      const defaultImport = new RegExp(
+        `import\\s+([A-Za-z_$][\\w$]*)\\s+from\\s+(['"\`])${rule.from.replaceAll('/', '\\/')}\\2`,
+        'g',
+      );
+      let rewroteClause = false;
+      output = output.replace(defaultImport, (_match, local, quote) => {
+        rewroteClause = true;
+        const clause =
+          local === defaultName ? defaultName : `${defaultName} as ${local}`;
+        return `import { ${clause} } from ${quote}${rule.to}${quote}`;
+      });
+      if (
+        !rewroteClause &&
+        new RegExp(`from\\s+['"\`]${rule.from.replaceAll('/', '\\/')}`).test(
+          output,
+        )
+      ) {
+        findings.push({
+          file,
+          level: 'manual',
+          message: `${rule.from} exports a default; ${rule.to} exports \`${defaultName}\` by name. Adjust the import clause.`,
+        });
+      }
+    }
+
+    // Renamed named exports, e.g. unstable_cache -> cached.
+    for (const [from, to] of Object.entries(rule.rename || {})) {
+      if (from === to) continue;
+      const named = new RegExp(`\\b${from}\\b`, 'g');
+      if (named.test(output)) {
+        output = output.replace(named, to);
+        findings.push({
+          file,
+          level: 'rewritten',
+          message: `${from} → ${to}`,
+        });
+      }
+    }
+
+    output = output.replace(pattern, `$1$2${rule.to}$2`);
     findings.push({
       file,
       level: 'rewritten',
@@ -173,7 +223,9 @@ function rewriteImports(source, file, findings) {
     });
   }
 
-  if (/<Link\s[^>]*\bhref=/.test(output)) {
+  // Only for a file that imported next/link: plenty of components are called
+  // Link and take an href that must stay an href.
+  if (importsNextLink && /<Link\s[^>]*\bhref=/.test(output)) {
     output = output.replace(/(<Link\s[^>]*?)\bhref=/g, '$1to=');
     findings.push({
       file,
@@ -337,7 +389,8 @@ function renderReport(root, { moves, findings }) {
 
 export async function migrateFromNext(directory = '.', options = {}) {
   const root = path.resolve(directory);
-  const clean = gitIsClean(root);
+  // A dry run writes nothing, so a dirty tree is irrelevant to it.
+  const clean = options.dryRun ? true : gitIsClean(root);
   if (clean === false && !options.force) {
     throw new Error(
       'The working tree has uncommitted changes. Commit them first so the migration can be reviewed as a diff, or pass --force.',
@@ -351,6 +404,19 @@ export async function migrateFromNext(directory = '.', options = {}) {
 
   const plan = planMigration(root);
   migrateNextConfig(root, plan.findings);
+
+  // A Next application may already have an `app/routes` URL segment, whose
+  // files sit exactly where this wants to move things. Renaming over them would
+  // destroy them silently, so collisions are reported and skipped instead.
+  const collisions = plan.moves.filter(move => fs.existsSync(move.to));
+  for (const move of collisions) {
+    plan.findings.push({
+      file: path.relative(root, move.from),
+      level: 'manual',
+      message: `Not moved: ${path.relative(root, move.to)} already exists. Merge the two by hand.`,
+    });
+  }
+  plan.moves = plan.moves.filter(move => !fs.existsSync(move.to));
 
   if (!options.dryRun) {
     for (const move of plan.moves) {

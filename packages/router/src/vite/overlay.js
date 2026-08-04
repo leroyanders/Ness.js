@@ -17,14 +17,30 @@ function stripFileUrl(file) {
 }
 
 /**
- * Splits a V8 stack into frames. Vite's `ssrFixStacktrace` has already
+ * Strips the `Name: message` header from a stack.
+ *
+ * The message is frequently attacker-influenced — anything echoed into an
+ * error — and a multi-line one would otherwise contribute its later lines as
+ * parsed frames, ahead of the real ones. Dropping a fixed number of lines is
+ * not enough; the header has to be matched.
+ */
+function stackBody(error) {
+  const stack = error?.stack || '';
+  const header = `${error?.name || 'Error'}: ${error?.message ?? ''}`;
+  if (stack.startsWith(header)) return stack.slice(header.length);
+  // Some runtimes omit the message. Fall back to dropping the first line only.
+  const firstBreak = stack.indexOf('\n');
+  return firstBreak === -1 ? '' : stack.slice(firstBreak);
+}
+
+/**
+ * Splits a V8 stack body into frames. Vite's `ssrFixStacktrace` has already
  * rewritten the transformed positions back to source ones by the time this
  * runs, so the locations point at the file the developer wrote.
  */
 function parseStack(stack = '') {
   return stack
     .split('\n')
-    .slice(1)
     .map(line => {
       const match = STACK_FRAME.exec(line);
       if (!match) return undefined;
@@ -39,13 +55,36 @@ function parseStack(stack = '') {
     .filter(Boolean);
 }
 
+/**
+ * Files the dev server itself refuses to serve. The overlay reads from disk, so
+ * it must not become a way around that — these are Vite's own `server.fs.deny`
+ * defaults.
+ */
+const DENIED = [
+  /(^|[\\/])\.env(\..*)?$/,
+  /\.(?:crt|pem|key|p12|pfx|cer|der)$/,
+  /(^|[\\/])\.npmrc$/,
+  /(^|[\\/])\.yarnrc\.yml$/,
+  /(^|[\\/])\.git([\\/]|$)/,
+];
+
 function isProjectFrame(frame, root) {
   if (!frame.file.startsWith('/') && !/^[A-Za-z]:[\\/]/.test(frame.file)) {
     return false;
   }
   if (frame.file.includes('node_modules')) return false;
+  if (DENIED.some(pattern => pattern.test(frame.file))) return false;
+
   const relative = path.relative(root, frame.file);
-  return Boolean(relative) && !relative.startsWith('..');
+  // `path.relative` cannot express a path across Windows drive roots and
+  // returns the target unchanged, which neither is empty nor starts with '..'.
+  // Rejecting an absolute result closes that.
+  return (
+    Boolean(relative) &&
+    !relative.startsWith(`..${path.sep}`) &&
+    relative !== '..' &&
+    !path.isAbsolute(relative)
+  );
 }
 
 /**
@@ -78,8 +117,11 @@ function renderCodeFrame(codeFrame) {
     .map((line, index) => {
       const number = codeFrame.start + index;
       const active = number === codeFrame.highlight;
+      // The column comes from a stack string, so clamp it rather than sizing an
+      // allocation from it.
+      const caret = Math.min(Math.max(0, codeFrame.column - 1), line.length);
       const marker = active
-        ? `<div class="caret">${' '.repeat(Math.max(0, codeFrame.column - 1))}^</div>`
+        ? `<div class="caret">${' '.repeat(caret)}^</div>`
         : '';
       return `<div class="line${active ? ' active' : ''}"><span class="ln">${number}</span><span class="code">${escapeHtml(line)}</span></div>${marker}`;
     })
@@ -131,7 +173,7 @@ footer{color:#5b6274;font-size:12px;border-top:1px solid #1a1f2b;padding-top:16p
 `;
 
 function renderOverlay(error, request, root) {
-  const frames = parseStack(error.stack);
+  const frames = parseStack(stackBody(error));
   const codeFrame = readCodeFrame(
     frames.find(frame => isProjectFrame(frame, root)),
     root,
@@ -178,7 +220,7 @@ function sendToClient(server, payload) {
 function reportServerError(server, error) {
   if (!server || !error) return;
   server.ssrFixStacktrace?.(error);
-  const [frame] = parseStack(error.stack);
+  const [frame] = parseStack(stackBody(error));
   sendToClient(server, {
     type: 'error',
     err: {
@@ -237,6 +279,7 @@ function nessErrorOverlay(options = {}) {
 
 export {
   isProjectFrame,
+  stackBody,
   nessErrorOverlay,
   parseStack,
   renderOverlay,

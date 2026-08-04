@@ -146,17 +146,17 @@ function createApp(context) {
   return path.join(root, 'app');
 }
 
-test('localized discovery mounts the tree at the root and under :locale', async t => {
+test('localized discovery mounts the tree at the root and under each locale', async t => {
   const appDirectory = createApp(t);
   const routes = await nessRoutes({
     appDirectory,
-    i18n: { locales: ['en', 'de'], defaultLocale: 'en' },
+    i18n: { locales: ['en', 'de', 'fr'], defaultLocale: 'en' },
   });
 
-  const localized = routes.find(route => route.path === ':locale');
-  assert.ok(localized, 'a :locale branch is generated');
+  const localized = routes.filter(route => ['de', 'fr'].includes(route.path));
+  assert.equal(localized.length, 2, 'one branch per non-default locale');
   assert.ok(
-    routes.some(route => route.path !== ':locale'),
+    routes.some(route => !['de', 'fr'].includes(route.path)),
     'prefix-except-default keeps the untranslated tree at the root',
   );
 
@@ -175,28 +175,88 @@ test('localized discovery mounts the tree at the root and under :locale', async 
   );
 });
 
-test('the prefix strategy mounts only the localized tree', async t => {
+test('an unknown locale simply does not match a locale branch', async t => {
+  const appDirectory = createApp(t);
+  const routes = await nessRoutes({
+    appDirectory,
+    i18n: { locales: ['en', 'de'] },
+  });
+
+  // Static segments mean there is nothing to validate at runtime: /xx matches
+  // no locale branch, so it falls through to the application's own routing.
+  assert.ok(!routes.some(route => route.path === 'xx'));
+
+  const generated = fs.readFileSync(
+    path.join(appDirectory, '.ness', 'routes', 'ness__locale.tsx'),
+    'utf8',
+  );
+  assert.ok(
+    !generated.includes('404'),
+    'the layout no longer needs a rejecting loader',
+  );
+  assert.match(generated, /Outlet/);
+});
+
+/* Regressions found by adversarial review of the localized routing. */
+
+test('a locale branch does not swallow the application 404', async t => {
+  const appDirectory = createApp(t);
+  fs.writeFileSync(
+    path.join(appDirectory, 'routes', 'not-found.tsx'),
+    'export default function NotFound(){ return null; }\n',
+  );
+  const routes = await nessRoutes({
+    appDirectory,
+    i18n: { locales: ['en', 'de'], defaultLocale: 'en' },
+  });
+
+  const paths = routes.map(route => route.path);
+  assert.ok(
+    !paths.includes(':locale'),
+    'a dynamic segment would outrank the root not-found route',
+  );
+  assert.ok(paths.includes('de'), 'each locale is its own static segment');
+});
+
+test('prefix-except-default does not publish the default locale twice', async t => {
+  const appDirectory = createApp(t);
+  const routes = await nessRoutes({
+    appDirectory,
+    i18n: { locales: ['en', 'de'], defaultLocale: 'en' },
+  });
+
+  assert.ok(
+    !routes.some(route => route.path === 'en'),
+    'the default locale is served at the root, so /en would duplicate it',
+  );
+  assert.ok(routes.some(route => route.path === 'de'));
+});
+
+test('the prefix strategy mounts every locale, including the default', async t => {
   const appDirectory = createApp(t);
   const routes = await nessRoutes({
     appDirectory,
     i18n: { locales: ['en', 'de'], strategy: 'prefix' },
   });
 
-  assert.equal(routes.length, 1);
-  assert.equal(routes[0].path, ':locale');
+  assert.deepEqual(routes.map(route => route.path).sort(), ['de', 'en']);
 });
 
-test('the generated locale layout rejects an unknown locale', async t => {
-  const appDirectory = createApp(t);
-  await nessRoutes({
-    appDirectory,
-    i18n: { locales: ['en', 'de'] },
-  });
-
-  const generated = fs.readFileSync(
-    path.join(appDirectory, '.ness', 'routes', 'ness__locale.tsx'),
-    'utf8',
+test('the prefix strategy redirects the default locale too', () => {
+  const config = normalizeI18n({ locales: ['en', 'de'], strategy: 'prefix' });
+  const middleware = createLocaleMiddleware(config);
+  const response = middleware(
+    new Request('https://ness.dev/blog', {
+      headers: { 'accept-language': 'en-US,en;q=0.9' },
+    }),
   );
-  assert.match(generated, /\["en","de"\]/);
-  assert.match(generated, /status: 404/);
+
+  assert.ok(response, 'nothing is mounted outside a locale segment');
+  assert.equal(response.headers.get('location'), '/en/blog');
+});
+
+test('q=0 means not acceptable', () => {
+  const config = normalizeI18n({ locales: ['en', 'de'], defaultLocale: 'en' });
+  assert.equal(matchAcceptLanguage('de;q=0,en;q=0.5', config), 'en');
+  assert.equal(matchAcceptLanguage('de;Q=0.9,en;q=0.1', config), 'de');
 });

@@ -63,6 +63,7 @@ const sidebars = {
         'documentation/client/render',
         'documentation/server/render',
         'documentation/caching',
+        'documentation/performance',
         'documentation/i18n',
         'documentation/errors',
         'documentation/assets',

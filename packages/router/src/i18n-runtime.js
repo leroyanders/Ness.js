@@ -1,5 +1,6 @@
-import { useParams } from 'react-router';
+import { useLocation } from 'react-router';
 import {
+  isBareDefault,
   localizePath,
   matchAcceptLanguage,
   normalizeI18n,
@@ -9,13 +10,14 @@ import {
 /**
  * The active locale inside a component. Returns the default locale on
  * unprefixed routes, so a component never has to know which strategy is in use.
+ *
+ * Read from the pathname rather than a route param: each locale is a static
+ * segment, so there is no `:locale` param to read.
  */
 function useLocale(i18n) {
   const config = normalizeI18n(i18n);
-  const params = useParams();
-  const fromRoute = params.locale;
-  if (fromRoute && config?.locales.includes(fromRoute)) return fromRoute;
-  return config?.defaultLocale;
+  const { pathname } = useLocation();
+  return resolveLocale(pathname, config).locale;
 }
 
 /** The locale a request resolves to, from its pathname. */
@@ -53,7 +55,12 @@ function createLocaleMiddleware(i18n, { cookie = 'ness-locale' } = {}) {
         ? stored
         : matchAcceptLanguage(request.headers.get('accept-language'), config);
 
-    if (preferred === config.defaultLocale) return undefined;
+    // Only the `prefix-except-default` strategy serves the default locale at
+    // the root. Under `prefix` nothing is mounted outside a locale segment, so
+    // declining to redirect here would leave every unprefixed URL dead.
+    if (preferred === config.defaultLocale && isBareDefault(config)) {
+      return undefined;
+    }
 
     url.pathname = localizePath(url.pathname, preferred, config);
     return new Response(null, {
