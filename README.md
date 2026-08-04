@@ -18,10 +18,10 @@ cd my-app
 npm run dev
 ```
 
-Use the TypeScript template:
+That scaffolds the TypeScript starter. For the same application without the types:
 
 ```bash
-ness new my-app --template typescript
+ness new my-app --template javascript
 ```
 
 Other official starters:
@@ -41,7 +41,7 @@ ness new my-app --template ./templates/company-app
 Experimental React Server Components and Server Functions are opt-in:
 
 ```bash
-ness new my-app --template typescript --rsc
+ness new my-app --rsc
 ```
 
 Vite, React Router, Nest production mounting, RSC, and instrumentation are configured together in `ness.config.mjs`. TypeScript and Docker retain their native `tsconfig.json` and `Dockerfile` entrypoints.

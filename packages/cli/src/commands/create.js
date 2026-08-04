@@ -40,18 +40,25 @@ export function checkForLatestVersion(packageName) {
   });
 }
 
+/**
+ * `ness new` with no `--template` scaffolds TypeScript. The JavaScript starter
+ * is still `@nessframework/default` under three names — `default` keeps working
+ * for anyone who wrote it into a script back when it was the one you got.
+ */
+export const DEFAULT_TEMPLATE = 'typescript';
+
 export function resolveTemplate(template) {
   const officialTemplates = {
-    default: '@nessframework/default',
-    javascript: '@nessframework/default',
-    js: '@nessframework/default',
     typescript: '@nessframework/typescript',
     ts: '@nessframework/typescript',
+    javascript: '@nessframework/default',
+    js: '@nessframework/default',
+    default: '@nessframework/default',
     minimal: '@nessframework/minimal',
     api: '@nessframework/api',
     dashboard: '@nessframework/dashboard',
   };
-  const officialTemplate = officialTemplates[template || 'default'];
+  const officialTemplate = officialTemplates[template || DEFAULT_TEMPLATE];
   if (officialTemplate) {
     return { name: officialTemplate, spec: officialTemplate };
   }

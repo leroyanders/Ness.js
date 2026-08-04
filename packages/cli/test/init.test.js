@@ -212,11 +212,28 @@ test('clean removes only known generated directories and supports dry runs', t =
   assert.equal(fs.existsSync(path.join(workspace, 'uploads')), true);
 });
 
-test('template aliases resolve to package names', () => {
+test('no template scaffolds TypeScript', () => {
   assert.deepEqual(resolveTemplate(), {
-    name: '@nessframework/default',
-    spec: '@nessframework/default',
+    name: '@nessframework/typescript',
+    spec: '@nessframework/typescript',
   });
+  assert.deepEqual(resolveTemplate(''), {
+    name: '@nessframework/typescript',
+    spec: '@nessframework/typescript',
+  });
+});
+
+test('the JavaScript starter keeps all three of its names', () => {
+  for (const alias of ['javascript', 'js', 'default']) {
+    assert.deepEqual(
+      resolveTemplate(alias),
+      { name: '@nessframework/default', spec: '@nessframework/default' },
+      `${alias} should still resolve to the JavaScript starter`,
+    );
+  }
+});
+
+test('template aliases resolve to package names', () => {
   assert.deepEqual(resolveTemplate('typescript'), {
     name: '@nessframework/typescript',
     spec: '@nessframework/typescript',

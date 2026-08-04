@@ -6,19 +6,24 @@ slug: /templates
 
 Every official template uses ESM, React Router for UI and SSR, and NestJS controllers under `app/server` for public APIs.
 
-| Alias        | Package                     | Best for                                       |
-| ------------ | --------------------------- | ---------------------------------------------- |
-| `default`    | `@nessframework/default`    | JavaScript applications and first projects     |
-| `typescript` | `@nessframework/typescript` | Strict TypeScript full-stack applications      |
-| `minimal`    | `@nessframework/minimal`    | Small prototypes with the fewest source files  |
-| `api`        | `@nessframework/api`        | NestJS-first services with a small React UI    |
-| `dashboard`  | `@nessframework/dashboard`  | Internal tools, consoles, and admin interfaces |
+`typescript` is what `ness new` scaffolds when `--template` is left out.
+
+| Alias               | Package                     | Best for                                       |
+| ------------------- | --------------------------- | ---------------------------------------------- |
+| `typescript` (`ts`) | `@nessframework/typescript` | Strict TypeScript full-stack applications      |
+| `javascript` (`js`) | `@nessframework/default`    | The same application without the types         |
+| `minimal`           | `@nessframework/minimal`    | Small prototypes with the fewest source files  |
+| `api`               | `@nessframework/api`        | NestJS-first services with a small React UI    |
+| `dashboard`         | `@nessframework/dashboard`  | Internal tools, consoles, and admin interfaces |
 
 ```bash
-ness new my-app --template minimal
+ness new my-app
+ness new my-prototype --template javascript
 ness new my-api --template api
 ness new my-dashboard --template dashboard
 ```
+
+`default` is accepted as a third name for the JavaScript starter. It is what `--template` fell back to before TypeScript became the default, so a script that spells it out keeps scaffolding the same thing.
 
 ## Minimal
 

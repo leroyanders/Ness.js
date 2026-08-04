@@ -19,17 +19,19 @@ npm install --global @nessframework/cli@latest
 ness new my-app
 ```
 
+That gives you the TypeScript starter: strict mode on, and route types generated into `.react-router/types`.
+
 `ness new` also has the shorter `ness n` alias. See the [`ness new` reference](./commands/new.md) for every option.
 
-## TypeScript
+## JavaScript
 
 ```bash
-ness new my-app --template typescript
+ness new my-app --template javascript
 ```
 
-The TypeScript starter enables strict mode and generates route types into `.react-router/types`.
+The same application without the types. `js` and `default` are accepted as well — `default` is what `--template` fell back to before TypeScript became the default, and it still scaffolds this starter.
 
-All official starters include a NestJS backend under `app/server`. Controllers are mounted at `/api` while React Router handles pages and SSR. Choose among the [default, TypeScript, minimal, API-first, and dashboard templates](../templates/index.md).
+All official starters include a NestJS backend under `app/server`. Controllers are mounted at `/api` while React Router handles pages and SSR. Choose among the [TypeScript, JavaScript, minimal, API-first, and dashboard templates](../templates/index.md).
 
 ## Local template
 
@@ -42,7 +44,7 @@ The directory can contain the application files directly or expose them from a `
 ## Experimental React Server Components
 
 ```bash
-ness new my-app --template typescript --rsc
+ness new my-app --rsc
 ```
 
 RSC mode supports Server Components, `'use client'`, and `'use server'` functions. It is experimental and can change between minor versions. Prerendering is disabled in RSC mode; standard SSR mode supports prerendering and ISR.

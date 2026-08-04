@@ -51,8 +51,8 @@ export async function init() {
     .argument('<project_name>', 'directory for the new application')
     .option(
       '--template <name-or-path>',
-      'use default, typescript, minimal, api, dashboard, or a custom template',
-      'default',
+      'use typescript, javascript, minimal, api, dashboard, or a custom template',
+      'typescript',
     )
     .option('--rsc', 'enable experimental React Server Components')
     .option(
