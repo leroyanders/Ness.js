@@ -101,7 +101,7 @@ const config = {
           },
           {
             position: 'right',
-            label: 'v6.0',
+            label: 'v7.0',
             className: 'navbar-version',
             to: '/docs/intro',
           },

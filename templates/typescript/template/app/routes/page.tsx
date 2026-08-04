@@ -1,7 +1,7 @@
 import { Link, useLoaderData } from 'react-router';
 
-export const handle = { title: 'Ness.js — full-stack React framework' };
 export const meta = () => [
+  { title: 'Ness.js — full-stack React framework' },
   { name: 'description', content: 'A production-ready Ness.js application.' },
 ];
 

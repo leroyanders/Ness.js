@@ -1,5 +1,5 @@
-export const handle = { title: 'Ness.js minimal starter' };
 export const meta = () => [
+  { title: 'Ness.js minimal starter' },
   { name: 'description', content: 'A minimal Ness.js application.' },
 ];
 

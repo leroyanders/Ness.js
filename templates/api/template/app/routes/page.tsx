@@ -6,7 +6,7 @@ const endpoints = [
   ['POST', '/api/users', 'Create a user'],
 ] as const;
 
-export const handle = { title: 'Ness.js API starter' };
+export const meta = () => [{ title: 'Ness.js API starter' }];
 
 export default function Home() {
   return (

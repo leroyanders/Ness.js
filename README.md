@@ -1,6 +1,6 @@
 # Ness.js
 
-Ness.js is a full-stack React framework with a NestJS backend. Version 6 combines React 19, React Router Framework Mode, Vite 8, NestJS controllers and DI, streaming SSR, typed loaders and actions, caching, pre-rendering, image optimization, and self-hosted deployment.
+Ness.js is a full-stack React framework with a NestJS backend. Version 7 combines React 19, React Router Framework Mode, Vite 8, NestJS controllers and DI, streaming SSR, typed loaders and actions, caching shared across instances, localized routing, pre-rendering, image optimization, and self-hosted deployment that ships as a single directory.
 
 ## Create an application
 
@@ -143,7 +143,7 @@ ness doctor             Diagnose an application
 - `@nessframework/compression` — Gzip and Brotli build assets
 - `@nessframework/analyzer` — bundle reports and size budgets
 
-There is one build pipeline: Vite. The Webpack-based v5 runtime was removed in v6 — its build tooling was declared as runtime dependencies, which put Webpack, Babel, and TypeScript into every deployment.
+There is one build pipeline: Vite. The Webpack-based runtime was removed in v7 — its build tooling was declared as runtime dependencies, which put Webpack, Babel, and TypeScript into every deployment.
 
 ## Repository layout
 
@@ -152,7 +152,7 @@ packages/
 ├── assets/        # @nessframework/assets optimized assets and metadata
 ├── cache/         # @nessframework/cache caching primitives
 ├── cli/           # @nessframework/cli commands and generators
-├── core/          # @nessframework/core client runtime and compatibility facade
+├── core/          # @nessframework/core client runtime and umbrella exports
 ├── deployment/    # @nessframework/deployment runtime adapters
 ├── instrumentation/ # @nessframework/instrumentation lifecycle hooks
 ├── router/        # @nessframework/router file routing and Vite integration

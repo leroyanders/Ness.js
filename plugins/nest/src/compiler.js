@@ -65,6 +65,9 @@ export async function buildNestApplication({
 
   for (const filename of files) {
     const relative = path.relative(sourceDirectory, filename);
+    // A tsconfig describes how to compile this directory; it is not part of the
+    // compiled output and must not be shipped with it.
+    if (path.basename(relative) === 'tsconfig.json') continue;
     const destination = path.join(outputDirectory, outputFilename(relative));
     fs.ensureDirSync(path.dirname(destination));
     if (/\.(?:mts|ts|tsx)$/.test(filename)) {

@@ -16,7 +16,7 @@ export default {
 
 Ness Tailwind uses Tailwind CSS 4 with automatic source detection and CSS-first configuration.
 
-For Ness 6, enable it in Vite:
+Enable it in Vite:
 
 ```js
 import { ness } from '@nessframework/router/vite';

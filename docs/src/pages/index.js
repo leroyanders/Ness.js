@@ -84,7 +84,7 @@ export default function Home() {
           <div className={styles.heroGrid}>
             <div className={styles.heroCopy}>
               <p className={styles.kicker}>
-                <span>Ness.js 6</span>
+                <span>Ness.js 7</span>
                 Full-stack React framework
               </p>
               <h1>
@@ -182,7 +182,7 @@ export default function Home() {
 
         <section className={styles.finalCta}>
           <div>
-            <span>Ness.js v6</span>
+            <span>Ness.js v7</span>
             <h2>Use React on both sides of the response.</h2>
           </div>
           <Link
