@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { createRequestListener } from '@remix-run/node-fetch-server';
 import { createImageHandler } from '@nessframework/assets/image/server';
 import { getCache, setCache } from '@nessframework/cache';
+import { resolveCache } from '@nessframework/cache/resolve';
 import { registerInstrumentation } from '@nessframework/instrumentation';
 import { createNessRequestHandler } from '@nessframework/server';
 import express from 'express';
@@ -61,7 +62,8 @@ async function main() {
   const config = loadedConfig.config || {};
   const { configureServer, ...handlerConfig } = config;
   await loadInstrumentation(root, loadedConfig.instrumentation);
-  if (config.cache) setCache(config.cache);
+  const configuredCache = await resolveCache(config.cache);
+  if (configuredCache) setCache(configuredCache);
   const imageHandler =
     config.images === false
       ? undefined
@@ -90,7 +92,7 @@ async function main() {
     response.set('cache-control', 'no-store').json({
       healthy: true,
       framework: 'Ness.js',
-      cache: cache.constructor.name,
+      cache: (cache.adapter ?? cache).constructor.name,
     });
   });
   const disposeConfiguredServer = configureServer

@@ -32,4 +32,4 @@ Official aliases passed to `ness add`, `remove`, or `update` resolve to the `@ne
 
 `--template` accepts the official `default`, `typescript`, `minimal`, `api`, and `dashboard` aliases, npm packages, package-style templates, and direct local directories through relative, absolute, `~/`, or `file:` paths. Official starters keep framework settings in one `ness.config.mjs` file.
 
-Node.js 16 or newer is required.
+Node.js 20.19 or newer is required.

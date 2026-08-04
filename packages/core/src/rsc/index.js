@@ -2,8 +2,45 @@ import '../runtime/web-api.js';
 
 const RSC_FEATURE = 'experimental-rsc';
 
+/**
+ * What the RSC pipeline can and cannot do today.
+ *
+ * The build, SSR, hydration, and NestJS routes are covered by the end-to-end
+ * suite on every commit, so they are not a guess. The gaps are real gaps, not
+ * untested claims: prerendering and the build manifest are disabled by React
+ * Router in RSC mode, and standalone bundling depends on the manifest.
+ *
+ * RSC stays behind a flag because it sits on two upstream APIs that are
+ * themselves pre-stable: `@vitejs/plugin-rsc` (0.x) and React Router's
+ * `unstable_reactRouterRSC`. Calling it stable here would not make those
+ * stable, and would promise a compatibility guarantee this project cannot keep.
+ */
+const RSC_SUPPORT = Object.freeze({
+  supported: Object.freeze([
+    'production build',
+    'streaming SSR and hydration',
+    'server functions',
+    'NestJS controllers',
+    'route middleware, loaders, and actions',
+  ]),
+  unsupported: Object.freeze([
+    'prerender / SSG (router.prerender is ignored in RSC mode)',
+    'the ness-manifest.json build manifest',
+    'standalone bundling (ness bundle node), which reads that manifest',
+  ]),
+  upstream: Object.freeze({
+    '@vitejs/plugin-rsc': '0.x',
+    'react-router': 'unstable_reactRouterRSC',
+  }),
+});
+
 function experimentalRsc(options = {}) {
   return { rsc: true, feature: RSC_FEATURE, ...options };
+}
+
+/** Programmatic access to the table above, for `ness doctor` and tooling. */
+function rscSupport() {
+  return RSC_SUPPORT;
 }
 
 function assertSerializable(value, path = 'props', seen = new WeakSet()) {
@@ -65,4 +102,11 @@ function serverOnly(callback) {
   };
 }
 
-export { RSC_FEATURE, assertSerializable, experimentalRsc, serverOnly };
+export {
+  RSC_FEATURE,
+  RSC_SUPPORT,
+  assertSerializable,
+  experimentalRsc,
+  rscSupport,
+  serverOnly,
+};

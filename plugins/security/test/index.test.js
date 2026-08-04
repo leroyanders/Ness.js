@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import security, { install, securityHeaders } from '../src/index.js';
+import security, { securityHeaders } from '../src/index.js';
 
 test('security creates visible defaults and supports overrides', () => {
   const headers = securityHeaders({
@@ -12,12 +12,14 @@ test('security creates visible defaults and supports overrides', () => {
   assert.equal(headers['Content-Security-Policy'], "default-src 'self'");
 });
 
-test('security configures Vite and legacy development servers', () => {
+test('security applies the headers to the dev server and to preview', () => {
   const vite = security().config();
   assert.equal(vite.server.headers['X-Frame-Options'], 'DENY');
   assert.equal(vite.preview.headers['X-Frame-Options'], 'DENY');
+});
 
-  const webpack = install({ devServer: { headers: { Custom: 'value' } } });
-  assert.equal(webpack.devServer.headers.Custom, 'value');
-  assert.equal(webpack.devServer.headers['X-Frame-Options'], 'DENY');
+test('security omits a header that is explicitly disabled', () => {
+  const headers = securityHeaders({ headers: { 'X-Frame-Options': false } });
+  assert.equal('X-Frame-Options' in headers, false);
+  assert.equal(headers['X-Content-Type-Options'], 'nosniff');
 });

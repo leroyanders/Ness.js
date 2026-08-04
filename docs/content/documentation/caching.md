@@ -18,7 +18,64 @@ await revalidatePath('/posts');
 
 Profiles include `seconds`, `minutes`, `hours`, `days`, `max`, and `default`. Concurrent calls are deduplicated. Expired values are regenerated; stale values are served while one background refresh runs.
 
-`MemoryCacheAdapter` is the default. Supply a shared adapter through `setCache` or the `server` section of `ness.config.mjs` for multi-instance deployments.
+## Adapters
+
+`MemoryCacheAdapter` is the default and is process-local: a second instance keeps its own copy, and `revalidateTag` on one instance does not reach the others. Anything running more than one process needs a shared adapter.
+
+Configure one in the `server` section of `ness.config.mjs`:
+
+```js
+import { defineNessConfig } from '@nessframework/router';
+
+export default defineNessConfig({
+  server: {
+    cache: { adapter: 'filesystem', directory: '.ness/cache' },
+  },
+});
+```
+
+| Adapter      | Shared across                   | Needs                         | Use it when                                        |
+| ------------ | ------------------------------- | ----------------------------- | -------------------------------------------------- |
+| `memory`     | nothing                         | —                             | development, single process                        |
+| `filesystem` | processes on one host, restarts | a writable directory          | one container, clustered Node, no external service |
+| `sqlite`     | processes on one host, restarts | Node.js 22.5+ (`node:sqlite`) | same as above, with indexed invalidation           |
+| `redis`      | every instance                  | a Redis client you supply     | more than one host or replica                      |
+
+Redis takes the client from your config rather than bundling one, so connection, TLS, and pooling stay yours:
+
+```js
+import { createClient } from 'redis';
+
+const client = await createClient({ url: process.env.REDIS_URL }).connect();
+
+export default defineNessConfig({
+  server: {
+    cache: { adapter: 'redis', client, prefix: 'app:cache:' },
+  },
+});
+```
+
+### Tag and path invalidation
+
+Adapters expose `keysByTag` and `keysByPath`, so `revalidateTag('posts')` resolves the affected keys from an index instead of reading every cached entry. An adapter of your own may omit them — the cache falls back to a scan, which stays correct but costs one read per entry.
+
+### Local tier
+
+A shared store turns every cache hit into a network round trip. Set `local` to keep an in-process tier in front of it:
+
+```js
+cache: { adapter: 'redis', client, local: true, bus }
+```
+
+The local tier reintroduces the problem the shared store solved: deleting an entry in Redis does not evict the copy another instance already holds in memory. Pass a `bus` so instances broadcast evictions to each other:
+
+```js
+import { createRedisInvalidationBus } from '@nessframework/cache/tiered';
+
+const bus = createRedisInvalidationBus(client, subscriber);
+```
+
+`subscriber` must be a separate connection — Redis does not allow other commands on a subscribed one. Without a bus, `localTtl` (5 seconds by default) bounds how long an instance may trust a local copy.
 
 ## Static generation
 

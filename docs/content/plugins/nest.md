@@ -12,7 +12,7 @@ New Ness applications include the integration. Add it to an existing application
 
 ```bash
 ness add @nessframework/nest
-npm install @nestjs/common@10.4.22 @nestjs/core@10.4.22 reflect-metadata@0.2.2 rxjs@7.8.2
+npm install @nestjs/common@11.1.28 @nestjs/core@11.1.28 reflect-metadata@0.2.2 rxjs@7.8.2
 ```
 
 ## Unified integration

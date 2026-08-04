@@ -22,5 +22,4 @@ export function validateEnvironment(
   values?: Record<string, string | undefined>,
 ): Readonly<Record<string, string>>;
 export function env(options?: EnvOptions): Plugin;
-export function install(config: object, options?: EnvOptions): object;
 export default env;

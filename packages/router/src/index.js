@@ -1,8 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { normalizeI18n } from './i18n.js';
 import { nessRoutes } from './routes.js';
 
 export { RESERVED_FILES, ROUTE_EXTENSIONS, segmentPath } from './routes.js';
+export {
+  localizePath,
+  matchAcceptLanguage,
+  normalizeI18n,
+  resolveLocale,
+} from './i18n.js';
 
 const DEFAULT_CACHE_PROFILES = {
   default: { stale: 300, revalidate: 900, expire: 31536000 },
@@ -30,6 +37,7 @@ function writeBuildManifest(options) {
       routes: buildManifest?.routes || {},
       cache: options.cache || { profiles: DEFAULT_CACHE_PROFILES },
       deployment: options.deployment || { runtime: 'node' },
+      ...(options.i18n ? { i18n: options.i18n } : {}),
     };
     const filename = path.join(
       reactRouterConfig.buildDirectory,
@@ -48,8 +56,14 @@ function defineConfig(options = {}) {
     prerender,
     rsc = false,
     routeDirectory,
+    i18n,
     ...reactRouterOptions
   } = options;
+  // Validated here so a typo in ness.config.mjs fails immediately with a
+  // message naming the field. Route generation itself stays in app/routes.ts —
+  // `nessRoutes({i18n})` — rather than being injected behind the developer's
+  // back, which would silently override a hand-written route tree.
+  const localization = normalizeI18n(i18n);
   return {
     appDirectory: 'app',
     buildDirectory: 'build',
@@ -69,7 +83,7 @@ function defineConfig(options = {}) {
       : {
           buildEnd: chainHooks(
             buildEnd,
-            writeBuildManifest({ cache, deployment }),
+            writeBuildManifest({ cache, deployment, i18n: localization }),
           ),
         }),
   };

@@ -8,7 +8,7 @@
     "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "packages/core"
   },
-  "version": "6.0.0",
+  "version": "7.0.0",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -20,7 +20,6 @@
     "./package.json": "./package.json",
     "./cache": "./src/cache/index.js",
     "./client": "./src/runtime/client.js",
-    "./client/dom": "./src/client/dom.js",
     "./config": {
       "types": "./src/framework/config.d.ts",
       "default": "./src/framework/config.js"
@@ -34,12 +33,10 @@
     "./image/server": "./src/assets/image-server.js",
     "./instrumentation": "./src/instrumentation/index.js",
     "./metadata": "./src/metadata/index.js",
-    "./next/ui": "./src/next/ui.js",
     "./rsc": "./src/rsc/index.js",
     "./script": "./src/assets/script.js",
     "./server": "./src/runtime/server.js",
     "./server/responses": "./src/runtime/responses.js",
-    "./server/dom": "./src/server/dom.js",
     "./testing": "./src/testing/index.js",
     "./types/*": "./src/types/*",
     "./vite": {
@@ -48,93 +45,36 @@
     }
   },
   "bin": {
-    "ness-core": "src/bin/index.js",
     "ness-serve": "src/bin/serve.js"
   },
   "files": [
     "src",
     "readme.md"
   ],
-  "scripts": {
-    "build": "babel src -d dist --extensions .js --copy-files"
-  },
-  "babel": {
-    "presets": [
-      "./src/babel/index.js"
-    ]
-  },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "peerDependencies": {
     "react": ">=19.2.7",
     "react-dom": ">=19.2.7"
   },
   "dependencies": {
-    "@babel/core": "^8.0.1",
-    "@babel/plugin-transform-runtime": "^8.0.1",
-    "@babel/preset-env": "^8.0.2",
-    "@babel/preset-react": "^8.0.1",
-    "@babel/preset-typescript": "^8.0.1",
-    "@babel/runtime": "^8.0.0",
-    "@nessframework/assets": "^6.0.0",
-    "@nessframework/cache": "^6.0.0",
-    "@nessframework/deployment": "^6.0.0",
-    "@nessframework/instrumentation": "^6.0.0",
-    "@nessframework/router": "^6.0.0",
-    "@nessframework/server": "^6.0.0",
-    "@nessframework/testing": "^6.0.0",
-    "@pmmmwh/react-refresh-webpack-plugin": "0.6.2",
+    "@nessframework/assets": "^7.0.0",
+    "@nessframework/cache": "^7.0.0",
+    "@nessframework/deployment": "^7.0.0",
+    "@nessframework/instrumentation": "^7.0.0",
+    "@nessframework/router": "^7.0.0",
+    "@nessframework/server": "^7.0.0",
+    "@nessframework/testing": "^7.0.0",
     "@remix-run/node-fetch-server": "0.13.3",
-    "@react-router/dev": "8.3.0",
-    "@react-router/fs-routes": "8.3.0",
-    "@react-router/node": "8.3.0",
-    "@react-router/serve": "8.3.0",
-    "@vitejs/plugin-rsc": "0.5.27",
-    "assets-webpack-plugin": "^7.1.1",
-    "babel-loader": "^10.1.1",
-    "babel-plugin-transform-react-remove-prop-types": "^0.4.24",
-    "css-loader": "7.1.4",
-    "css-minimizer-webpack-plugin": "^8.0.0",
-    "dotenv": "17.4.2",
     "express": "^5.2.1",
-    "fs-extra": "11.4.0",
-    "html-webpack-plugin": "^5.6.8",
-    "http-proxy-middleware": "^4.1.1",
-    "json5": "^2.2.3",
-    "mini-css-extract-plugin": "2.10.2",
-    "node-fetch": "^3.3.2",
-    "postcss": "^8.5.25",
-    "postcss-loader": "8.2.1",
-    "process": "^0.11.10",
-    "pug": "^3.0.4",
-    "react-dev-utils": "^12.0.1",
-    "react-refresh": "^0.18.0",
-    "react-router": "8.3.0",
-    "react-server-dom-webpack": "19.2.8",
-    "sade": "^1.8.1",
-    "sass": "1.102.0",
-    "sass-loader": "17.0.0",
-    "sharp": "0.35.3",
-    "source-map-support": "^0.5.21",
-    "start-server-nestjs-webpack-plugin": "^2.2.5",
-    "style-loader": "^4.0.0",
-    "terser-webpack-plugin": "^5.6.1",
-    "tinyglobby": "^0.2.17",
-    "typescript": "^7.0.2",
-    "vite": "8.2.0",
-    "webpack": "5.109.2",
-    "webpack-dev-server": "~6.0.0",
-    "webpack-manifest-plugin": "^6.0.1",
-    "webpack-node-externals": "^3.0.0"
+    "react-router": "8.3.0"
   },
   "devDependencies": {
-    "@babel/cli": "^8.0.4",
     "@types/express": "^5.0.6",
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.4",
-    "@types/webpack-env": "^1.18.8"
+    "@types/react-dom": "^19.2.4"
   },
   "keywords": [
     "nodejs",
@@ -144,6 +84,6 @@
     "react",
     "typescript",
     "react-router",
-    "webpack"
+    "vite"
   ]
 }

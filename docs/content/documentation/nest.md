@@ -15,7 +15,7 @@ app/
         └── users.module.ts
 ```
 
-New applications include `@nessframework/nest`, NestJS 10, `reflect-metadata`, and RxJS. NestJS 10 is used because the framework maintains Node.js 16 compatibility; NestJS 11 requires Node.js 20 or newer.
+New applications include `@nessframework/nest`, NestJS 11, `reflect-metadata`, and RxJS. NestJS 11 and Express 5 must be used together: `@nestjs/platform-express@11` calls Express 5 APIs, and pairing it with Express 4 fails at application start.
 
 ## Root module
 

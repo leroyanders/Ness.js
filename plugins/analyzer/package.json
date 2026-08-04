@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/analyzer",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Bundle reports and size budgets for Ness.js applications.",
   "type": "module",
   "exports": {
@@ -19,11 +19,11 @@
     "directory": "plugins/analyzer"
   },
   "peerDependencies": {
-    "@nessframework/core": ">=6.0.0",
+    "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT"

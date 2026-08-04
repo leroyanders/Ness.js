@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/router",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "File-system routing and Vite integration for Ness.js.",
   "type": "module",
   "exports": {
@@ -11,20 +11,32 @@
     "./vite": {
       "types": "./src/vite/index.d.ts",
       "default": "./src/vite/index.js"
-    }
+    },
+    "./i18n": {
+      "types": "./src/i18n-runtime.d.ts",
+      "default": "./src/i18n-runtime.js"
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "src",
     "readme.md"
   ],
   "dependencies": {
-    "@react-router/dev": "8.3.0",
-    "@vitejs/plugin-rsc": "0.5.27",
-    "react-router": "8.3.0",
-    "vite": "8.2.0"
+    "react-router": "8.3.0"
+  },
+  "peerDependencies": {
+    "@react-router/dev": "^8.3.0",
+    "@vitejs/plugin-rsc": "^0.5.27",
+    "vite": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@vitejs/plugin-rsc": {
+      "optional": true
+    }
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=20.19.0"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT"

@@ -267,14 +267,66 @@ function validateProjectDirectory(root) {
   }
 }
 
+/**
+ * Turns repeated `--package-override name=spec` values into a map. Used to
+ * install a canary, a release candidate, or a locally packed tarball instead of
+ * the published version — which is also how the end-to-end suite verifies the
+ * working tree rather than the registry.
+ */
+export function normalizePackageOverrides(input) {
+  const entries = [input].flat().filter(Boolean);
+  const overrides = new Map();
+  for (const entry of entries) {
+    if (typeof entry === 'object') {
+      for (const [name, spec] of Object.entries(entry))
+        overrides.set(name, spec);
+      continue;
+    }
+    const separator = entry.indexOf('=');
+    if (separator <= 0) {
+      throw new Error(
+        `A package override must look like name=spec; received: ${entry}`,
+      );
+    }
+    overrides.set(entry.slice(0, separator), entry.slice(separator + 1));
+  }
+  return overrides;
+}
+
+/**
+ * Replaces matching install specs in place. An override for a package the
+ * template does not install is appended, so extra plugins can be added too.
+ */
+export function applyPackageOverrides(
+  dependencies,
+  overrides,
+  { append = true } = {},
+) {
+  if (!overrides?.size) return dependencies;
+  const seen = new Set();
+  for (const [index, dependency] of dependencies.entries()) {
+    const name = dependency.startsWith('@')
+      ? `@${dependency.slice(1).split('@')[0]}`
+      : dependency.split('@')[0];
+    if (!overrides.has(name)) continue;
+    dependencies[index] = `${name}@${overrides.get(name)}`;
+    seen.add(name);
+  }
+  if (!append) return dependencies;
+  for (const [name, spec] of overrides) {
+    if (!seen.has(name)) dependencies.push(`${name}@${spec}`);
+  }
+  return dependencies;
+}
+
 export async function createApp(
   projectName,
   templateOption,
   createOptions = {},
 ) {
-  if (!semver.satisfies(process.version, '>=16.0.0')) {
+  if (!semver.satisfies(process.version, '>=20.19.0')) {
     throw new Error(
-      `Node.js 16 or newer is required; current version is ${process.version}.`,
+      `Node.js 20.19 or newer is required; current version is ${process.version}.`,
     );
   }
 
@@ -296,7 +348,7 @@ export async function createApp(
     version: '0.1.0',
     private: true,
     type: 'module',
-    engines: { node: '>=16.0.0' },
+    engines: { node: '>=20.19.0' },
     scripts: {
       start: 'ness dev',
       dev: 'ness dev',
@@ -313,14 +365,16 @@ export async function createApp(
     `${JSON.stringify(applicationPackage, null, 2)}${os.EOL}`,
   );
 
+  // Runtime dependencies ship to production; build tooling does not. Keeping
+  // them apart is what lets `ness bundle` trace a small deployment instead of
+  // copying Vite, TypeScript, and Babel into the container.
   const dependencies = [
-    '@nessframework/cli',
     '@nessframework/cache',
     '@nessframework/core',
     '@nessframework/nest',
     '@nessframework/router',
-    '@nestjs/common@10.4.22',
-    '@nestjs/core@10.4.22',
+    '@nestjs/common@11.1.28',
+    '@nestjs/core@11.1.28',
     'reflect-metadata@0.2.2',
     'rxjs@7.8.2',
     'react',
@@ -329,18 +383,39 @@ export async function createApp(
     'isbot',
     ...(template.local ? [] : [template.spec]),
   ];
+  const developmentDependencies = [
+    '@nessframework/cli',
+    '@react-router/dev@8.3.0',
+    'vite@8.2.0',
+  ];
   if (createOptions.rsc) {
-    dependencies.push(
-      '@vitejs/plugin-rsc@0.5.27',
-      'react-server-dom-webpack@19.2.8',
-    );
+    developmentDependencies.push('@vitejs/plugin-rsc@0.5.27');
+    dependencies.push('react-server-dom-webpack@19.2.8');
   }
+
+  const overrides = normalizePackageOverrides(createOptions.packageOverride);
+  // The dev list only rewrites specs it already has; unmatched overrides are
+  // appended once, to the runtime list.
+  applyPackageOverrides(developmentDependencies, overrides, { append: false });
+  const devNames = new Set(
+    developmentDependencies.map(entry =>
+      entry.startsWith('@')
+        ? `@${entry.slice(1).split('@')[0]}`
+        : entry.split('@')[0],
+    ),
+  );
+  applyPackageOverrides(
+    dependencies,
+    new Map([...overrides].filter(([name]) => !devNames.has(name))),
+  );
 
   console.log(`Creating a new Ness app in ${paint('blue', root)}.`);
   if (template.local) {
     console.log(`Using local template ${paint('cyan', template.directory)}.`);
   }
-  console.log(`Installing ${dependencies.join(', ')}...\n`);
+  console.log(
+    `Installing ${[...dependencies, ...developmentDependencies].join(', ')}...\n`,
+  );
   await runNpm(root, [
     'install',
     '--no-audit',
@@ -349,6 +424,15 @@ export async function createApp(
     '--loglevel',
     'error',
     ...dependencies,
+  ]);
+  await runNpm(root, [
+    'install',
+    '--no-audit',
+    '--save-dev',
+    '--save-exact',
+    '--loglevel',
+    'error',
+    ...developmentDependencies,
   ]);
 
   const templatePackageDirectory = template.local

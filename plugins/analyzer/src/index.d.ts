@@ -25,5 +25,4 @@ export interface BundleReport {
 
 export function analyzer(options?: AnalyzerOptions): Plugin;
 export function createReport(entries: BundleReportEntry[]): BundleReport;
-export function install(config: object, options?: AnalyzerOptions): object;
 export default analyzer;

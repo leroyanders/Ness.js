@@ -1,0 +1,14 @@
+node_modules
+build
+.ness
+.react-router
+.git
+.github
+coverage
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+Dockerfile
+.dockerignore

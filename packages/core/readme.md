@@ -36,4 +36,4 @@ import { nessRoutes } from '@nessframework/router';
 export default nessRoutes();
 ```
 
-Node.js 16+, React 19.2.7+, and React DOM 19.2.7+ are required.
+Node.js 20.19+, React 19.2.7+, and React DOM 19.2.7+ are required.
