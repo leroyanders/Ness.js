@@ -88,10 +88,12 @@ test('generator creates JavaScript and TypeScript route modules without overwrit
     path.join(typescript, 'app', 'server', 'app.module.ts'),
     "import {Module} from '@nestjs/common';\n\n@Module({})\nexport class AppModule {}\n",
   );
+  // A JavaScript application still has a TypeScript Nest server: Nest is
+  // decorator-based, and decorators do not exist in JavaScript.
   fs.mkdirSync(path.join(javascript, 'app', 'server'), { recursive: true });
   fs.writeFileSync(
-    path.join(javascript, 'app', 'server', 'app.module.js'),
-    "import {Module} from '@nestjs/common';\n\nclass AppModule {}\nModule({})(AppModule);\nexport {AppModule};\n",
+    path.join(javascript, 'app', 'server', 'app.module.ts'),
+    "import {Module} from '@nestjs/common';\n\n@Module({})\nexport class AppModule {}\n",
   );
   const page = generate('page', 'blog/[slug]', javascript);
   const middleware = generate('middleware', 'auth', typescript);
@@ -126,7 +128,7 @@ test('generator creates JavaScript and TypeScript route modules without overwrit
   assert.match(fs.readFileSync(resource, 'utf8'), /@Controller\("users"\)/);
   assert.match(
     fs.readFileSync(
-      path.join(javascript, 'app', 'server', 'app.module.js'),
+      path.join(javascript, 'app', 'server', 'app.module.ts'),
       'utf8',
     ),
     /controllers: \[UsersController\]/,

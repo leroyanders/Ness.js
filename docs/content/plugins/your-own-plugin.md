@@ -1,6 +1,6 @@
 # Create a plugin
 
-Ness 6 plugins use the standard Vite plugin contract. Public official plugins use the `@nessframework/*` scope; community plugins can use any npm package name.
+Ness 7 plugins use the standard Vite plugin contract. Public official plugins use the `@nessframework/*` scope; community plugins can use any npm package name.
 
 ## Vite plugin
 
@@ -47,7 +47,7 @@ Plugins can use any Vite hook, including `config`, `transform`, `generateBundle`
 
 ## Migrating a Ness 5 plugin
 
-Ness 5 plugins exported an `install(config, options)` function that mutated a Webpack configuration. That runtime was removed in Ness 6, and `install` is no longer called.
+Ness 5 and 6 plugins exported an `install(config, options)` function that mutated a Webpack configuration. That runtime was removed in Ness 7, and `install` is no longer called.
 
 Rewrite the plugin as a Vite plugin. Most of the mapping is direct:
 

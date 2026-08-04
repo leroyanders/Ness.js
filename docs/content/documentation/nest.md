@@ -17,6 +17,19 @@ app/
 
 New applications include `@nessframework/nest`, NestJS 11, `reflect-metadata`, and RxJS. NestJS 11 and Express 5 must be used together: `@nestjs/platform-express@11` calls Express 5 APIs, and pairing it with Express 4 fails at application start.
 
+`app/server` is TypeScript in every starter, including the JavaScript one. Nest is built on decorators, and decorators do not exist in JavaScript — writing this folder in JavaScript means applying every decorator by hand:
+
+```js
+// What JavaScript forces you to write instead of @Get('health')
+Get('health')(
+  ApiController.prototype,
+  'health',
+  Object.getOwnPropertyDescriptor(ApiController.prototype, 'health'),
+);
+```
+
+The JavaScript starter therefore keeps `app/server/tsconfig.json` scoped to that folder rather than at the project root, so the React side stays JavaScript. Nothing else needs configuring: the Nest compiler transpiles `app/server` on its own, in development and in the build.
+
 ## Root module
 
 ```ts title="app/server/app.module.ts"

@@ -1,6 +1,6 @@
 # @nessframework/core
 
-The Ness.js v6 client runtime and compatibility facade. Framework subsystems are published as focused `@nessframework/*` packages, while the legacy `@nessframework/core/*` paths remain available for migration.
+The Ness.js v7 client runtime and umbrella package. Framework subsystems are published as focused `@nessframework/*` packages and re-exported here for convenience.
 
 ## Public modules
 

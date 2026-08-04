@@ -6,8 +6,8 @@ import {
   useNavigation,
 } from 'react-router';
 
-export const handle = { title: 'Ness.js — full-stack React framework' };
 export const meta = () => [
+  { title: 'Ness.js — full-stack React framework' },
   {
     name: 'description',
     content: 'A production example built with the Ness.js v6 App Router.',

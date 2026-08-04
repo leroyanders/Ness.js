@@ -4,7 +4,7 @@ slug: /plugins
 
 # Plugin ecosystem
 
-Ness 6 plugins use Vite hooks and are composed through `ness({ plugins })`. Official integrations are ESM-only, typed, and tested on Node 20.19+.
+Ness 7 plugins use Vite hooks and are composed through `ness({ plugins })`. Official integrations are ESM-only, typed, and tested on Node 20.19+.
 
 | Package                      | Purpose                                               |
 | ---------------------------- | ----------------------------------------------------- |

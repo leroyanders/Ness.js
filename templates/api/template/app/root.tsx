@@ -1,26 +1,16 @@
 import type { ReactNode } from 'react';
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useMatches,
-} from 'react-router';
+import { Links, Meta, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import './styles/app.css';
 
 export function Layout({ children }: { children: ReactNode }) {
-  const title = useMatches().reduce((currentTitle, match) => {
-    const handle = match.handle as { title?: unknown } | undefined;
-    return typeof handle?.title === 'string' ? handle.title : currentTitle;
-  }, 'Ness.js API starter');
-
   return (
     <html lang="en">
+      {/* No literal <title> here on purpose: <Meta /> renders it from the
+          route's meta export. A hard-coded one would come first in the
+          document and freeze every page on the same title. */}
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{title}</title>
         <Meta />
         <Links />
       </head>

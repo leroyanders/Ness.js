@@ -4,9 +4,9 @@ sidebar_position: 1
 
 # Ness.js
 
-Ness.js is a full-stack React framework for applications that render on the server and navigate in the browser. Version 6 provides file-routed React UI, a NestJS backend, streaming SSR, typed data loading and mutations, caching and revalidation, optimized assets, and self-hosted deployment.
+Ness.js is a full-stack React framework for applications that render on the server and navigate in the browser. Version 7 provides file-routed React UI, a NestJS backend, streaming SSR, typed data loading and mutations, caching shared across instances, localized routing, optimized assets, and self-hosted deployment that ships as a single directory.
 
-The framework uses React 19, React Router Framework Mode, Vite 8, and standard `Request`/`Response` APIs. The default runtime is Node.js; serverless and Edge adapters are available when an application only uses APIs supported by the target runtime.
+The framework uses React 19, React Router Framework Mode, Vite 8, and standard `Request`/`Response` APIs. The default runtime is Node.js; Cloudflare Workers and AWS Lambda adapters are available when an application only uses APIs supported by the target runtime.
 
 ## Why Ness
 
