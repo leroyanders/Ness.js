@@ -222,9 +222,10 @@ body {
   margin-right: 2rem;
 }
 
-/* The mark is gone; the wordmark carries the identity on its own. */
 .navbar__logo {
-  display: none;
+  height: 1.75rem;
+  margin-right: 0.55rem;
+  width: 1.75rem;
 }
 
 .navbar__title {

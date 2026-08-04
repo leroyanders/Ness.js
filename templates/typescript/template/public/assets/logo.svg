@@ -1,15 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="ness-logo-title">
   <title id="ness-logo-title">Ness.js</title>
-  <defs>
-    <mask id="ness-logo-mask">
-      <rect width="512" height="512" fill="#000" />
-      <circle cx="256" cy="256" r="216" fill="#fff" />
-      <path d="M306 166 472 74 364 205Z" fill="#000" />
-    </mask>
-  </defs>
-  <circle cx="256" cy="256" r="216" fill="#000" mask="url(#ness-logo-mask)" />
+  <!--
+    The single source for every mark and icon in the repository — the rasters
+    and the .ico are rendered from it by scripts/assets/logo.mjs. Edit this
+    file, then run the script.
+
+    The N is drawn rather than set: an `svg` `text` element depends on a font
+    being installed wherever the file is rasterised, and would come out as a
+    fallback face — or as nothing — on a build machine.
+
+    It is drawn upright and sheared into its oblique. Cutting the italic
+    directly would thin the stem leaning into the slant and fatten the other;
+    shearing an upright drawing keeps both at the 74 they are set to.
+
+    Only the corners outside the disc are transparent. The disc is the plate, so
+    one file serves the header, the tab and the starter pages: on a dark surface
+    it recedes into the background and the white letter carries the mark alone.
+
+    The letter's corners land 226 from the centre, 28 clear of the disc.
+  -->
+  <circle cx="256" cy="256" r="254" fill="#000000" />
   <path
-    fill="#fff"
-    d="M142 376V136h55l118 157V136h55v240h-55L197 219v157h-55Z"
+    fill="#ffffff"
+    transform="translate(0 256) skewX(-11) translate(0 -256)"
+    d="M130 418V94h74l104 196V94h74v324h-74L204 222v196Z"
   />
 </svg>

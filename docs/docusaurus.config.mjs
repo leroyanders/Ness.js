@@ -80,6 +80,49 @@ const config = {
   },
   favicon: 'img/favicon.ico',
 
+  /*
+   * `favicon` above emits only the .ico. The rest of the icon set is rendered
+   * by scripts/assets/logo.mjs and has to be declared, or a browser that would
+   * prefer the SVG and an iOS home screen that wants the touch icon both fall
+   * back to the 16px bitmap.
+   */
+  headTags: [
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/svg+xml',
+        href: '/img/logo.svg',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '32x32',
+        href: '/img/favicon-32x32.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'icon',
+        type: 'image/png',
+        sizes: '16x16',
+        href: '/img/favicon-16x16.png',
+      },
+    },
+    {
+      tagName: 'link',
+      attributes: {
+        rel: 'apple-touch-icon',
+        sizes: '180x180',
+        href: '/img/apple-touch-icon.png',
+      },
+    },
+  ],
+
   organizationName: 'leroyanders',
   projectName: 'Ness.js',
   deploymentBranch: 'master',
@@ -121,6 +164,18 @@ const config = {
       },
       navbar: {
         title: 'Ness.js',
+        /*
+         * The same file the browser tab gets. The mark carries its own disc, so
+         * it needs no variant per surface: on the light navbar the disc reads as
+         * the mark, and on the dark one it recedes into the background and the
+         * white letter carries it alone.
+         */
+        logo: {
+          alt: '',
+          src: 'img/logo.svg',
+          width: 28,
+          height: 28,
+        },
         items: [
           {
             type: 'doc',
@@ -150,7 +205,7 @@ const config = {
           },
           {
             position: 'right',
-            label: 'v7.0',
+            label: 'v7.1',
             className: 'navbar-version',
             to: '/docs/intro',
           },
