@@ -1,6 +1,6 @@
 # Ness.js welcome example
 
-This application demonstrates the Ness.js v6 file router, a NestJS backend, nested layouts,
+This application demonstrates the Ness.js file router, a NestJS backend, nested layouts,
 cached loaders, route actions, controllers, middleware, metadata, boundaries and the production runtime.
 
 ```bash

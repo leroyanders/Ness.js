@@ -14,7 +14,7 @@ export default function Home() {
         <Link to="/about">About</Link>
       </nav>
       <section className="hero">
-        <p className="eyebrow">Ness.js {framework.version}</p>
+        <p className="eyebrow">{framework.name}</p>
         <h1>Ship the server and the interface together.</h1>
         <p>
           File routes, streaming SSR, typed data, actions, caching and

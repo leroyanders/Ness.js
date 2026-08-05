@@ -10,7 +10,7 @@ export const meta = () => [
   { title: 'Ness.js — full-stack React framework' },
   {
     name: 'description',
-    content: 'A production example built with the Ness.js v6 App Router.',
+    content: 'A production example built with the Ness.js App Router.',
   },
 ];
 
@@ -43,11 +43,11 @@ export default function Home() {
     <main>
       <section className="hero shell">
         <div className="hero-copy">
-          <p className="eyebrow">Ness.js {framework.version}</p>
+          <p className="eyebrow">{framework.name}</p>
           <h1>Build the server and the interface as one application.</h1>
           <p className="lead">
-            This example runs on the Ness v6 file router with cached server
-            data, route actions, middleware and a NestJS API runtime.
+            This example runs on the Ness file router with cached server data,
+            route actions, middleware and a NestJS API runtime.
           </p>
           <div className="actions">
             <a className="button button-primary" href="https://nessjs.com">

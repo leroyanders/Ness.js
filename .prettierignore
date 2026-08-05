@@ -21,3 +21,8 @@ yarn.lock
 **/*.ico
 **/*.png
 **/*.svg
+
+# Search Console reads this file byte for byte. Prettier was appending a
+# trailing newline to it on every run, rewriting a file whose whole purpose is
+# to match what Google issued.
+docs/static/google*.html

@@ -3,7 +3,6 @@ import { cached } from '@nessframework/cache';
 const loadFramework = cached(
   async () => ({
     name: 'Ness.js',
-    version: 6,
     generatedAt: new Date().toISOString(),
   }),
   { key: 'welcome-example', life: 'minutes', tags: ['framework', 'welcome'] },

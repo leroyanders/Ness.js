@@ -16,7 +16,7 @@ export default function SiteLayout() {
       </header>
       <Outlet />
       <footer className="site-footer shell">
-        <span>Ness.js v6 example</span>
+        <span>Ness.js example</span>
         <span>React and NestJS, one runtime.</span>
       </footer>
     </>

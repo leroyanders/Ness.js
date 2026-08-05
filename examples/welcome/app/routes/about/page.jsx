@@ -2,7 +2,7 @@ import { Link } from 'react-router';
 
 export const meta = () => [
   { title: 'Architecture · Ness.js' },
-  { name: 'description', content: 'How the Ness.js v6 example is structured.' },
+  { name: 'description', content: 'How the Ness.js example is structured.' },
 ];
 
 export default function About() {
