@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/typescript",
-  "version": "4.2.4",
+  "version": "4.2.5",
   "type": "module",
   "description": "Official strict TypeScript starter for Ness.js, and what ness new scaffolds by default.",
   "homepage": "https://nessjs.com/docs/templates",
