@@ -74,15 +74,47 @@ Two capabilities do not exist on this runtime:
 - **Image optimization** needs `sharp`, a native module. Use Cloudflare Images instead.
 - **The filesystem and SQLite cache adapters** need a filesystem. Use a KV- or Durable-Object-backed adapter.
 
+### Configuration at the edge
+
+A Worker cannot read a file or import a path at runtime, so its configuration has to be compiled in — and `ness.config.mjs` cannot be, because it imports Vite plugins at module scope and that would drag the build toolchain into the Worker.
+
+Keep the runtime half in `ness.server.config.mjs`:
+
+```js title="ness.server.config.mjs"
+export default {
+  server: {
+    trustProxy: true,
+    headers: [
+      {
+        source: '/:path*',
+        headers: [{ key: 'x-frame-options', value: 'DENY' }],
+      },
+    ],
+    cache: { adapter: myKvAdapter },
+  },
+  instrumentation: { onError: reportToSentry },
+};
+```
+
+`ness bundle cloudflare` finds it and generates an entry that imports it, so the cache adapter, instrumentation, headers and redirects apply at the edge exactly as they do under `ness start`. `ness start` reads the same file, so nothing is duplicated.
+
+Without it the bundler says so rather than deploying a Worker that quietly ignores your settings.
+
+The config is applied on the first request rather than at module scope, because a Worker's startup window is metered and short.
+
 ## AWS Lambda
 
 ```js
-import { createLambdaHandler } from '@nessframework/deployment/lambda';
-import { createNessRequestHandler } from '@nessframework/server';
+import { createLambdaApplication } from '@nessframework/deployment/lambda';
 import * as build from './build/server/index.js';
+import config from './ness.server.config.mjs';
 
-export const handler = createLambdaHandler(createNessRequestHandler({ build }));
+export const handler = createLambdaApplication({ build, config });
 ```
+
+`createLambdaApplication` applies the runtime config the way `ness start` does — the cache adapter, the instrumentation, the headers and the redirects — and honours the scheme API Gateway forwards when `trustProxy` is on.
+
+`createLambdaHandler(fetchHandler)` is still there for a handler you assemble yourself, but it applies no configuration: everything in the `server` section is then yours to wire.
 
 API Gateway v2 and Function URL payloads are supported. v1 (REST API) is not.
 
@@ -124,3 +156,20 @@ const health = createHealthHandler({ checks: [pingDatabase, pingRedis] });
 ```
 
 It returns 503 when any check fails, so an orchestrator can take the instance out of rotation.
+
+## Shutting down
+
+On `SIGTERM` or `SIGINT` the server drains rather than stopping:
+
+1. `/_ness/health` starts reporting `503` with `"status": "draining"`, so the load balancer stops routing here. This happens first, before the socket closes — a balancer needs a poll cycle to notice, and anything it routes in the meantime would be a request the visitor sees fail.
+2. The listening socket closes and in-flight requests are allowed to finish.
+3. Idle keep-alive sockets are released, repeatedly, as connections fall idle.
+4. `configureServer`'s dispose runs — after the drain, because the API layer is still serving those requests until then.
+
+Step 3 is what makes the rest work. `server.close` waits for every connection, and a browser holds a keep-alive socket open long after its last request; without releasing them the close never resolves, the grace period expires, and the orchestrator kills the process along with the in-flight requests the drain was protecting.
+
+The grace period is 10 seconds, from `NESS_SHUTDOWN_TIMEOUT` or `server.shutdownTimeout`. When it runs out the remaining connections are cut and the process exits `1`, so the reason is in the logs rather than an unexplained `SIGKILL`.
+
+Set the orchestrator's own grace period higher than this one, or it will kill the process mid-drain. In Kubernetes that is `terminationGracePeriodSeconds`.
+
+Unhandled rejections and uncaught exceptions are logged and sent to the `onError` instrumentation hook. An uncaught exception then exits `1`, because the process state after one is not worth trusting.

@@ -23,6 +23,20 @@ async function emit(name, payload) {
   }
 }
 
+/**
+ * Whether anything is listening for a hook.
+ *
+ * Used to decide whether a fallback is still needed: an error nobody is
+ * reporting should keep reaching the console, and one that is being reported
+ * should not be logged twice.
+ */
+function hasHook(name) {
+  for (const instrumentation of hooks) {
+    if (typeof instrumentation[name] === 'function') return true;
+  }
+  return false;
+}
+
 function createConsoleInstrumentation({
   logger = console,
   includeHeaders = false,
@@ -94,6 +108,7 @@ function reportWebVitals(callback) {
 export {
   createConsoleInstrumentation,
   emit,
+  hasHook,
   register,
   registerInstrumentation,
   reportWebVitals,

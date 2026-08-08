@@ -37,3 +37,30 @@ Pass `overlay: false` to disable it and fall back to Vite's default response.
 ## Production
 
 The overlay is a development tool. In production, use route boundaries — `error.tsx`, `not-found.tsx`, `forbidden.tsx`, `unauthorized.tsx` — and the `onError` instrumentation hook to report to your error tracker.
+
+## Reporting errors a boundary caught
+
+`onError` fires for errors the request handler catches **and** for errors a route boundary handled.
+
+That second case is the one worth naming. A loader or an action that throws on a route with an `error.tsx` is caught by the router: the boundary renders and the response is ordinary. The visitor sees the fallback and, without this, the error tracker sees nothing — the failure that matters most is the one that looks handled.
+
+```js title="instrumentation.mjs"
+import * as Sentry from '@sentry/node';
+
+export default {
+  onError({ error, request, source }) {
+    Sentry.captureException(error, {
+      tags: { source },
+      extra: { url: request?.url },
+    });
+  },
+};
+```
+
+`source` is `'route'` when a boundary handled it and absent when the request handler caught it, so the two can be told apart.
+
+A request the client abandoned is not reported. The error there is that the connection went away, not that the application failed.
+
+If nothing is listening for `onError`, the error still reaches the console, as it did before any instrumentation was registered. If something is listening, it is not logged twice.
+
+An application that exports its own `handleError` from `entry.server` keeps it — it runs alongside the hook rather than instead of it.

@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/server",
-  "version": "7.1.0",
+  "version": "7.6.0",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
   "keywords": [
     "ness",
@@ -17,6 +17,18 @@
     ".": {
       "types": "./src/index.d.ts",
       "default": "./src/index.js"
+    },
+    "./compress": {
+      "types": "./src/compress.d.ts",
+      "default": "./src/compress.js"
+    },
+    "./proxy": {
+      "types": "./src/proxy.d.ts",
+      "default": "./src/proxy.js"
+    },
+    "./runtime": {
+      "types": "./src/runtime.d.ts",
+      "default": "./src/runtime.js"
     },
     "./responses": {
       "types": "./src/responses.d.ts",

@@ -89,4 +89,12 @@ export default defineNessConfig({
 
 Prerendered HTML and data are emitted into `build/client`. Other pages use SSR. The Ness production server adds CDN-compatible `s-maxage` and `stale-while-revalidate` headers and performs incremental regeneration for anonymous HTML GET requests.
 
-Requests with cookies or authorization headers bypass the default page cache.
+### What the page cache refuses
+
+A request carrying a `cookie` or an `authorization` header bypasses the page cache entirely — it is neither answered from the cache nor stored in it. The check happens before the cache is read, not only before it is written: deciding on the way out alone would still let a credentialed request be served another visitor's rendering.
+
+A response carrying `set-cookie` is never stored, whatever the policy says. The page cache is shared and replays stored headers verbatim, so keeping one would hand the same cookie to every subsequent visitor — an anonymous session id, a CSRF token or an experiment bucket minted on a plain `GET` is enough. The request-side check cannot catch this on its own, because the first visitor arrives without a cookie and is issued one by the render.
+
+That second refusal is enforced around `cachePolicy` rather than inside it, so a project supplying its own policy cannot reintroduce the leak by forgetting the check.
+
+If you replace `cachePolicy`, consider `cacheableRequest` alongside it. The first decides what is kept; the second decides whether the cache is touched at all.

@@ -124,16 +124,99 @@ function restoreResponse(serialized, state) {
   });
 }
 
+/**
+ * Whether a request may be answered from the shared page cache at all.
+ *
+ * Consulted before the cache is read, not only before it is written. Deciding
+ * this on the way out alone leaves whatever is already stored reachable by
+ * anyone: a credentialed request would still be served another visitor's
+ * rendering, and would never get as far as the policy that was meant to stop
+ * it.
+ */
+function defaultCacheableRequest(request) {
+  if (request.method !== 'GET') return false;
+  return (
+    !request.headers.has('authorization') && !request.headers.has('cookie')
+  );
+}
+
+/**
+ * A response carrying `set-cookie` belongs to the visitor it was rendered for.
+ *
+ * The page cache is shared and replays stored headers verbatim, so storing one
+ * hands the same cookie to every subsequent visitor — an anonymous session id,
+ * a CSRF token or an experiment bucket minted on a plain GET is enough. The
+ * request-side check cannot catch this: the first visitor arrives without a
+ * cookie and is issued one by the render.
+ */
+function storableResponse(response) {
+  return !response.headers.has('set-cookie');
+}
+
 function defaultCachePolicy(request, response) {
-  if (request.method !== 'GET' || response.status !== 200) return undefined;
-  if (request.headers.has('authorization') || request.headers.has('cookie'))
-    return undefined;
+  if (!defaultCacheableRequest(request)) return undefined;
+  if (response.status !== 200) return undefined;
+  if (!storableResponse(response)) return undefined;
   if (!(response.headers.get('content-type') || '').includes('text/html'))
     return undefined;
   return {
     life: 'default',
     path: new URL(request.url).pathname,
     tags: ['pages'],
+  };
+}
+
+/**
+ * Routes a boundary-caught error to the instrumentation hooks.
+ *
+ * A loader or an action that throws on a route with an `ErrorBoundary` never
+ * reaches this package's own try/catch: React Router catches it, renders the
+ * boundary, and returns an ordinary response. The user sees the fallback and
+ * the error tracker sees nothing — the failure that matters most is the one
+ * that looks handled.
+ *
+ * React Router reads `entry.module.handleError` once, when it builds its
+ * request handler, so the hook is attached by deriving a build rather than by
+ * shipping a replacement `entry.server`. Owning that file would mean owning a
+ * copy of the streaming render, and watching it drift.
+ */
+function reportingBuild(build) {
+  const entryModule = build?.entry?.module;
+  if (!entryModule) return build;
+
+  const applicationHandler = entryModule.handleError;
+
+  return {
+    ...build,
+    entry: {
+      ...build.entry,
+      module: {
+        ...entryModule,
+        handleError(error, details) {
+          // An aborted request is a client that left, not a fault to report.
+          if (!details?.request?.signal?.aborted) {
+            instrumentation
+              .emit('onError', {
+                error,
+                request: details?.request,
+                params: details?.params,
+                // Distinguishes this from a throw the request handler caught.
+                source: 'route',
+              })
+              // Reporting must not become its own failure.
+              .catch(() => {});
+
+            // React Router's default logs to the console. Providing a handler
+            // replaces that default, so an application with nothing listening
+            // would otherwise lose the message entirely.
+            if (!instrumentation.hasHook('onError') && !applicationHandler)
+              console.error(error);
+          }
+
+          return applicationHandler?.(error, details);
+        },
+      },
+    },
   };
 }
 
@@ -149,6 +232,9 @@ function createNessRequestHandler({
   imageHandler,
   imagePath = '/_ness/image',
   cachePolicy = defaultCachePolicy,
+  // Override this alongside `cachePolicy`, not instead of it: this one decides
+  // whether the cache is touched, that one decides what is kept.
+  cacheableRequest = defaultCacheableRequest,
 } = {}) {
   if (!build && !requestHandler) {
     throw new TypeError(
@@ -160,7 +246,7 @@ function createNessRequestHandler({
     requestHandler ||
     (typeof rscHandler === 'function'
       ? request => rscHandler(request)
-      : createRouterRequestHandler(build, mode));
+      : createRouterRequestHandler(reportingBuild(build), mode));
   const run = composeMiddleware(middleware, async context => {
     const url = new URL(context.request.url);
     if (imageHandler && url.pathname === imagePath)
@@ -184,7 +270,10 @@ function createNessRequestHandler({
 
       const cache = getCache();
       const key = `page:${request.method}:${new URL(request.url).href}`;
-      const cached = await cache.read(key);
+      // Asked before the read. A request that may not be answered from the
+      // shared cache must not reach into it at all.
+      const cacheable = await cacheableRequest(request);
+      const cached = cacheable ? await cache.read(key) : { state: 'miss' };
       if (cached.state !== 'miss' && cached.state !== 'stale') {
         return restoreResponse(
           cached.entry.value,
@@ -209,7 +298,9 @@ function createNessRequestHandler({
                 state: new Map(),
               });
               refreshed = applyHeaders(refreshed, request, headers);
-              const policy = await cachePolicy(request, refreshed);
+              const policy = storableResponse(refreshed)
+                ? await cachePolicy(request, refreshed)
+                : undefined;
               if (policy) {
                 const life = normalizeLife(policy.life);
                 const refreshedHeaders = new Headers(refreshed.headers);
@@ -236,7 +327,13 @@ function createNessRequestHandler({
 
       let response = await run({ request, id, params: {}, state: new Map() });
       response = applyHeaders(response, request, headers);
-      const policy = await cachePolicy(request, response);
+      // `storableResponse` gates the policy rather than being folded into it,
+      // so a project that supplies its own `cachePolicy` cannot reintroduce the
+      // leak by forgetting the check.
+      const policy =
+        cacheable && storableResponse(response)
+          ? await cachePolicy(request, response)
+          : undefined;
       if (policy) {
         const life = normalizeLife(policy.life);
         const responseHeaders = new Headers(response.headers);
@@ -280,6 +377,8 @@ export {
   compilePattern,
   composeMiddleware,
   createNessRequestHandler,
+  defaultCacheableRequest,
   defaultCachePolicy,
   matchPattern,
+  storableResponse,
 };

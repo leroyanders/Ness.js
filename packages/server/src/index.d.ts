@@ -40,14 +40,27 @@ export interface RequestHandlerOptions {
   headers?: HeaderRule[];
   imageHandler?: (request: Request) => Promise<Response> | Response;
   imagePath?: string;
+  /** What to keep. Returning a falsy value leaves the response unstored. */
   cachePolicy?: (
     request: Request,
     response: Response,
   ) => unknown | Promise<unknown>;
+  /**
+   * Whether the page cache is touched at all for this request.
+   *
+   * Consulted before the read, so a request this refuses is neither answered
+   * from the cache nor stored in it. Override it alongside `cachePolicy`, not
+   * instead of it.
+   */
+  cacheableRequest?: (request: Request) => boolean | Promise<boolean>;
 }
 export function createNessRequestHandler(
   options: RequestHandlerOptions,
 ): (request: Request) => Promise<Response>;
+/** GET, and no `cookie` or `authorization` header. */
+export function defaultCacheableRequest(request: Request): boolean;
+/** False for a response carrying `set-cookie`, which belongs to one visitor. */
+export function storableResponse(response: Response): boolean;
 export function compilePattern(pattern: string | RegExp): RegExp;
 export function matchPattern(
   pattern: string | RegExp,

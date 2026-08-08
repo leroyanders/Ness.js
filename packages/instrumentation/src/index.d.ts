@@ -6,6 +6,8 @@ export interface Instrumentation {
 }
 export function registerInstrumentation(value: Instrumentation): () => void;
 export function register(): Promise<void>;
+/** Whether any registered instrumentation implements this hook. */
+export function hasHook(name: string): boolean;
 export function emit(
   name: keyof Instrumentation,
   payload: Record<string, unknown>,

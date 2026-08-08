@@ -100,5 +100,57 @@ function createLambdaHandler(handler) {
   };
 }
 
-export { createLambdaHandler, eventFromResponse, requestFromEvent };
+/**
+ * The same handler, built from a server build and a config.
+ *
+ * `createLambdaHandler` takes a fetch handler you have already assembled, which
+ * left every Lambda deployment to wire the cache adapter, the instrumentation
+ * and the configured headers by hand — and, in practice, to skip them. This
+ * applies the runtime config the way `ness start` does.
+ *
+ * The config is imported by the caller rather than read from disk: a Lambda
+ * bundle has no project directory, and `ness.config.mjs` cannot be imported
+ * here anyway because it pulls in Vite. Point it at a runtime-only config.
+ */
+function createLambdaApplication({ build, config, ...handlerOptions } = {}) {
+  if (!build) {
+    throw new TypeError(
+      'createLambdaApplication requires the server build: import * as build from "./build/server/index.js".',
+    );
+  }
+
+  let ready;
+  const prepare = async () => {
+    const { createNessRequestHandler } = await import('@nessframework/server');
+    const { applyForwardedHeaders } =
+      await import('@nessframework/server/proxy');
+    const { applyRuntimeConfig } =
+      await import('@nessframework/server/runtime');
+    const { server, options } = await applyRuntimeConfig(config);
+    const handler = createNessRequestHandler({
+      build,
+      ...options,
+      ...handlerOptions,
+    });
+    return { handler, server, applyForwardedHeaders };
+  };
+
+  return createLambdaHandler(async request => {
+    ready ??= prepare();
+    const { handler, server, applyForwardedHeaders } = await ready;
+    // API Gateway terminates TLS and forwards the original scheme.
+    return handler(
+      applyForwardedHeaders(request, {
+        trustProxy: server.trustProxy === true,
+      }),
+    );
+  });
+}
+
+export {
+  createLambdaApplication,
+  createLambdaHandler,
+  eventFromResponse,
+  requestFromEvent,
+};
 export default createLambdaHandler;

@@ -24,3 +24,14 @@ export function createLambdaHandler(
 ): (event: LambdaEvent) => Promise<LambdaResult>;
 
 export default createLambdaHandler;
+
+/**
+ * A Lambda handler built from the server build and a runtime config, so the
+ * cache adapter, instrumentation, headers and redirects apply here too.
+ */
+export function createLambdaApplication(options: {
+  build: unknown;
+  /** A runtime-only config module. `ness.config.mjs` cannot be used: it imports Vite. */
+  config?: unknown;
+  [option: string]: unknown;
+}): (event: unknown) => Promise<unknown>;

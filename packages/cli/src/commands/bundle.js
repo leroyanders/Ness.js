@@ -65,7 +65,7 @@ async function bundleNode(root, options) {
  * runtime shim Cloudflare needs.
  */
 async function bundleCloudflare(root, options) {
-  const { WORKER_ENTRY, createWorkerConfig } = await loadDeployment(
+  const { createWorkerConfig, workerEntry } = await loadDeployment(
     root,
     'cloudflare',
   );
@@ -79,7 +79,20 @@ async function bundleCloudflare(root, options) {
   }
 
   fs.mkdirSync(workerDirectory, { recursive: true });
-  fs.writeFileSync(path.join(workerDirectory, 'index.js'), WORKER_ENTRY);
+
+  // A Worker cannot read a file at runtime, so the config has to be imported
+  // statically — and `ness.config.mjs` cannot be, because it imports Vite
+  // plugins at module scope. A runtime-only config file can.
+  const runtimeConfig = [
+    'ness.server.config.mjs',
+    'ness.server.config.js',
+  ].find(candidate => fs.existsSync(path.join(root, candidate)));
+  fs.writeFileSync(
+    path.join(workerDirectory, 'index.js'),
+    workerEntry({
+      configPath: runtimeConfig ? `../../${runtimeConfig}` : undefined,
+    }),
+  );
 
   const manifest = JSON.parse(
     fs.readFileSync(path.join(root, 'package.json'), 'utf8'),
@@ -96,6 +109,19 @@ async function bundleCloudflare(root, options) {
   );
   console.log(`  Wrangler config: ${path.relative(root, configFile)}`);
   console.log(`  Deploy it with: ${paint('cyan', 'npx wrangler deploy')}`);
+  if (runtimeConfig) {
+    console.log(`  Runtime config: ${runtimeConfig}`);
+  } else if (fs.existsSync(path.join(root, 'ness.config.mjs'))) {
+    console.warn(
+      paint(
+        'yellow',
+        '  ness.config.mjs was not bundled: it imports Vite plugins, which cannot run on a Worker.',
+      ),
+    );
+    console.warn(
+      `  Move the ${paint('cyan', 'server')} and ${paint('cyan', 'instrumentation')} sections into ${paint('cyan', 'ness.server.config.mjs')} to have them applied here.`,
+    );
+  }
   console.warn(
     paint(
       'yellow',

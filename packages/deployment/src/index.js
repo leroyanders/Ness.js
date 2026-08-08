@@ -62,28 +62,79 @@ function createHealthHandler({
   };
 }
 
+/**
+ * Stops taking traffic, lets in-flight requests finish, then exits.
+ *
+ * Three things a rolling deploy needs, in this order.
+ *
+ * Readiness fails first, through `onDraining`. A load balancer needs a poll
+ * cycle to notice; anything it routes here after the socket closes is a request
+ * the visitor sees fail.
+ *
+ * Idle keep-alive sockets are released. `server.close` waits for every
+ * connection, and a browser holds a keep-alive socket open long after its last
+ * request — so without this the close never resolves, the grace period expires,
+ * and the in-flight requests this was meant to protect are killed with the
+ * process. The sweep repeats because a connection serving a request now falls
+ * idle a moment later.
+ *
+ * Cleanup runs after the drain, not before. Disposing the API layer while
+ * requests are still using it breaks exactly the requests being waited for.
+ */
 function gracefulShutdown(
   server,
-  { timeout = 10_000, signals = ['SIGINT', 'SIGTERM'], onShutdown } = {},
+  {
+    timeout = 10_000,
+    signals = ['SIGINT', 'SIGTERM'],
+    onShutdown,
+    onDraining,
+    sweepInterval = 100,
+    exit = code => process.exit(code),
+  } = {},
 ) {
   let closing = false;
-  const close = signal => {
+
+  const close = async signal => {
     if (closing) return;
     closing = true;
-    const timer = setTimeout(() => process.exit(1), timeout).unref();
-    Promise.resolve(onShutdown?.(signal))
-      .then(
-        () =>
-          new Promise((resolve, reject) =>
-            server.close(error => (error ? reject(error) : resolve())),
-          ),
-      )
-      .then(() => {
-        clearTimeout(timer);
-        process.exit(0);
-      })
-      .catch(() => process.exit(1));
+
+    try {
+      await onDraining?.(signal);
+    } catch {
+      // A failed readiness flip must not stop the drain.
+    }
+
+    const expire = setTimeout(() => {
+      // The grace period is spent. Cut what is left, so the exit is ours and
+      // the reason is logged, rather than an unexplained SIGKILL.
+      server.closeAllConnections?.();
+      exit(1);
+    }, timeout);
+    expire.unref?.();
+
+    const sweep = setInterval(
+      () => server.closeIdleConnections?.(),
+      sweepInterval,
+    );
+    sweep.unref?.();
+
+    try {
+      const drained = new Promise((resolve, reject) =>
+        server.close(error => (error ? reject(error) : resolve())),
+      );
+      server.closeIdleConnections?.();
+      await drained;
+      await onShutdown?.(signal);
+      clearInterval(sweep);
+      clearTimeout(expire);
+      exit(0);
+    } catch {
+      clearInterval(sweep);
+      clearTimeout(expire);
+      exit(1);
+    }
   };
+
   for (const signal of signals) process.once(signal, () => close(signal));
   return () => signals.forEach(signal => process.removeAllListeners(signal));
 }
