@@ -14,28 +14,30 @@ Both sides render every request. Next's fixtures declare `export const dynamic =
 
 ## Results
 
-Apple M4, 10 cores, Node 22, 40 concurrent connections for 8 s per route.
+Apple M4, 10 cores, Node 22, 40 concurrent connections for 10 s per route.
 
 | Metric                       | Ness.js         | Next.js     |             |
 | ---------------------------- | --------------- | ----------- | ----------- |
-| List page (SSR)              | **2361 req/s**  | 1256 req/s  | 1.9×        |
-| Detail page (SSR)            | **3657 req/s**  | 1636 req/s  | 2.2×        |
-| JSON endpoint                | **10129 req/s** | 6396 req/s  | 1.6×        |
-| List page p95 latency        | **30.0 ms**     | 40.5 ms     |             |
-| Detail page p95 latency      | **16.2 ms**     | 29.6 ms     |             |
-| Build time                   | **1.8 s**       | 4.9 s       | 2.7× faster |
-| Client assets                | **312 KB**      | 560 KB      | 44% smaller |
-| `node_modules` (dev)         | **163.7 MB**    | 330.8 MB    | 51% smaller |
-| Cold start to first response | 541 ms          | **192 ms**  | 2.8× slower |
-| Deployable output            | 67.2 MB         | **43.2 MB** | 1.6× larger |
+| List page (SSR)              | **2522 req/s**  | 1323 req/s  | 1.9×        |
+| Detail page (SSR)            | **3176 req/s**  | 1689 req/s  | 1.9×        |
+| JSON endpoint                | **11389 req/s** | 6794 req/s  | 1.7×        |
+| List page p95 latency        | **18.0 ms**     | 35.7 ms     | 2.0× lower  |
+| Detail page p95 latency      | **14.3 ms**     | 26.3 ms     | 1.8× lower  |
+| Build time                   | **1.8 s**       | 4.4 s       | 2.4× faster |
+| Client assets                | **310 KB**      | 560 KB      | 45% smaller |
+| `node_modules` (dev)         | **163.8 MB**    | 330.8 MB    | 50% smaller |
+| Cold start to first response | 459 ms          | **198 ms**  | 2.3× slower |
+| Deployable output            | 67.3 MB         | **43.2 MB** | 1.6× larger |
 
 Throughput is roughly twice Next's across server-rendered routes, builds finish in about a third of the time, and applications install and ship about half the JavaScript.
+
+The latency rows are the ones worth reading closely. p95 is what a user actually waits for when the server is busy, and the gap there is wider than the throughput ratio — a server that keeps its tail short under 40 concurrent connections is describing its behaviour at peak, not its best case.
 
 ## Where Ness is behind
 
 Two rows go the other way, and they are here for the same reason as the rest.
 
-**Cold start is about 2.8× slower.** This is down from 2406 ms — `sharp`, the native image-processing library, used to load during boot even in applications that never serve an optimized image, and now loads on the first image request instead. What remains is under investigation; the NestJS bootstrap and the size of the server module graph are the likely candidates. If your workload scales to zero and pays a cold start per request, measure it for your own application before choosing.
+**Cold start is about 2.3× slower.** This is down from 2406 ms — `sharp`, the native image-processing library, used to load during boot even in applications that never serve an optimized image, and now loads on the first image request instead. What remains is under investigation; the NestJS bootstrap and the size of the server module graph are the likely candidates. If your workload scales to zero and pays a cold start per request, measure it for your own application before choosing.
 
 **The deployable bundle is about 1.6× larger.** Ness traces dependencies at package granularity rather than file granularity. The output is larger, and in exchange it never drops a file reached through a runtime `require`, a dynamic import, or a native binding — the failure mode that makes file-level tracing unpleasant to debug in production. An opt-in file-level mode is a reasonable future addition; changing the default is not.
 

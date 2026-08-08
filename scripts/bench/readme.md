@@ -37,11 +37,15 @@ benchmark that flatters the framework is worse than none.
 
 ## What the current numbers say
 
-**Throughput is roughly 1.9–2.2× Next's on the SSR routes and 1.6× on the JSON
+**Throughput is roughly 1.9× Next's on the SSR routes and 1.7× on the JSON
 endpoint.** That is a real margin and a defensible one. It is not the 10× the
 broken harness reported.
 
-**Cold start is still about 2.8× slower than Next** — 541 ms against 192 ms,
+**Tail latency is where the margin is widest.** p95 on the list page is 18 ms
+against 35.7 ms — a larger gap than the throughput ratio, and the more useful
+number of the two, since p95 is what a user waits for under load.
+
+**Cold start is still about 2.3× slower than Next** — 459 ms against 198 ms,
 down from 2406 ms once `sharp` stopped loading eagerly at boot. What remains is
 worth another profile: the NestJS bootstrap in `configureServer` and the
 react-router server build are the obvious candidates.

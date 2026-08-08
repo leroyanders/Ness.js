@@ -4,6 +4,7 @@ import { createServer, get } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
+import { pathToFileURL } from 'node:url';
 import { buildNestApplication, createNestMiddleware } from '../src/index.js';
 
 function request(url) {
@@ -84,6 +85,108 @@ export class AppModule {}
     if (server?.listening) {
       await new Promise(resolve => server.close(resolve));
     }
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+/**
+ * The single-file test above cannot see this: the compiled output is ESM, and
+ * Node refuses a relative import with no extension. TypeScript accepts one
+ * under `moduleResolution: 'bundler'` — what the templates configure — and
+ * `transpileModule` copies the specifier out as written, so the build succeeded
+ * and every template crashed at boot with ERR_MODULE_NOT_FOUND. The assertion
+ * that matters is the `import()`: reading the text would pass against output
+ * Node still cannot load.
+ */
+test('Nest build emits imports Node can resolve', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-nest-esm-'));
+  try {
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      JSON.stringify({ type: 'module' }),
+    );
+    fs.symlinkSync(
+      path.join(process.cwd(), 'node_modules'),
+      path.join(root, 'node_modules'),
+      'dir',
+    );
+    const source = path.join(root, 'app', 'server');
+    fs.mkdirSync(path.join(source, 'users'), { recursive: true });
+
+    // Extensionless, extensioned, a nested directory index, a dynamic import,
+    // and a specifier that only looks like one because it sits inside a string.
+    fs.writeFileSync(
+      path.join(source, 'app.module.ts'),
+      `import {Module} from '@nestjs/common';
+import {HealthController} from './health.controller';
+import {UsersController} from './users';
+import {LABEL} from './label.js';
+
+export const note = 'see ./health.controller for details';
+export const lazy = () => import('./health.controller');
+
+@Module({controllers: [HealthController, UsersController]})
+export class AppModule {}
+export {LABEL};
+`,
+    );
+    fs.writeFileSync(
+      path.join(source, 'health.controller.ts'),
+      `import {Controller, Get} from '@nestjs/common';
+
+@Controller()
+export class HealthController {
+  @Get('health')
+  health() {
+    return {healthy: true};
+  }
+}
+`,
+    );
+    fs.writeFileSync(
+      path.join(source, 'users', 'index.ts'),
+      `import {Controller, Get} from '@nestjs/common';
+
+@Controller()
+export class UsersController {
+  @Get('users')
+  users() {
+    return [];
+  }
+}
+`,
+    );
+    // Hand-written JavaScript is copied rather than compiled, and breaks the
+    // same way.
+    fs.writeFileSync(
+      path.join(source, 'label.js'),
+      `import {NAME} from './name';\nexport const LABEL = NAME;\n`,
+    );
+    fs.writeFileSync(
+      path.join(source, 'name.js'),
+      `export const NAME = 'ok';\n`,
+    );
+
+    const entry = await buildNestApplication({ root });
+    const compiled = fs.readFileSync(entry, 'utf8');
+    assert.match(compiled, /'\.\/health\.controller\.js'/);
+    assert.match(compiled, /'\.\/users\/index\.js'/);
+    assert.match(compiled, /import\('\.\/health\.controller\.js'\)/);
+    // Already correct, and not doubled into `.js.js`.
+    assert.match(compiled, /'\.\/label\.js'/);
+    assert.doesNotMatch(compiled, /\.js\.js/);
+    // The string is not an import and must survive untouched.
+    assert.match(compiled, /see \.\/health\.controller for details/);
+    assert.match(
+      fs.readFileSync(path.join(root, 'build', 'nest', 'label.js'), 'utf8'),
+      /'\.\/name\.js'/,
+    );
+
+    const module = await import(pathToFileURL(entry).href);
+    assert.ok(module.AppModule, 'the built module loads under Node');
+    assert.equal(module.LABEL, 'ok');
+    assert.ok((await module.lazy()).HealthController);
+  } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
 });

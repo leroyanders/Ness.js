@@ -109,14 +109,15 @@ Measured against Next.js on the same application, both self-hosted on Node, both
 
 |                      | Ness.js         | Next.js     |             |
 | -------------------- | --------------- | ----------- | ----------- |
-| List page (SSR)      | **2361 req/s**  | 1256 req/s  | 1.9×        |
-| Detail page (SSR)    | **3657 req/s**  | 1636 req/s  | 2.2×        |
-| JSON endpoint        | **10129 req/s** | 6396 req/s  | 1.6×        |
-| Build time           | **1.8 s**       | 4.9 s       | 2.7× faster |
-| Client assets        | **312 KB**      | 560 KB      | 44% smaller |
-| `node_modules` (dev) | **163.7 MB**    | 330.8 MB    | 51% smaller |
-| Cold start           | 541 ms          | **192 ms**  | 2.8× slower |
-| Deployable output    | 67.2 MB         | **43.2 MB** | 1.6× larger |
+| List page (SSR)      | **2522 req/s**  | 1323 req/s  | 1.9×        |
+| Detail page (SSR)    | **3176 req/s**  | 1689 req/s  | 1.9×        |
+| JSON endpoint        | **11389 req/s** | 6794 req/s  | 1.7×        |
+| List page p95        | **18.0 ms**     | 35.7 ms     | 2.0× lower  |
+| Build time           | **1.8 s**       | 4.4 s       | 2.4× faster |
+| Client assets        | **310 KB**      | 560 KB      | 45% smaller |
+| `node_modules` (dev) | **163.8 MB**    | 330.8 MB    | 50% smaller |
+| Cold start           | 459 ms          | **198 ms**  | 2.3× slower |
+| Deployable output    | 67.3 MB         | **43.2 MB** | 1.6× larger |
 
 Ness is behind on cold start and bundle size; both rows are explained in [the performance docs](https://nessjs.com/docs/documentation/performance) rather than omitted. Absolute values depend on the machine — compare the columns of one run, not numbers across runs.
 
