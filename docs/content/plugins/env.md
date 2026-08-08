@@ -34,3 +34,5 @@ export default defineNessConfig({
 ```
 
 Rules support `required`, regular expressions, allowed choices, and custom validator functions.
+
+A rule can also be written in shorthand: `true` or `'required'` for a required variable, a bare regular expression for a format, and a bare function for a validator — so `{ DATABASE_URL: true }` and `{ DATABASE_URL: { required: true } }` are the same rule. A validator returning a string uses that string as the message. Only `required` rejects a missing variable; every other rule is skipped when the variable is unset.

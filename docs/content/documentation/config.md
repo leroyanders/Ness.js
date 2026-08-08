@@ -59,6 +59,8 @@ The `router` section accepts React Router Framework Mode options. Ness supplies 
 
 The `server` section is loaded by `ness start`. It supports the NestJS bridge, redirects, rewrites, response headers, image policy, middleware, and cache adapters.
 
+It is not only `ness start` that reads it. The Worker entry `ness bundle cloudflare` generates, and `createLambdaApplication` from `@nessframework/deployment/lambda`, go through the same resolution, so the cache adapter, the instrumentation, the headers and the redirects behave the same on all three. Neither of those two can import `ness.config.mjs` — it pulls in Vite plugins at module scope — so put the runtime half in `ness.server.config.mjs`. `ness start` falls back to that file only when the project has no `ness.config.mjs` — it reads the first of the two that exists and merges nothing — so a project with both keeps its `server` and `instrumentation` sections in `ness.config.mjs` and duplicates them in the runtime-only file for the edge targets. See [Configuration at the edge](./deployment.md#configuration-at-the-edge).
+
 ```js title="ness.config.mjs"
 export default defineNessConfig({
   server: {
@@ -86,6 +88,12 @@ A forwarded host without a port drops the internal one rather than inheriting it
 ### `shutdownTimeout`
 
 How long in-flight requests get on `SIGTERM`, in milliseconds. Defaults to 10 000, and `NESS_SHUTDOWN_TIMEOUT` overrides it. See [Shutting down](./deployment.md#shutting-down).
+
+### `compression`
+
+On by default. A response with a compressible content type is encoded with Brotli or gzip according to the request's `Accept-Encoding`, and `Vary: Accept-Encoding` is appended so a shared cache keeps the encodings apart. `threshold` is the smallest body worth encoding, 1024 bytes by default; a response that already carries `Content-Encoding`, or whose `Cache-Control` says `no-transform`, is left alone.
+
+`compression: false` turns it off. That also stops `ness start` serving the `.br` and `.gz` twins the compression plugin writes next to build assets, so a static file is then sent uncompressed too.
 
 ## Instrumentation
 

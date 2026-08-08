@@ -2,20 +2,35 @@
 
 ## Metadata
 
-```tsx
-import { defineMetadata } from '@nessframework/assets/metadata';
+A page declares its metadata in its own markup, with the components from `@nessframework/components`. React hoists `<title>`, `<meta>` and `<link>` into `<head>` from anywhere in the tree, so there is no `meta` route export and nothing for a parent to render on the page's behalf.
 
-export const meta = () =>
-  defineMetadata({
-    title: 'Products',
-    description: 'Product catalog',
-    alternates: { canonical: 'https://example.com/products' },
-    openGraph: { images: ['/og/products.png'] },
-    twitter: { card: 'summary_large_image' },
-  });
+```tsx title="app/routes/products/page.tsx"
+import {
+  Canonical,
+  Description,
+  Meta,
+  SocialImage,
+  Title,
+} from '@nessframework/components';
+
+export default function Products() {
+  return (
+    <main>
+      <Meta>
+        <Title>Products</Title>
+        <Description>Product catalog</Description>
+        <Canonical href="https://example.com/products" />
+        <SocialImage src="https://example.com/og/products.png" />
+      </Meta>
+      <h1>Products</h1>
+    </main>
+  );
+}
 ```
 
-`createManifest`, `createRobots`, and `createSitemap` return Web `Response` objects for low-level React Router resource modules. Public JSON APIs belong in NestJS controllers.
+`<Title>` and `<Description>` emit their Open Graph equivalents too, and `<SocialImage>` carries the large-image card type with it. See [Components](./components.md).
+
+`createManifest`, `createRobots`, and `createSitemap` from `@nessframework/assets/metadata` return Web `Response` objects for low-level React Router resource modules. Public JSON APIs belong in NestJS controllers.
 
 ## Images
 

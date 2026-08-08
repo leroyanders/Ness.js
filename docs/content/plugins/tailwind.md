@@ -34,4 +34,6 @@ export default defineNessConfig({
 
 Import the optional base stylesheet with `@import '@nessframework/tailwind/styles/base.css';`.
 
+The plugin runs cssnano after Tailwind on builds and not in development. Pass `minify: true` to minify in development as well, or `minify: false` to leave the built CSS unminified.
+
 For custom themes and sources, see the [Tailwind CSS documentation](https://tailwindcss.com/docs/theme).

@@ -15,6 +15,7 @@ When a route has an `error.tsx` boundary, React Router renders it and the reques
 ## Configuration
 
 ```js title="ness.config.mjs"
+import { defineNessConfig } from '@nessframework/router';
 import { ness } from '@nessframework/router/vite';
 
 export default defineNessConfig({
@@ -57,7 +58,7 @@ export default {
 };
 ```
 
-`source` is `'route'` when a boundary handled it and absent when the request handler caught it, so the two can be told apart.
+`source` is `'route'` when a boundary handled it and absent when the request handler caught it, so the two can be told apart. An unhandled rejection or an uncaught exception in the server process arrives with `source: 'process'`.
 
 A request the client abandoned is not reported. The error there is that the connection went away, not that the application failed.
 

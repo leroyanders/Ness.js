@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/env",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Environment variable validation for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/plugins/env",
   "bugs": {

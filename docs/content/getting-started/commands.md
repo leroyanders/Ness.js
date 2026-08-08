@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # CLI commands
 
-The `@nessframework/cli` package provides application creation, package management, code generation, development, builds, production, and diagnostics through the `ness` executable.
+The `@nessframework/cli` package provides application creation, package management, code generation, development, builds, production, deployment packaging, migration, and diagnostics through the `ness` executable.
 
 ```bash
 ness --help
@@ -14,12 +14,14 @@ ness --version
 
 ## Application lifecycle
 
-| Command                             | Purpose                               |
-| ----------------------------------- | ------------------------------------- |
-| [`ness new`](./commands/new.md)     | Create an application from a template |
-| [`ness dev`](./commands/dev.md)     | Start the development server          |
-| [`ness build`](./commands/build.md) | Create optimized production bundles   |
-| [`ness start`](./commands/start.md) | Serve an existing production build    |
+| Command                                 | Purpose                                  |
+| --------------------------------------- | ---------------------------------------- |
+| [`ness new`](./commands/new.md)         | Create an application from a template    |
+| [`ness dev`](./commands/dev.md)         | Start the development server             |
+| [`ness build`](./commands/build.md)     | Create optimized production bundles      |
+| [`ness start`](./commands/start.md)     | Serve an existing production build       |
+| [`ness bundle`](./commands/bundle.md)   | Package a build for a deployment target  |
+| [`ness migrate`](./commands/migrate.md) | Migrate a Next.js App Router application |
 
 ## Code and routes
 

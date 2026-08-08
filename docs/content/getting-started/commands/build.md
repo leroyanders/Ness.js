@@ -19,4 +19,4 @@ ness build
 ness build --mode staging --sourcemap-server
 ```
 
-The default output is written to `build/client` and `build/server`. Use [`ness start`](./start.md) to serve the completed build.
+The default output is written to `build/client` and `build/server`. The build also writes `build/ness-manifest.json`, which records the built routes, the cache profiles, and the deployment settings from `ness.config.mjs`; RSC builds do not emit it. Use [`ness start`](./start.md) to serve the completed build.

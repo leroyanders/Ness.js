@@ -16,15 +16,15 @@ Tracing is at package granularity rather than file granularity. The output is a 
 
 Anything in `devDependencies` is excluded — that is where most of the size lives. Keep Vite, `@react-router/dev`, and TypeScript there; new applications are scaffolded that way.
 
-If a package is loaded by a name nothing declares, name it explicitly:
+If a package is loaded by a name nothing declares, the tracer will not reach it. `ness bundle node` has no option for that case; call the bundler directly and name the package:
 
-```js title="ness.config.mjs"
-export default defineNessConfig({
-  router: {
-    deployment: { extraPackages: ['my-runtime-plugin'] },
-  },
-});
+```js title="bundle.mjs"
+import { createStandaloneOutput } from '@nessframework/deployment/standalone';
+
+await createStandaloneOutput({ extraPackages: ['my-runtime-plugin'] });
 ```
+
+The defaults match what the CLI does — the project directory, `build`, and `build/standalone`.
 
 Standalone bundling is unavailable in RSC mode, which does not emit the build manifest it reads.
 
@@ -54,6 +54,8 @@ CMD ["node", "server.mjs"]
 ## Node and Express
 
 `ness start` runs the Ness server directly. To mount it inside an existing Express application, use `nodeAdapter` or `expressAdapter` from `@nessframework/deployment`, and `gracefulShutdown` to drain connections on a signal.
+
+`ness start` wraps the request handler with three things a hand-mounted server does not get for free. `X-Forwarded-Proto` and `X-Forwarded-Host` are applied before the request is handled when `server.trustProxy` is on; the response is compressed with Brotli or gzip for clients that accept one, unless `server.compression` is `false`; and a request for a static asset is rewritten to the `.br` or `.gz` twin the compression plugin wrote beside it, keeping the original `Content-Type`.
 
 `configureServer` in `ness.config.mjs` is the supported hook for adding middleware — that is how the NestJS integration mounts itself.
 
@@ -96,7 +98,7 @@ export default {
 };
 ```
 
-`ness bundle cloudflare` finds it and generates an entry that imports it, so the cache adapter, instrumentation, headers and redirects apply at the edge exactly as they do under `ness start`. `ness start` reads the same file, so nothing is duplicated.
+`ness bundle cloudflare` finds it and generates an entry that imports it, so the cache adapter, instrumentation, headers and redirects apply at the edge exactly as they do under `ness start`. `ness start` reads it too, but only when the project has no `ness.config.mjs`: it takes the first of the two that exists and merges nothing. A project that keeps both needs the `server` and `instrumentation` sections in each.
 
 Without it the bundler says so rather than deploying a Worker that quietly ignores your settings.
 

@@ -9,6 +9,7 @@ Ness is split into focused ESM packages. Applications install only the public mo
 | `@nessframework/server`          | Web request handling, middleware, routing rules, response helpers     |
 | `@nessframework/cache`           | cache profiles, SWR, deduplication, tag and path invalidation         |
 | `@nessframework/assets`          | optimized images, local fonts, scripts, metadata and SEO responses    |
+| `@nessframework/components`      | page metadata, streaming, pending UI, forms, and URL state            |
 | `@nessframework/instrumentation` | server lifecycle hooks, error hooks, and Core Web Vitals              |
 | `@nessframework/deployment`      | Node, Express, serverless, Edge, health, and shutdown adapters        |
 | `@nessframework/testing`         | route stubs, requests, isolated caches, and response assertions       |
@@ -21,8 +22,11 @@ import { ness } from '@nessframework/router/vite';
 import { createNessRequestHandler } from '@nessframework/server';
 import { cached, revalidateTag } from '@nessframework/cache';
 import { Image } from '@nessframework/assets/image';
-import { defineMetadata } from '@nessframework/assets/metadata';
+import { createSitemap } from '@nessframework/assets/metadata';
+import { Meta, Title } from '@nessframework/components';
 ```
+
+`@nessframework/components` has a single entry point; every component and hook it ships is exported from it.
 
 The more specific asset entry points keep server-only dependencies out of browser bundles:
 

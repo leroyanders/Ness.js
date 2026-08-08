@@ -22,7 +22,9 @@ export default defineNessConfig({
 });
 ```
 
-By default, both `.gz` and `.br` files are emitted for compressible assets larger than 1 KiB.
+By default, both `.gz` and `.br` files are emitted for `.css`, `.html`, `.js`, `.json`, `.svg`, `.txt` and `.xml` files larger than 1 KiB. A twin is only kept when it is smaller than the file it came from, so an already-dense asset is left alone.
+
+`algorithms` narrows the set to `['gzip']` or `['brotli']`, `gzipLevel` and `brotliQuality` trade build time against size, and `test` — a regular expression or a predicate over the filename — replaces the default extension list.
 
 `ness start` serves them. It negotiates `Accept-Encoding`, rewrites the request to the twin, keeps the original `Content-Type`, and sets `Content-Encoding` and `Vary` — so the plugin is worth adding even without a CDN in front.
 
@@ -30,6 +32,8 @@ The plugin walks the output directory after the build rather than reading Vite's
 
 ## What it does not cover
 
-Files written after the Vite build — the route manifest, prerendered HTML — have no twin, because the plugin has already finished by the time they land.
+Anything written after the client build has no twin, because the plugin has already walked the output by the time it lands.
 
-Prerendered pages are unaffected in practice: they are served through the request handler, which compresses them per request. The route manifest is served as a static file and ships uncompressed. Put a CDN or a reverse proxy in front if that matters for your traffic.
+The one that reaches a visitor is React Router's client route manifest, `build/client/assets/manifest-<hash>.js`. It is emitted during the server build, after the client build's pass has finished, so it is served uncompressed. Put a CDN or a reverse proxy in front if that matters for your traffic.
+
+Prerendered HTML is unaffected: it is served through the request handler, which compresses per request.

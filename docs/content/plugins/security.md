@@ -26,4 +26,6 @@ export default defineNessConfig({
 });
 ```
 
+`headers` adds or overrides individual headers, and a header set to `false` there drops one of the defaults. `defaults: false` starts from nothing at all.
+
 Set production response headers in the `server` section of `ness.config.mjs`; this plugin protects Vite development and preview traffic.

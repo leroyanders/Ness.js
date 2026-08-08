@@ -22,4 +22,4 @@ ness add @company/ness-plugin
 | `--exact`, `-E` | Save an exact version                    |
 | `--dry-run`     | Print the npm command without running it |
 
-Recognized official aliases include `nest`, `tailwind`, `security`, `env`, `compression`, and `analyzer`. Scoped and third-party package names pass through unchanged.
+Recognized official aliases include `nest`, `tailwind`, `security`, `env`, `compression`, `analyzer`, and `components`. Scoped and third-party package names pass through unchanged.

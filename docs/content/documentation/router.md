@@ -39,6 +39,8 @@ export async function action({ request }: { request: Request }) {
 }
 ```
 
+Only `loader`, `action`, `headers`, and `shouldRevalidate` are picked up from the adjacent `.server` module; anything else it exports stays private to it. Importing a `.server` module from client code fails the build rather than shipping it.
+
 Use `<Form>` and fetchers for mutations; they progressively enhance native HTML forms and automatically revalidate route data.
 
 ## NestJS server routes

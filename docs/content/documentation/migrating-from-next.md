@@ -21,6 +21,7 @@ The route conventions are nearly the same, which is what makes this mechanical r
 | `app/loading.tsx`                                         | `app/routes/.../loading.tsx`   |
 | `app/error.tsx`                                           | `app/routes/.../error.tsx`     |
 | `app/not-found.tsx`                                       | `app/routes/.../not-found.tsx` |
+| `app/forbidden.tsx`, `app/unauthorized.tsx`               | same names under `app/routes/` |
 | `app/api/x/route.ts`                                      | `app/routes/api/x/route.ts`    |
 | `[id]`, `[...rest]`, `[[...rest]]`, `(group)`, `_private` | identical                      |
 
@@ -73,7 +74,7 @@ export default function Page() {
 
 **`generateStaticParams`.** List the paths under `router.prerender` in `ness.config.mjs`.
 
-**`generateMetadata`.** Export `meta` from the route, or use `@nessframework/core/metadata`.
+**`generateMetadata`.** There is no `meta` route export in Ness. A page declares its metadata in its own markup with `Meta`, `Title`, `Description`, `Canonical`, `Robots`, and `SocialImage` from `@nessframework/components`; React hoists the tags into `<head>`. See [Components](./components.md).
 
 **`next.config.js`.** `redirects`, `rewrites`, `headers`, and `images` move into the `server` section of `ness.config.mjs`; the option shapes match.
 

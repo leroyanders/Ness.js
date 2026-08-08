@@ -76,7 +76,7 @@ Use `template.json` to add dependencies, scripts, and supported package metadata
 }
 ```
 
-Ness preserves the generated application name, version, ESM mode, private flag, and Node requirement. It merges dependencies, scripts, optional and peer dependencies, Browserslist, ESLint configuration, and npm overrides.
+Ness preserves the generated application name, version, ESM mode, private flag, and Node requirement. It merges dependencies, development dependencies, optional and peer dependencies, and scripts; Browserslist, ESLint configuration, and npm overrides are copied whole.
 
 The `prettier` field is also copied into the generated `package.json`, so formatting rules do not require a separate `.prettierrc` file.
 
@@ -84,7 +84,7 @@ The `prettier` field is also copied into the generated `package.json`, so format
 
 The following development artifacts are never copied from a local template:
 
-- `node_modules`, `.git`, `build`, `dist`, `deploy`, `.react-router`, and `.ness`
+- `node_modules`, `.git`, `.npmignore`, `build`, `dist`, `deploy`, `.react-router`, and `.ness`
 - npm, pnpm, Yarn, and Bun lock files
 - source `package.json` and `template.json`
 

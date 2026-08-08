@@ -21,3 +21,5 @@ ness dev --mode staging --strict-port
 ```
 
 Environment files are loaded using the selected mode. Route types and the route manifest are refreshed as application files change.
+
+An unhandled server error is rendered by the Ness error overlay instead of a bare `Internal Server Error`: source-mapped stack frames, a code frame around the failing line, and editor links. The overlay is development-only — it is never applied to a build — and `ness({ overlay: false })` in `ness.config.mjs` turns it off.

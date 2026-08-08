@@ -108,3 +108,37 @@ test('the server section comes back alongside the handler options', async () => 
   assert.equal(server.shutdownTimeout, 42);
   assert.deepEqual(options, { rewrites: [] });
 });
+
+test('a runtime-only config file is read the same as a defineNessConfig result', async () => {
+  // The shape the deployment docs publish for ness.server.config.mjs. `ness
+  // start` used to normalise it once itself and once here, so every setting
+  // came back undefined while the Worker — which hands the module straight
+  // over — read them correctly.
+  const runtimeOnly = await applyRuntimeConfig({
+    server: { trustProxy: true, rewrites: [] },
+    instrumentation: { onError() {} },
+  });
+  const defined = await applyRuntimeConfig({
+    ness: { server: { trustProxy: true, rewrites: [] } },
+  });
+  const flat = await applyRuntimeConfig({ trustProxy: true, rewrites: [] });
+
+  for (const [label, result] of [
+    ['runtime-only', runtimeOnly],
+    ['defineNessConfig', defined],
+    ['flat', flat],
+  ]) {
+    assert.equal(result.server.trustProxy, true, `${label} lost trustProxy`);
+    assert.deepEqual(
+      result.options,
+      { rewrites: [] },
+      `${label} lost rewrites`,
+    );
+  }
+});
+
+test('no config at all resolves to nothing rather than throwing', async () => {
+  const { server, options } = await applyRuntimeConfig(undefined);
+  assert.deepEqual(server, {});
+  assert.deepEqual(options, {});
+});

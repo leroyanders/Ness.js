@@ -22,4 +22,6 @@ export default defineNessConfig({
 });
 ```
 
-Production builds emit `ness-bundle-report.json` and `ness-bundle-report.html`.
+Production builds emit `ness-bundle-report.json` and `ness-bundle-report.html`. Set `html: false` to emit only the JSON, and `reportFile` or `htmlFile` to name them something else.
+
+`maxSize` is compared against the total size of one build output. A Ness build runs Vite more than once — for the client and for the server — and each run writes its own report and is checked against the budget separately.

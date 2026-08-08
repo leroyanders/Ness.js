@@ -24,6 +24,8 @@ ness add components
 | `<SearchField>`        | A debounced input bound to a search parameter                    |
 | `<Pagination>`         | Page numbers and hrefs derived from the URL                      |
 
+The hooks are exported too — `useHydrated`, `useActivity`, `useDelayed`, `useSearchParam`, and `useSubmitOnChange` — for markup none of the components fit.
+
 ## Metadata
 
 React hoists `<title>`, `<meta>` and `<link>` into `<head>` from anywhere in the tree, so a page declares its own metadata in its own markup — no `meta` export, and nothing for a parent component to render on its behalf.

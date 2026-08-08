@@ -89,6 +89,8 @@ export default defineNessConfig({
 
 Prerendered HTML and data are emitted into `build/client`. Other pages use SSR. The Ness production server adds CDN-compatible `s-maxage` and `stale-while-revalidate` headers and performs incremental regeneration for anonymous HTML GET requests.
 
+A response the page cache took part in carries `x-ness-cache`: `MISS` on the render that was stored, `HIT` on a replay of a fresh entry, and `STALE` on a replay of an entry past its `stale` age — the last of which may have a background refresh running behind it. A request the cache refused carries no such header at all.
+
 ### What the page cache refuses
 
 A request carrying a `cookie` or an `authorization` header bypasses the page cache entirely — it is neither answered from the cache nor stored in it. The check happens before the cache is read, not only before it is written: deciding on the way out alone would still let a credentialed request be served another visitor's rendering.

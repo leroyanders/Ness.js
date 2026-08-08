@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/testing",
-  "version": "7.1.1",
+  "version": "7.1.2",
   "description": "Test utilities for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/documentation/packages",
   "bugs": {

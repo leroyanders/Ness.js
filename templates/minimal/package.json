@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/minimal",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "type": "module",
   "description": "Minimal TypeScript starter for Ness.js.",
   "homepage": "https://nessjs.com/docs/templates",

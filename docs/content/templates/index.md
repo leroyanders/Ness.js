@@ -4,7 +4,7 @@ slug: /templates
 
 # Official templates
 
-Every official template uses ESM, React Router for UI and SSR, and NestJS controllers under `app/server` for public APIs.
+Every official template uses ESM, React Router for UI and SSR, and NestJS controllers under `app/server` for public APIs. Each one also ships `error`, `loading`, and `not-found` boundaries in `app/routes`, and its pages declare their own metadata with `Meta` and `Title` from `@nessframework/components` — plus `Description` where there is one to give — instead of a `meta` route export.
 
 `typescript` is what `ness new` scaffolds when `--template` is left out.
 
@@ -27,7 +27,7 @@ ness new my-dashboard --template dashboard
 
 ## Minimal
 
-The minimal template contains one page, one stylesheet, and a NestJS health controller. It keeps TypeScript strict mode and the production server bridge without example features that need removal later.
+The minimal template contains one page, the three route boundaries, one stylesheet, and a NestJS health controller. It keeps TypeScript strict mode and the production server bridge without example features that need removal later.
 
 ## API-first
 

@@ -4,7 +4,7 @@ Ness 7 plugins use the standard Vite plugin contract. Public official plugins us
 
 ## Vite plugin
 
-```js title="ness-example/index.js" showLineNumbers
+```js title="ness-example/src/index.js" showLineNumbers
 export default function example(options = {}) {
   return {
     name: 'ness:example',
@@ -32,6 +32,8 @@ export default defineNessConfig({
 ```
 
 Plugins can use any Vite hook, including `config`, `transform`, `generateBundle`, `configureServer`, and `handleHotUpdate`.
+
+`ness()` flattens the `plugins` array and drops falsy entries, so a factory may return several Vite plugins at once and an entry can be gated with `condition && plugin()`. The entries are registered after the framework's own plugins and React Router's, and before the development error overlay.
 
 ## Package exports
 

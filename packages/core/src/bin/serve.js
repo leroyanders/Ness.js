@@ -15,7 +15,10 @@ import {
   negotiateEncoding,
 } from '@nessframework/server/compress';
 import { applyForwardedHeaders } from '@nessframework/server/proxy';
-import { applyRuntimeConfig } from '@nessframework/server/runtime';
+import {
+  applyRuntimeConfig,
+  serverConfig,
+} from '@nessframework/server/runtime';
 import express from 'express';
 import mime from 'mime-types';
 
@@ -56,6 +59,18 @@ function precompressed(directory) {
   };
 }
 
+/**
+ * Loads the config module, without interpreting it.
+ *
+ * Normalising here as well as in `applyRuntimeConfig` double-unwrapped a
+ * runtime-only file: `{ server, instrumentation }` has no `ness` key, so it was
+ * passed on whole as the server section and every setting inside came back
+ * undefined — while the Worker, which hands the module straight over, read them
+ * correctly. Two targets disagreeing about the file shape is exactly what the
+ * shared resolver exists to prevent, so shape is now its business alone.
+ *
+ * Only the first file that exists is read. Nothing merges them.
+ */
 async function loadServerConfig(root) {
   const filename = [
     'ness.config.mjs',
@@ -65,17 +80,11 @@ async function loadServerConfig(root) {
   ]
     .map(candidate => path.join(root, candidate))
     .find(fs.existsSync);
-  if (!filename) return {};
+  if (!filename) return undefined;
   const module = await import(
     `${pathToFileURL(filename).href}?t=${fs.statSync(filename).mtimeMs}`
   );
-  const config = module.default || module;
-  return config.ness
-    ? {
-        config: config.ness.server || {},
-        instrumentation: config.ness.instrumentation,
-      }
-    : { config, instrumentation: undefined };
+  return module.default || module;
 }
 
 /** The optional `instrumentation.mjs` beside the project, when the config named none. */
@@ -100,16 +109,15 @@ async function main() {
   if (!fs.existsSync(buildFile))
     throw new Error(`Ness server build not found: ${buildFile}`);
   const build = await import(pathToFileURL(buildFile).href);
-  const loadedConfig = await loadServerConfig(root);
+  const configModule = await loadServerConfig(root);
   // The same resolution every target uses, so `ness start`, a Worker and a
   // Lambda cannot end up honouring different halves of the config.
-  const { server: config, options: handlerConfig } = await applyRuntimeConfig({
-    server: loadedConfig.config || {},
-    instrumentation: loadedConfig.instrumentation,
-  });
+  const { server: config, options: handlerConfig } =
+    await applyRuntimeConfig(configModule);
   const { configureServer } = config;
   // Only when the config named nothing: a file on disk still wins over none.
-  if (!loadedConfig.instrumentation) await loadInstrumentation(root);
+  if (!serverConfig(configModule).instrumentation)
+    await loadInstrumentation(root);
   const imageHandler =
     config.images === false
       ? undefined

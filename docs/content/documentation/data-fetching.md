@@ -72,4 +72,30 @@ This route is available at `/api/products`. See [NestJS backend](./nest.md).
 
 ## Avoid waterfalls
 
-Start independent work together with `Promise.all`, or return promises and render them inside React `<Suspense>`/`<Await>` boundaries for progressive streaming.
+Start independent work together with `Promise.all`, or return a promise from the loader without awaiting it and render it inside a `<Suspense>`/`<Await>` boundary for progressive streaming.
+
+```ts
+// app/routes/products/[id]/page.server.ts
+export async function loader({ params }: { params: { id: string } }) {
+  return {
+    product: await getProduct(params.id), // blocks the shell
+    reviews: getReviews(params.id), // streams in later
+  };
+}
+```
+
+`<Streamed>` from `@nessframework/components` wires the `<Suspense>`, the `<Await>`, and the error element together:
+
+```tsx
+import { Streamed } from '@nessframework/components';
+
+<Streamed
+  value={reviews}
+  fallback={<ReviewsSkeleton />}
+  error={() => <p>Reviews are unavailable.</p>}
+>
+  {list => <Reviews items={list} />}
+</Streamed>;
+```
+
+Passing `error` keeps a rejection local: the slow panel renders its own error instead of replacing the page through the route boundary. See [Components](./components.md).

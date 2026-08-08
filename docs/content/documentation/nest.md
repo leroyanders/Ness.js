@@ -28,7 +28,7 @@ Get('health')(
 );
 ```
 
-The JavaScript starter therefore keeps `app/server/tsconfig.json` scoped to that folder rather than at the project root, so the React side stays JavaScript. Nothing else needs configuring: the Nest compiler transpiles `app/server` on its own, in development and in the build.
+The JavaScript starter therefore ships a project-root `tsconfig.json` whose `include` is `**/*.ts`, which reaches `app/server` and nothing else: the `.jsx` React side is left alone. Nothing else needs configuring: the Nest compiler transpiles `app/server` on its own, in development and in the build.
 
 ## Root module
 
@@ -88,15 +88,18 @@ The generator writes Nest modules under `app/server` and registers controllers, 
 
 The `@nessframework/nest` Vite plugin compiles decorators with `emitDecoratorMetadata`, mounts the application during `ness dev`, and reloads it when `app/server` changes. `ness build` writes the ESM backend to `build/nest`.
 
-The production bridge is configured in `ness.config.mjs`:
+Both halves are wired in `ness.config.mjs` — the Vite plugin for `ness dev`, the bridge for `ness start`:
 
 ```js
 import { defineNessConfig } from '@nessframework/router';
+import { ness } from '@nessframework/router/vite';
+import nest from '@nessframework/nest';
 import { nestServer } from '@nessframework/nest/server';
 
 export default defineNessConfig({
+  vite: { plugins: [ness({ plugins: [nest({ prefix: 'api' })] })] },
   server: { configureServer: nestServer({ prefix: 'api' }) },
 });
 ```
 
-The prefix must be non-empty so unknown URLs can continue to the React application. Change it to another namespace such as `v1` when needed.
+The prefix must be non-empty so unknown URLs can continue to the React application. Change it to another namespace such as `v1` when needed — in both places, or development and production will disagree about where the API is. Both default to `api`.
