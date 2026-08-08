@@ -1,14 +1,21 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "allowJs": false,
+    "allowImportingTsExtensions": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "esModuleInterop": true,
-    "strict": true,
+    "resolveJsonModule": true,
+    "rootDirs": [".", ".react-router/types"],
     "skipLibCheck": true,
-    "noEmit": true
+    "types": ["node", "vite/client"]
   },
-  "include": ["**/*.ts"]
+  "include": ["app/**/*", ".react-router/types/**/*"]
 }
