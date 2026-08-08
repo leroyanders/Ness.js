@@ -1,14 +1,14 @@
 import { Link, useLoaderData } from 'react-router';
-
-export const meta = () => [
-  { title: 'Ness.js — full-stack React framework' },
-  { name: 'description', content: 'A production-ready Ness.js application.' },
-];
+import { Description, Meta, Title } from '@nessframework/components';
 
 export default function Home() {
   const framework = useLoaderData<typeof import('./page.server').loader>();
   return (
     <main className="shell">
+      <Meta>
+        <Title>Ness.js — full-stack React framework</Title>
+        <Description>A production-ready Ness.js application.</Description>
+      </Meta>
       <nav>
         <img src="/assets/logo.svg" alt="Ness.js" />
         <Link to="/about">About</Link>

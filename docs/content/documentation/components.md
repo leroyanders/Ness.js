@@ -1,6 +1,6 @@
 # Components
 
-`@nessframework/components` covers the seams between React and the framework: streaming loader data, pending UI, forms bound to actions, and state that belongs in the URL.
+`@nessframework/components` covers the seams between React and the framework: page metadata, streaming loader data, pending UI, forms bound to actions, and state that belongs in the URL.
 
 It is not a UI kit. The package ships no CSS and has no opinion about how your application looks — pair it with Tailwind, CSS Modules, or a component library, which is what it is designed to sit underneath.
 
@@ -10,6 +10,12 @@ ness add components
 
 |                        |                                                                  |
 | ---------------------- | ---------------------------------------------------------------- |
+| `<Meta>`               | Groups a page's metadata                                         |
+| `<Title>`              | The document title, mirrored to `og:title`                       |
+| `<Description>`        | The description, mirrored to `og:description`                    |
+| `<Canonical>`          | `<link rel="canonical">`                                         |
+| `<Robots>`             | Crawler instructions                                             |
+| `<SocialImage>`        | The link preview image and its card type                         |
 | `<ClientOnly>`         | Renders only after hydration, for genuinely browser-only UI      |
 | `<Streamed>`           | Renders a promise a loader returned without awaiting             |
 | `<Pending>`            | Renders while the router is busy, with a delay to avoid flicker  |
@@ -17,6 +23,35 @@ ness add components
 | `<Form>`               | A form that hands `pending`, `data`, and `error` to its children |
 | `<SearchField>`        | A debounced input bound to a search parameter                    |
 | `<Pagination>`         | Page numbers and hrefs derived from the URL                      |
+
+## Metadata
+
+React hoists `<title>`, `<meta>` and `<link>` into `<head>` from anywhere in the tree, so a page declares its own metadata in its own markup — no `meta` export, and nothing for a parent component to render on its behalf.
+
+```tsx title="app/routes/pricing/page.tsx"
+import { Canonical, Description, Meta, Title } from '@nessframework/components';
+
+export default function Pricing() {
+  return (
+    <main>
+      <Meta>
+        <Title>Pricing · Acme</Title>
+        <Description>What it costs, per seat and per month.</Description>
+        <Canonical href="https://acme.com/pricing" />
+      </Meta>
+      <h1>Pricing</h1>
+    </main>
+  );
+}
+```
+
+`<Title>` and `<Description>` each also emit their Open Graph equivalent, because a page that has bothered to name itself wants that name when it is shared.
+
+Render `<Title>` once per page and never in the root or a shared layout. React does not deduplicate `<title>`: both reach the document and the browser takes the first, so a title in a layout silently wins over every page's own.
+
+`<Title>` also flattens its children before rendering. React renders `<title>` empty when given more than one child, and `<Title>Pricing · {siteName}</Title>` is two — so interpolating into a title would otherwise erase it.
+
+`<Meta>` renders nothing itself. It exists so metadata sits in one readable block instead of scattering through the markup; anything it does not model goes inside it as ordinary elements.
 
 ## Streaming
 

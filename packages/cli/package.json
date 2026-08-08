@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/cli",
-  "version": "7.2.0",
+  "version": "7.3.0",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
   "keywords": [

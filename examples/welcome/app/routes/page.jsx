@@ -5,14 +5,7 @@ import {
   useLoaderData,
   useNavigation,
 } from 'react-router';
-
-export const meta = () => [
-  { title: 'Ness.js — full-stack React framework' },
-  {
-    name: 'description',
-    content: 'A production example built with the Ness.js App Router.',
-  },
-];
+import { Description, Meta, Title } from '@nessframework/components';
 
 const capabilities = [
   [
@@ -42,6 +35,12 @@ export default function Home() {
   return (
     <main>
       <section className="hero shell">
+        <Meta>
+          <Title>Ness.js — full-stack React framework</Title>
+          <Description>
+            A production example built with the Ness.js App Router.
+          </Description>
+        </Meta>
         <div className="hero-copy">
           <p className="eyebrow">{framework.name}</p>
           <h1>Build the server and the interface as one application.</h1>

@@ -1,10 +1,14 @@
 import { Link, useRouteError } from 'react-router';
+import { Meta, Title } from '@nessframework/components';
 
 export default function RouteError() {
   const error = useRouteError();
 
   return (
     <div className="page">
+      <Meta>
+        <Title>Route error · Ness.js</Title>
+      </Meta>
       <div className="shell prose">
         <p className="status">Route error</p>
         <h1>This segment threw.</h1>

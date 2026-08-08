@@ -15,6 +15,59 @@ export interface ClientOnlyProps {
 /** Renders children only after hydration, for genuinely browser-only UI. */
 export function ClientOnly(props: ClientOnlyProps): ReactNode;
 
+/* Metadata ----------------------------------------------------------------- */
+
+export interface MetaProps {
+  children?: ReactNode;
+}
+
+/** Groups a page's metadata. Renders nothing of its own. */
+export function Meta(props: MetaProps): ReactNode;
+
+export interface TitleProps {
+  children?: ReactNode;
+}
+
+/**
+ * The document title, mirrored to `og:title`.
+ *
+ * One per page and none in a shared layout: React does not deduplicate
+ * `<title>`, and a browser takes the first one in the document.
+ */
+export function Title(props: TitleProps): ReactNode;
+
+export interface DescriptionProps {
+  children?: ReactNode;
+}
+
+/** `<meta name="description">`, mirrored to `og:description`. */
+export function Description(props: DescriptionProps): ReactNode;
+
+export interface CanonicalProps {
+  /** Absolute URL this page should be indexed under. */
+  href: string;
+}
+
+/** `<link rel="canonical">`. */
+export function Canonical(props: CanonicalProps): ReactNode;
+
+export interface RobotsProps {
+  /** For example `noindex, nofollow`. */
+  children?: ReactNode;
+}
+
+/** `<meta name="robots">`. */
+export function Robots(props: RobotsProps): ReactNode;
+
+export interface SocialImageProps {
+  /** Absolute URL of the preview image. */
+  src: string;
+  alt?: string;
+}
+
+/** `og:image`, its alt text, and the large-image Twitter card type. */
+export function SocialImage(props: SocialImageProps): ReactNode;
+
 /* Streaming ---------------------------------------------------------------- */
 
 export interface StreamedProps<T> {

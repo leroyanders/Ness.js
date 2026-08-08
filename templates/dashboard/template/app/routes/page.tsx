@@ -1,11 +1,13 @@
 import { useLoaderData } from 'react-router';
-
-export const meta = () => [{ title: 'Overview · Ness dashboard' }];
+import { Meta, Title } from '@nessframework/components';
 
 export default function Dashboard() {
   const data = useLoaderData<typeof import('./page.server').loader>();
   return (
     <div className="app-shell">
+      <Meta>
+        <Title>Overview · Ness dashboard</Title>
+      </Meta>
       <aside>
         <a className="brand" href="/" aria-label="Ness dashboard home">
           <span>N</span>

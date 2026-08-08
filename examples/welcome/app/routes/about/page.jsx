@@ -1,13 +1,13 @@
 import { Link } from 'react-router';
-
-export const meta = () => [
-  { title: 'Architecture · Ness.js' },
-  { name: 'description', content: 'How the Ness.js example is structured.' },
-];
+import { Description, Meta, Title } from '@nessframework/components';
 
 export default function About() {
   return (
     <main className="shell content-page">
+      <Meta>
+        <Title>Architecture · Ness.js</Title>
+        <Description>How the Ness.js example is structured.</Description>
+      </Meta>
       <p className="eyebrow">Nested file route</p>
       <h1>A small application with production boundaries.</h1>
       <p className="lead">

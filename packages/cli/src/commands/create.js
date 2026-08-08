@@ -377,6 +377,9 @@ export async function createApp(
   // copying Vite, TypeScript, and Babel into the container.
   const dependencies = [
     '@nessframework/cache',
+    // Every starter's pages declare their metadata with its `Meta`, so this is
+    // not optional the way the rest of the component set is.
+    '@nessframework/components',
     '@nessframework/core',
     '@nessframework/nest',
     '@nessframework/router',

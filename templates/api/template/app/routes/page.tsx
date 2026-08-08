@@ -1,3 +1,5 @@
+import { Meta, Title } from '@nessframework/components';
+
 const endpoints = [
   ['GET', '/api/health', 'Liveness and framework information'],
   ['GET', '/api/ready', 'Readiness information'],
@@ -6,11 +8,12 @@ const endpoints = [
   ['POST', '/api/users', 'Create a user'],
 ] as const;
 
-export const meta = () => [{ title: 'Ness.js API starter' }];
-
 export default function Home() {
   return (
     <main>
+      <Meta>
+        <Title>Ness.js API starter</Title>
+      </Meta>
       <header>
         <span className="mark">N</span>
         <div>

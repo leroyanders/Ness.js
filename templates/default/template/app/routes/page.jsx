@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLoaderData } from 'react-router';
-
-export const meta = () => [
-  { title: 'Ness.js' },
-  {
-    name: 'description',
-    content: 'A Ness.js application, rendered on the server.',
-  },
-];
+import { Description, Meta, Title } from '@nessframework/components';
 
 const time = value => new Date(value).toLocaleTimeString();
 
@@ -66,6 +59,12 @@ export default function Home() {
 
   return (
     <div className="page">
+      <Meta>
+        <Title>Ness.js</Title>
+        <Description>
+          A Ness.js application, rendered on the server.
+        </Description>
+      </Meta>
       <div className="shell">
         <h1 className="lede">
           This page was rendered on the server.{' '}

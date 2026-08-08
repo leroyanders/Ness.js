@@ -1,61 +1,45 @@
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  isRouteErrorResponse,
-} from 'react-router';
+import { preload } from 'react-dom';
+import { Links, Outlet, Scripts, ScrollRestoration } from 'react-router';
 import './styles/app.css';
 
-export const meta = () => [{ title: 'Ness.js — full-stack React framework' }];
+/**
+ * The whole document, in one component.
+ *
+ * There is no separate `Layout` export. React Router treats that name
+ * specially — it wraps the default export, the ErrorBoundary and the
+ * HydrateFallback — which means the document shell lives in a component you
+ * never render yourself and cannot follow by reading the file top to bottom.
+ * Rendering `<Outlet />` inside the document here says the same thing without
+ * the convention.
+ *
+ * Metadata is written as elements rather than a `meta` export. React hoists
+ * `<title>`, `<meta>` and `<link>` into `<head>` from anywhere in the tree, so a
+ * page states its own title in its own markup.
+ *
+ * Deliberately no `<title>` here. React hoists every one it finds and does not
+ * deduplicate them, so a title in this file would be emitted ahead of the
+ * page's — and a browser takes the first. Every page carries its own instead.
+ * `<Links />` stays: stylesheets are the framework's to inject.
+ */
+export default function App() {
+  // `preload` rather than a `<link rel="preload">` element: React hoists the
+  // element into its own preload section and keeps the rendered one, emitting
+  // the same hint twice.
+  preload('/assets/logo.svg', { as: 'image' });
 
-export const links = () => [
-  { rel: 'icon', href: '/favicon.ico' },
-  { rel: 'preload', href: '/assets/logo.svg', as: 'image' },
-];
-
-export function Layout({ children }) {
   return (
     <html lang="en">
-      {/* No literal <title> here on purpose: <Meta /> renders it from the
-          route's meta export. A hard-coded one would come first in the
-          document and freeze every page on the same title. */}
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <Meta />
+        <link rel="icon" href="/favicon.ico" />
         <Links />
       </head>
       <body>
-        {children}
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
-  );
-}
-
-export default function App() {
-  return <Outlet />;
-}
-
-export function ErrorBoundary({ error }) {
-  const status = isRouteErrorResponse(error) ? error.status : 500;
-  const message = isRouteErrorResponse(error)
-    ? error.statusText
-    : error instanceof Error
-      ? error.message
-      : 'Unknown error';
-
-  return (
-    <main className="shell error-page">
-      <p className="eyebrow">Error {status}</p>
-      <h1>The request could not be completed.</h1>
-      <p>{message}</p>
-      <a className="button button-primary" href="/">
-        Return home
-      </a>
-    </main>
   );
 }

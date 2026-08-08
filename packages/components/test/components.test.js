@@ -4,12 +4,18 @@ import { createElement as h } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, RouterProvider, createMemoryRouter } from 'react-router';
 import {
+  Canonical,
   ClientOnly,
+  Description,
   Form,
+  Meta,
   Pagination,
   Pending,
+  Robots,
   SearchField,
+  SocialImage,
   Streamed,
+  Title,
 } from '../src/index.js';
 
 /** Renders on the server, which is where every one of these first runs. */
@@ -237,4 +243,78 @@ test('Form accepts plain children as well as a render prop', () => {
   );
   assert.match(markup, /<input/);
   assert.match(markup, /name="email"/);
+});
+
+test('Title renders the document title and mirrors it to Open Graph', () => {
+  const markup = render(h(Meta, null, h(Title, null, 'About')));
+  assert.match(markup, /<title>About<\/title>/);
+  assert.match(markup, /<meta property="og:title" content="About"\/?>/);
+});
+
+test('Title renders exactly one title, the defect this exists to avoid', () => {
+  const markup = render(h(Meta, null, h(Title, null, 'Home')));
+  assert.equal(markup.match(/<title>/g).length, 1);
+});
+
+test('Title flattens interpolated children into the og:title attribute', () => {
+  const markup = render(h(Meta, null, h(Title, null, 'Pricing · ', 'Ness')));
+  assert.match(markup, /<title>Pricing · Ness<\/title>/);
+  assert.match(markup, /content="Pricing · Ness"/);
+  assert.doesNotMatch(markup, /content="Pricing · ,Ness"/);
+});
+
+test('Description renders the meta tag and its Open Graph mirror', () => {
+  const markup = render(h(Meta, null, h(Description, null, 'What it costs.')));
+  assert.match(markup, /<meta name="description" content="What it costs."\/?>/);
+  assert.match(
+    markup,
+    /<meta property="og:description" content="What it costs."\/?>/,
+  );
+});
+
+test('Canonical and Robots render their own tag and nothing else', () => {
+  const markup = render(
+    h(
+      Meta,
+      null,
+      h(Canonical, { href: 'https://example.com/a' }),
+      h(Robots, null, 'noindex, nofollow'),
+    ),
+  );
+  assert.match(
+    markup,
+    /<link rel="canonical" href="https:\/\/example.com\/a"\/?>/,
+  );
+  assert.match(markup, /<meta name="robots" content="noindex, nofollow"\/?>/);
+  assert.doesNotMatch(markup, /<title>/);
+});
+
+test('SocialImage carries the card type, or the image is a thumbnail', () => {
+  const markup = render(
+    h(
+      Meta,
+      null,
+      h(SocialImage, { src: 'https://example.com/c.png', alt: 'A card' }),
+    ),
+  );
+  assert.match(
+    markup,
+    /<meta property="og:image" content="https:\/\/example.com\/c.png"\/?>/,
+  );
+  assert.match(markup, /<meta property="og:image:alt" content="A card"\/?>/);
+  assert.match(
+    markup,
+    /<meta name="twitter:card" content="summary_large_image"\/?>/,
+  );
+});
+
+test('SocialImage omits the alt tag when there is no alt text', () => {
+  const markup = render(
+    h(Meta, null, h(SocialImage, { src: 'https://example.com/c.png' })),
+  );
+  assert.doesNotMatch(markup, /og:image:alt/);
+});
+
+test('Meta renders nothing of its own', () => {
+  assert.equal(render(h(Meta, null)), '');
 });

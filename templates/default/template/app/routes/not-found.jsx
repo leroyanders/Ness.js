@@ -1,10 +1,12 @@
 import { Link } from 'react-router';
-
-export const meta = () => [{ title: 'Not found · Ness.js' }];
+import { Meta, Title } from '@nessframework/components';
 
 export default function NotFound() {
   return (
     <div className="page">
+      <Meta>
+        <Title>Not found · Ness.js</Title>
+      </Meta>
       <div className="shell prose">
         <p className="status">404</p>
         <h1>Nothing is routed here.</h1>

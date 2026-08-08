@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/components",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Unstyled React components bound to the Ness.js request lifecycle: streaming, pending state, optimistic forms, and URL-driven search and pagination.",
   "keywords": [
     "ness",

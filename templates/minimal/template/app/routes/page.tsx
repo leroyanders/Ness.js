@@ -1,11 +1,12 @@
-export const meta = () => [
-  { title: 'Ness.js minimal starter' },
-  { name: 'description', content: 'A minimal Ness.js application.' },
-];
+import { Description, Meta, Title } from '@nessframework/components';
 
 export default function Home() {
   return (
     <main>
+      <Meta>
+        <Title>Ness.js minimal starter</Title>
+        <Description>A minimal Ness.js application.</Description>
+      </Meta>
       <span className="mark">N</span>
       <p className="eyebrow">Ness.js minimal</p>
       <h1>Small surface. Full stack.</h1>

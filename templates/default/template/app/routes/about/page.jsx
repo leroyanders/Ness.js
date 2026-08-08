@@ -1,6 +1,5 @@
 import { Link } from 'react-router';
-
-export const meta = () => [{ title: 'Route tree · Ness.js' }];
+import { Meta, Title } from '@nessframework/components';
 
 const TREE = `app/
 ├── root.jsx              document shell
@@ -20,6 +19,9 @@ const TREE = `app/
 export default function About() {
   return (
     <div className="page">
+      <Meta>
+        <Title>Route tree · Ness.js</Title>
+      </Meta>
       <div className="shell prose">
         <p className="status">Nested file route</p>
         <h1>Every file here is a URL or a handler.</h1>
