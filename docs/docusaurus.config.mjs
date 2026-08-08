@@ -1,7 +1,25 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+
+/**
+ * The navbar badge, read from the framework rather than written out here.
+ *
+ * Major and minor only — the badge names the line the documentation describes,
+ * and a patch would change it on every release without changing what it means.
+ */
+function frameworkVersion() {
+  const manifest = JSON.parse(
+    readFileSync(
+      new URL('../packages/core/package.json', import.meta.url),
+      'utf8',
+    ),
+  );
+  const [major, minor] = manifest.version.split('.');
+  return `v${major}.${minor}`;
+}
 // Syntax highlighting stays inside the site's two hues — warm for keywords and
 // literals, cool for strings — because a rainbow theme would be a third palette
 // on the page and would drown the one distinction that carries meaning here.
@@ -205,7 +223,7 @@ const config = {
           },
           {
             position: 'right',
-            label: 'v7.1',
+            label: frameworkVersion(),
             className: 'navbar-version',
             to: '/docs/intro',
           },
