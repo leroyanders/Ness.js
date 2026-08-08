@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/assets",
-  "version": "7.2.0",
+  "version": "7.2.1",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/documentation/assets",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -11,8 +15,18 @@
     "fonts",
     "metadata",
     "sitemap",
-    "seo"
+    "seo",
+    "sharp",
+    "webp",
+    "avif",
+    "open-graph",
+    "robots-txt"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/assets"
+  },
   "type": "module",
   "exports": {
     ".": {

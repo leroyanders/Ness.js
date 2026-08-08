@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/server",
-  "version": "7.6.0",
+  "version": "7.6.1",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
+  "homepage": "https://nessjs.com/docs/documentation/server/render",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -10,8 +14,18 @@
     "http",
     "web-api",
     "request",
-    "response"
+    "response",
+    "cookies",
+    "compression",
+    "brotli",
+    "redirects",
+    "trust-proxy"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/server"
+  },
   "type": "module",
   "exports": {
     ".": {

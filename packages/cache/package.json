@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/cache",
-  "version": "7.2.0",
+  "version": "7.2.1",
   "description": "Caching, stale-while-revalidate, tags, and path invalidation for Ness.js.",
+  "homepage": "https://nessjs.com/docs/documentation/caching",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -10,8 +14,18 @@
     "stale-while-revalidate",
     "revalidation",
     "redis",
-    "sqlite"
+    "sqlite",
+    "cache-invalidation",
+    "memoize",
+    "ttl",
+    "distributed-cache",
+    "request-deduplication"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/cache"
+  },
   "type": "module",
   "exports": {
     ".": {

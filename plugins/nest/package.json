@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/nest",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "NestJS server routes for Ness.js applications",
+  "homepage": "https://nessjs.com/docs/plugins/nest",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,19 @@
     "nestjs",
     "dependency-injection",
     "controllers",
-    "backend"
+    "backend",
+    "vite",
+    "vite-plugin",
+    "express",
+    "typescript",
+    "api-routes",
+    "hot-reload"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/nest"
+  },
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

@@ -1,8 +1,12 @@
 {
   "name": "@nessframework/typescript",
-  "version": "4.2.2",
+  "version": "4.2.3",
   "type": "module",
   "description": "Official strict TypeScript starter for Ness.js, and what ness new scaffolds by default.",
+  "homepage": "https://nessjs.com/docs/templates",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -10,7 +14,14 @@
     "starter",
     "react",
     "nestjs",
-    "typescript"
+    "typescript",
+    "boilerplate",
+    "full-stack",
+    "ssr",
+    "react-router",
+    "file-based-routing",
+    "vite",
+    "docker"
   ],
   "repository": {
     "type": "git",
@@ -19,9 +30,6 @@
   },
   "engines": {
     "node": ">=16.0.0"
-  },
-  "bugs": {
-    "url": "https://github.com/leroyanders/Ness.js/issues"
   },
   "files": [
     "template",

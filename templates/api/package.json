@@ -1,8 +1,12 @@
 {
   "name": "@nessframework/api",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "type": "module",
   "description": "NestJS API-first starter for Ness.js.",
+  "homepage": "https://nessjs.com/docs/templates",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -11,7 +15,13 @@
     "react",
     "nestjs",
     "api",
-    "rest"
+    "rest",
+    "typescript",
+    "backend",
+    "boilerplate",
+    "full-stack",
+    "docker",
+    "vite"
   ],
   "repository": {
     "type": "git",

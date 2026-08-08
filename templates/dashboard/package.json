@@ -1,8 +1,12 @@
 {
   "name": "@nessframework/dashboard",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "type": "module",
   "description": "Dashboard starter for Ness.js and NestJS.",
+  "homepage": "https://nessjs.com/docs/templates",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -11,7 +15,13 @@
     "react",
     "nestjs",
     "dashboard",
-    "admin"
+    "admin",
+    "typescript",
+    "admin-panel",
+    "boilerplate",
+    "full-stack",
+    "ssr",
+    "docker"
   ],
   "repository": {
     "type": "git",

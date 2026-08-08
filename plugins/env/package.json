@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/env",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Environment variable validation for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/plugins/env",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,17 @@
     "environment-variables",
     "dotenv",
     "validation",
-    "config"
+    "config",
+    "vite-plugin",
+    "env",
+    "env-vars",
+    "schema-validation"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/env"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -22,11 +35,6 @@
     "src",
     "readme.md"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/leroyanders/Ness.js.git",
-    "directory": "plugins/env"
-  },
   "peerDependencies": {
     "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"

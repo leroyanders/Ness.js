@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/security",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Secure development and preview headers for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/plugins/security",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,18 @@
     "security",
     "headers",
     "csp",
-    "content-security-policy"
+    "content-security-policy",
+    "vite-plugin",
+    "http-headers",
+    "referrer-policy",
+    "permissions-policy",
+    "x-frame-options"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/security"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -22,11 +36,6 @@
     "src",
     "readme.md"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/leroyanders/Ness.js.git",
-    "directory": "plugins/security"
-  },
   "peerDependencies": {
     "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"

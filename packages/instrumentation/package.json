@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/instrumentation",
-  "version": "7.2.0",
+  "version": "7.2.1",
   "description": "Server instrumentation and Web Vitals for Ness.js.",
+  "homepage": "https://nessjs.com/docs/documentation/deployment",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,17 @@
     "observability",
     "telemetry",
     "web-vitals",
-    "monitoring"
+    "monitoring",
+    "core-web-vitals",
+    "real-user-monitoring",
+    "error-reporting",
+    "request-logging"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/instrumentation"
+  },
   "type": "module",
   "exports": {
     ".": {

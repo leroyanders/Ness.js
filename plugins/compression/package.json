@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/compression",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Gzip and Brotli build assets for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/plugins/compression",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,16 @@
     "compression",
     "gzip",
     "brotli",
-    "vite"
+    "vite",
+    "vite-plugin",
+    "rollup",
+    "precompress"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/compression"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -22,11 +34,6 @@
     "src",
     "readme.md"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/leroyanders/Ness.js.git",
-    "directory": "plugins/compression"
-  },
   "peerDependencies": {
     "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"

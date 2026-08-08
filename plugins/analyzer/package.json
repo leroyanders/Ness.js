@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/analyzer",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Bundle reports and size budgets for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/plugins/analyzer",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,16 @@
     "bundle-analyzer",
     "bundle-size",
     "performance-budget",
-    "vite"
+    "vite",
+    "vite-plugin",
+    "rollup",
+    "size-budget"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "plugins/analyzer"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -22,11 +34,6 @@
     "src",
     "readme.md"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/leroyanders/Ness.js.git",
-    "directory": "plugins/analyzer"
-  },
   "peerDependencies": {
     "@nessframework/core": ">=7.0.0",
     "vite": ">=5.0.0"

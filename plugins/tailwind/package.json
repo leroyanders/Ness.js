@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/tailwind",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Tailwind CSS integration for Ness.js",
+  "homepage": "https://nessjs.com/docs/plugins/tailwind",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,14 +13,18 @@
     "tailwind",
     "tailwindcss",
     "css",
-    "vite"
+    "vite",
+    "vite-plugin",
+    "postcss",
+    "cssnano",
+    "css-minification"
   ],
-  "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/leroyanders/Ness.js.git",
     "directory": "plugins/tailwind"
   },
+  "type": "module",
   "main": "./src/index.js",
   "exports": {
     ".": {

@@ -1,8 +1,12 @@
 {
   "name": "@nessframework/minimal",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "type": "module",
   "description": "Minimal TypeScript starter for Ness.js.",
+  "homepage": "https://nessjs.com/docs/templates",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -11,7 +15,13 @@
     "react",
     "nestjs",
     "minimal",
-    "typescript"
+    "typescript",
+    "boilerplate",
+    "full-stack",
+    "ssr",
+    "react-router",
+    "vite",
+    "docker"
   ],
   "repository": {
     "type": "git",

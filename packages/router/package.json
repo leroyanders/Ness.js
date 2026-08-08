@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/router",
-  "version": "7.2.0",
+  "version": "7.2.1",
   "description": "File-system routing and Vite integration for Ness.js.",
+  "homepage": "https://nessjs.com/docs/documentation/router",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -10,8 +14,18 @@
     "file-based-routing",
     "routing",
     "vite",
-    "ssr"
+    "ssr",
+    "i18n",
+    "internationalization",
+    "vite-plugin",
+    "file-system-routing",
+    "dynamic-routes"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/router"
+  },
   "type": "module",
   "exports": {
     ".": {

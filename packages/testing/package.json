@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/testing",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "description": "Test utilities for Ness.js applications.",
+  "homepage": "https://nessjs.com/docs/documentation/packages",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -9,8 +13,18 @@
     "test-utils",
     "loader",
     "action",
-    "integration-testing"
+    "integration-testing",
+    "vitest",
+    "playwright",
+    "e2e-testing",
+    "react-router",
+    "unit-testing"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/testing"
+  },
   "type": "module",
   "exports": {
     ".": {

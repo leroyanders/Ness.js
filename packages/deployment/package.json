@@ -1,7 +1,11 @@
 {
   "name": "@nessframework/deployment",
-  "version": "7.3.0",
+  "version": "7.3.1",
   "description": "Standalone output, dependency tracing, and Node, Lambda, and Cloudflare Workers adapters for Ness.js.",
+  "homepage": "https://nessjs.com/docs/documentation/deployment",
+  "bugs": {
+    "url": "https://github.com/leroyanders/Ness.js/issues"
+  },
   "keywords": [
     "ness",
     "nessjs",
@@ -10,8 +14,19 @@
     "bundle",
     "docker",
     "aws-lambda",
-    "cloudflare-workers"
+    "cloudflare-workers",
+    "serverless",
+    "edge-runtime",
+    "graceful-shutdown",
+    "health-check",
+    "wrangler",
+    "express"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leroyanders/Ness.js.git",
+    "directory": "packages/deployment"
+  },
   "type": "module",
   "exports": {
     ".": {
