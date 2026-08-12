@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { paint } from '../lib/colors.js';
 import { resolvePackageDirectory } from '../lib/packages.js';
 
-const TARGETS = ['node', 'cloudflare'];
+const TARGETS = ['node', 'cloudflare', 'vercel'];
 
 async function loadDeployment(cwd, subpath = '') {
   const directory = resolvePackageDirectory('@nessframework/deployment', cwd);
@@ -131,6 +131,44 @@ async function bundleCloudflare(root, options) {
   return { worker: workerDirectory, config: configFile };
 }
 
+/**
+ * Emits a Vercel Build Output API v3 deployment: a Node.js Function with a
+ * traced production `node_modules` plus the (optional) Nest build, and the
+ * client build as static files. Meant to run as part of `vercel.json`'s
+ * `buildCommand` (`ness build && ness bundle vercel`) — Vercel serves
+ * whatever `.vercel/output` contains directly, with no tracing or size-limited
+ * glob config of its own to fight.
+ */
+async function bundleVercel(root, options) {
+  const { createVercelOutput } = await loadDeployment(root, 'vercel');
+  const report = await createVercelOutput({
+    root,
+    buildDirectory: options.buildDirectory,
+    outputDirectory: options.output,
+    runtime: options.runtime,
+    logger: null,
+  });
+
+  console.log(
+    `${paint('green', 'Vercel Build Output')} ${path.relative(root, report.output) || report.output}`,
+  );
+  console.log(
+    `  ${report.packages} package(s), ${formatBytes(report.bytes)} (function)`,
+  );
+  if (report.missing.length) {
+    console.warn(
+      paint(
+        'yellow',
+        `  ${report.missing.length} declared dependency/dependencies were not installed and were skipped: ${report.missing.join(', ')}`,
+      ),
+    );
+  }
+  console.log(
+    '  Runs as part of your vercel.json buildCommand — nothing further to run here.',
+  );
+  return report;
+}
+
 export async function bundle(target = 'node', options = {}) {
   if (!TARGETS.includes(target)) {
     throw new Error(
@@ -146,9 +184,9 @@ export async function bundle(target = 'node', options = {}) {
     ...options,
   };
 
-  return target === 'cloudflare'
-    ? bundleCloudflare(root, resolved)
-    : bundleNode(root, resolved);
+  if (target === 'cloudflare') return bundleCloudflare(root, resolved);
+  if (target === 'vercel') return bundleVercel(root, resolved);
+  return bundleNode(root, resolved);
 }
 
 export { TARGETS };

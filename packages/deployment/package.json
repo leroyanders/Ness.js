@@ -1,7 +1,7 @@
 {
   "name": "@nessframework/deployment",
-  "version": "7.3.2",
-  "description": "Standalone output, dependency tracing, and Node, Lambda, and Cloudflare Workers adapters for Ness.js.",
+  "version": "7.4.0",
+  "description": "Standalone output, dependency tracing, and Node, Lambda, Cloudflare Workers, and Vercel adapters for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/deployment",
   "bugs": {
     "url": "https://github.com/leroyanders/Ness.js/issues"
@@ -15,6 +15,7 @@
     "docker",
     "aws-lambda",
     "cloudflare-workers",
+    "vercel",
     "serverless",
     "edge-runtime",
     "graceful-shutdown",
@@ -45,6 +46,10 @@
       "types": "./src/lambda.d.ts",
       "default": "./src/lambda.js"
     },
+    "./vercel": {
+      "types": "./src/vercel.d.ts",
+      "default": "./src/vercel.js"
+    },
     "./trace": {
       "types": "./src/trace.d.ts",
       "default": "./src/trace.js"
@@ -57,7 +62,9 @@
   ],
   "dependencies": {
     "@remix-run/node-fetch-server": "0.13.3",
-    "@nessframework/server": "^7.0.0"
+    "@nessframework/assets": "^7.0.0",
+    "@nessframework/server": "^7.0.0",
+    "express": "^5.2.1"
   },
   "engines": {
     "node": ">=20.19.0"

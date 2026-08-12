@@ -144,12 +144,18 @@ export async function init() {
     .option('--output <dir>', 'output directory (node target)')
     .option('--build-directory <dir>', 'build directory', 'build')
     .option('--name <name>', 'worker name (cloudflare target)')
+    .option(
+      '--runtime <version>',
+      'Vercel Node.js runtime (vercel target)',
+      'nodejs22.x',
+    )
     .action(async (target, options) => {
       commandExecuted = true;
       await bundle(target, {
         output: options.output,
         buildDirectory: options.buildDirectory,
         name: options.name,
+        runtime: options.runtime,
       });
     });
 
