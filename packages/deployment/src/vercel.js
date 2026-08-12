@@ -271,6 +271,19 @@ async function createVercelOutput({
       2,
     )}\n`,
   );
+  // Without this, Node has no package.json above `index.js` inside the
+  // deployed function root (/var/task) to learn its module system from, and
+  // falls back to CommonJS — which chokes on the entry's own `import`
+  // statements before anything of ours ever runs. Same reason
+  // `createStandaloneOutput` writes one of its own.
+  fs.writeFileSync(
+    path.join(functionDirectory, 'package.json'),
+    `${JSON.stringify(
+      { name: `${manifest.name || 'ness-app'}-vercel`, private: true, type: 'module' },
+      null,
+      2,
+    )}\n`,
+  );
 
   const { packages, conflicts, missing } = traceDependencies(absoluteRoot, {
     manifest,

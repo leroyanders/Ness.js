@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import process from 'node:process';
 import test from 'node:test';
 import {
   createVercelHandler,
@@ -118,6 +120,25 @@ test('createVercelOutput produces a Build Output API v3 tree', async t => {
     handler: 'index.js',
     launcherType: 'Nodejs',
   });
+
+  // Without a package.json declaring `type: module` right next to it, Node
+  // has nothing to learn the entry's module system from once it's the only
+  // thing under the deployed function root — and falls back to CommonJS,
+  // which fails on the entry's own `import` statements before anything of
+  // ours runs at all. Caught for real by parsing the generated file the same
+  // way the deployed runtime would, not just by asserting the field exists.
+  const functionManifest = JSON.parse(
+    fs.readFileSync(path.join(functionDirectory, 'package.json'), 'utf8'),
+  );
+  assert.equal(functionManifest.type, 'module');
+  assert.doesNotThrow(
+    () =>
+      execFileSync(process.execPath, [
+        '--check',
+        path.join(functionDirectory, 'index.js'),
+      ]),
+    'the generated entry must parse as ESM given only the files createVercelOutput itself wrote',
+  );
 
   assert.ok(
     fs.existsSync(path.join(functionDirectory, 'index.js')),
