@@ -53,7 +53,11 @@ export async function createNestMiddleware({
   const application = await NestFactory.create(
     rootModule,
     new ExpressAdapter(middleware),
-    { logger },
+    // rawBody: true stashes the unparsed request Buffer on `request.rawBody`
+    // (via RawBodyRequest<Request> from @nestjs/common) alongside the normal
+    // parsed body — needed for webhook signature verification (HMAC/ECDSA
+    // schemes that sign the exact byte sequence, not a re-serialized JSON).
+    { logger, rawBody: true },
   );
   application.setGlobalPrefix(routePrefix);
   await application.init();

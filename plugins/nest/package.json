@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/nest",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "NestJS server routes for Ness.js applications",
   "homepage": "https://nessjs.com/docs/plugins/nest",
   "bugs": {

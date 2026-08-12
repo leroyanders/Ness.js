@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { createServer, get } from 'node:http';
+import { createServer, get, request as httpRequest } from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -196,4 +196,100 @@ test('Nest routes require an isolated URL prefix', async () => {
     createNestMiddleware({ prefix: '' }),
     /prefix must be non-empty/,
   );
+});
+
+function post(url, body) {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(
+      url,
+      { method: 'POST', headers: { 'content-type': 'application/json' } },
+      response => {
+        let responseBody = '';
+        response.setEncoding('utf8');
+        response.on('data', chunk => {
+          responseBody += chunk;
+        });
+        response.on('end', () =>
+          resolve({ body: responseBody, status: response.statusCode }),
+        );
+      },
+    ).on('error', reject);
+    req.end(body);
+  });
+}
+
+// Webhook signature verification (e.g. Monobank's ECDSA-over-raw-bytes
+// scheme, unlike LiqPay's sign-the-data-field design) needs the exact byte
+// sequence the client sent — the parsed-then-restringified `@Body()` object
+// is not guaranteed to match key order/whitespace. `rawBody: true` is the
+// only thing standing between a route and always-invalid signatures.
+test('Nest middleware exposes the raw request body alongside the parsed one', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-nest-rawbody-'));
+  let nest;
+  let server;
+  try {
+    fs.writeFileSync(
+      path.join(root, 'package.json'),
+      JSON.stringify({ type: 'module' }),
+    );
+    fs.symlinkSync(
+      path.join(process.cwd(), 'node_modules'),
+      path.join(root, 'node_modules'),
+      'dir',
+    );
+    const source = path.join(root, 'app', 'server');
+    fs.mkdirSync(source, { recursive: true });
+    fs.writeFileSync(
+      path.join(source, 'app.module.ts'),
+      `import {Body, Controller, Module, Post, Req} from '@nestjs/common';
+
+@Controller()
+class EchoController {
+  @Post('echo')
+  echo(@Req() request, @Body() body) {
+    return {
+      rawBodyText: request.rawBody ? request.rawBody.toString('utf8') : null,
+      isBuffer: Buffer.isBuffer(request.rawBody),
+      parsed: body,
+    };
+  }
+}
+
+@Module({controllers: [EchoController]})
+export class AppModule {}
+`,
+    );
+
+    const entry = await buildNestApplication({ root });
+    nest = await createNestMiddleware({ modulePath: entry });
+    server = createServer((request, response) => {
+      nest.handler(request, response, () => {
+        response.statusCode = 404;
+        response.end();
+      });
+    });
+    server.listen(0, '127.0.0.1');
+    await new Promise(resolve => server.once('listening', resolve));
+
+    const address = server.address();
+    const sentBody = '{"invoiceId":"p2_test","status":"success"}';
+    const response = await post(
+      `http://127.0.0.1:${address.port}/api/echo`,
+      sentBody,
+    );
+    assert.equal(response.status, 201);
+    const parsedResponse = JSON.parse(response.body);
+    assert.equal(parsedResponse.rawBodyText, sentBody);
+    assert.equal(parsedResponse.isBuffer, true);
+    assert.deepEqual(parsedResponse.parsed, {
+      invoiceId: 'p2_test',
+      status: 'success',
+    });
+  } finally {
+    await nest?.application.close();
+    if (server?.listening) {
+      await new Promise(resolve => server.close(resolve));
+    }
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });
