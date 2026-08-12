@@ -27,7 +27,7 @@
   },
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "version": "7.7.0",
+  "version": "7.7.1",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",

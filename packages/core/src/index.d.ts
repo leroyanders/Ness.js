@@ -9,6 +9,7 @@ export {
 export { Image, Script } from '@nessframework/assets';
 export {
   RouteOutlet,
+  apiFetch,
   cachedClientLoader,
   clearClientCache,
   prefetch,

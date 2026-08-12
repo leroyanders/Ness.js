@@ -5,6 +5,7 @@ export {
   NavLink,
   PrefetchPageLinks,
   RouteOutlet,
+  apiFetch,
   cachedClientLoader,
   clearClientCache,
   prefetch,

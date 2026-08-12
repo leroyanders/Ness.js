@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createElement as h } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import { RouteOutlet, cachedClientLoader, clearClientCache } from '../src/runtime/client.js';
+import { RouteOutlet, apiFetch, cachedClientLoader, clearClientCache } from '../src/runtime/client.js';
 
 /**
  * `cachedClientLoader` reads `window.location` — not present under Node's
@@ -13,6 +13,22 @@ import { RouteOutlet, cachedClientLoader, clearClientCache } from '../src/runtim
 function setLocation(pathname, search = '') {
   globalThis.window = { location: { pathname, search } };
 }
+
+test('apiFetch is a plain fetch pass-through, same name/shape as the server helper', async () => {
+  const originalFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = (path, init) => {
+    calls.push({ path, init });
+    return Promise.resolve(new Response(JSON.stringify({ ok: true })));
+  };
+  try {
+    const response = await apiFetch('/api/contacts', { method: 'GET' });
+    assert.deepEqual(await response.json(), { ok: true });
+    assert.deepEqual(calls, [{ path: '/api/contacts', init: { method: 'GET' } }]);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
 
 test('cachedClientLoader calls through and caches on a miss', async () => {
   setLocation('/current');

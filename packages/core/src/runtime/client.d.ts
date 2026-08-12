@@ -8,6 +8,7 @@ export {
   useParams,
   useSearchParams,
 } from 'react-router';
+export function apiFetch(path: string | URL, init?: RequestInit): Promise<Response>;
 export function cachedClientLoader<
   T extends (args: any) => Promise<any>,
 >(loader: T): T;

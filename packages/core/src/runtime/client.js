@@ -67,6 +67,18 @@ const { Form, Link, NavLink, PrefetchPageLinks, useParams, useSearchParams } =
   router;
 
 /**
+ * Deliberately just `fetch()` — its value is having the same name/shape as
+ * the server-side `apiFetch(request, path, init?)` a project typically
+ * defines for its own `loader`s, so a `clientLoader` reads the same way as
+ * the `loader` beside it instead of switching between two different-looking
+ * APIs. Also the one place a project can later add shared client-side
+ * behaviour (error handling, a base URL, etc.) without touching every route.
+ */
+function apiFetch(path, init) {
+  return fetch(path, init);
+}
+
+/**
  * Keyed by URL, shared across every `cachedClientLoader` in the app.
  * Session-lifetime only — a plain module-scope Map, never persisted, reset
  * on a full reload.
@@ -163,6 +175,7 @@ export {
   NavLink,
   PrefetchPageLinks,
   RouteOutlet,
+  apiFetch,
   cachedClientLoader,
   clearClientCache,
   prefetch,
