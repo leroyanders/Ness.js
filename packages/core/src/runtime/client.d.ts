@@ -14,7 +14,7 @@ export function cachedClientLoader<
 >(loader: T): T;
 export function clearClientCache(): void;
 export function RouteOutlet(props: {
-  fallback?: ReactNode;
+  fallback?: ReactNode | ((pathname: string) => ReactNode);
   context?: unknown;
 }): ReactElement;
 export interface NavigationProgress {

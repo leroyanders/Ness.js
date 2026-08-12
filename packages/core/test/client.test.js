@@ -149,3 +149,32 @@ test('RouteOutlet renders the fallback during a genuine cross-route pending navi
   assert.match(markup, /skeleton/);
   assert.doesNotMatch(markup, /other/, 'the target route must not render until its loader resolves');
 });
+
+test('RouteOutlet calls a function fallback with the destination pathname, for a distinct skeleton per route', () => {
+  const seen = [];
+  const routes = [
+    {
+      path: '/',
+      element: h(RouteOutlet, {
+        fallback: pathname => {
+          seen.push(pathname);
+          return h('span', null, `skeleton-for-${pathname}`);
+        },
+      }),
+      children: [
+        { index: true, element: h('span', null, 'home') },
+        {
+          path: 'other',
+          loader: () => new Promise(() => {}),
+          element: h('span', null, 'other'),
+        },
+      ],
+    },
+  ];
+  const router = createMemoryRouter(routes, { initialEntries: ['/'] });
+  router.navigate('/other');
+
+  const markup = renderToStaticMarkup(h(RouterProvider, { router }));
+  assert.match(markup, /skeleton-for-\/other/);
+  assert.deepEqual(seen, ['/other']);
+});

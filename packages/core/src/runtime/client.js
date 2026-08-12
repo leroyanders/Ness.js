@@ -126,7 +126,7 @@ function cachedClientLoader(loader) {
 
 /**
  * Drop-in replacement for react-router's `<Outlet/>` in a layout route:
- * shows `fallback` during a genuine cross-route pending navigation (a
+ * shows a fallback during a genuine cross-route pending navigation (a
  * search-param-only change under the same route does not count), and
  * clears the whole `cachedClientLoader` cache once any in-flight mutation
  * — a top-level `<Form>` submission or a `useFetcher()` — finishes. That
@@ -135,16 +135,21 @@ function cachedClientLoader(loader) {
  * which mutation would need every action to declare it, and getting that
  * wrong risks stale data, which is worse than an extra cache miss.
  *
- * There is no way to resolve the fallback of the route being navigated TO
- * (not yet mounted) on react-router 8's stable API — resolving it would
- * need either `matchRoutes()` against react-router's own live tree (which
- * deliberately omits `HydrateFallback` for a lazy route not yet visited)
- * or an `unstable_`/`UNSAFE_`-prefixed API not safe to depend on. So
- * `fallback` is one static element the consumer provides, not
- * auto-resolved per destination — and because it fully replaces `<Outlet/>`
- * while pending, a leaf route's own `HydrateFallback` no longer plays any
- * role in client-side navigation once its layout adopts `RouteOutlet` (it
- * still applies to the first, full-document hydration, same as before).
+ * `fallback` accepts either a single element (same fallback everywhere) or
+ * `(pathname) => ReactNode`, called with `navigation.location.pathname` —
+ * the destination being navigated to. This is a plain string match the
+ * consumer controls, not automatic per-route resolution: there is no way to
+ * read the fallback (or anything else) off the route being navigated TO
+ * from react-router 8's stable API while it's still pending and not yet
+ * mounted — that would need either `matchRoutes()` against react-router's
+ * own live tree (which deliberately omits `HydrateFallback` for a lazy
+ * route not yet visited) or an `unstable_`/`UNSAFE_`-prefixed API not safe
+ * to depend on. A pathname-keyed function sidesteps that entirely — it
+ * never needs to inspect the target route at all, so it stays on fully
+ * stable ground while still giving each page its own look. And because
+ * this fully replaces `<Outlet/>` while pending, a leaf route's own
+ * `HydrateFallback` still only plays a role in the first, full-document
+ * hydration — never in client-side navigation, with or without this.
  */
 function RouteOutlet({ fallback, context }) {
   const location = router.useLocation();
@@ -163,9 +168,14 @@ function RouteOutlet({ fallback, context }) {
   const isPageTransition =
     navigation.state === 'loading' &&
     navigation.location.pathname !== location.pathname;
+  const resolvedFallback = isPageTransition
+    ? typeof fallback === 'function'
+      ? fallback(navigation.location.pathname)
+      : fallback
+    : null;
 
-  return isPageTransition && fallback
-    ? fallback
+  return isPageTransition && resolvedFallback
+    ? resolvedFallback
     : React.createElement(router.Outlet, { context });
 }
 
