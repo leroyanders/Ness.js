@@ -48,3 +48,25 @@ test('configEnvironment: applies the same postcss pipeline to every environment'
   const ssr = plugin.configEnvironment('ssr', {}, { command: 'build' });
   assert.equal(client.css.postcss.plugins.length, ssr.css.postcss.plugins.length);
 });
+
+// `@import 'tailwindcss'` in the app's CSS makes Vite auto-insert its own
+// postcss-import ahead of the plugins configured here, which asks the ssr
+// environment to resolve the bare specifier `tailwindcss`. Left externalized
+// (Vite's default for ssr — correct for JS `import`, meaningless for a CSS
+// `@import`), that resolution hands back the bare string itself, which
+// postcss-import then reads as a literal path from `cwd` and fails with
+// ENOENT. `noExternal` is what makes the ssr environment resolve it to a
+// real file instead, same as the client environment already does by default.
+test('config: forces tailwindcss to resolve for ssr instead of externalizing', () => {
+  const config = tailwind().config({}, { command: 'build' });
+  assert.deepEqual(config.ssr.noExternal, ['tailwindcss']);
+});
+
+test('configEnvironment: forces tailwindcss to resolve for ssr instead of externalizing', () => {
+  const plugin = tailwind();
+  const ssr = plugin.configEnvironment('ssr', {}, { command: 'build' });
+  assert.deepEqual(ssr.resolve.noExternal, ['tailwindcss']);
+
+  const client = plugin.configEnvironment('client', {}, { command: 'build' });
+  assert.equal(client.resolve, undefined);
+});

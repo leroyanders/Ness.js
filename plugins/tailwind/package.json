@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/tailwind",
-  "version": "2.1.2",
+  "version": "2.1.4",
   "description": "Tailwind CSS integration for Ness.js",
   "homepage": "https://nessjs.com/docs/plugins/tailwind",
   "bugs": {
