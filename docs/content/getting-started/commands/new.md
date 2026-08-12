@@ -12,7 +12,7 @@ ness n <project> [options]
 | Option                           | Description                                                        | Default      |
 | -------------------------------- | ------------------------------------------------------------------ | ------------ |
 | `--template <name-or-path>`      | Official alias, npm package, or local directory                    | `typescript` |
-| `--rsc`                          | Enable experimental React Server Components                        | disabled     |
+| `--no-rsc`                       | Scaffold classic SSR mode instead of the default RSC mode          | RSC enabled  |
 | `--package-override <name=spec>` | Install a specific version, tag, or tarball of a framework package | none         |
 
 ## Examples
@@ -24,7 +24,7 @@ ness new service --template api
 ness new admin --template dashboard
 ness new tiny-app --template minimal
 ness new internal-tool --template ../company-template
-ness new rsc-app --rsc
+ness new ssr-app --no-rsc
 ```
 
 Project names may contain lowercase letters, numbers, dots, dashes, and underscores. The destination must be empty, apart from `.git` and `.DS_Store`.

@@ -398,7 +398,10 @@ export async function createApp(
     '@react-router/dev@8.3.0',
     'vite@8.2.0',
   ];
-  if (createOptions.rsc) {
+  // RSC is the default mode for new apps; pass --no-rsc to scaffold the
+  // classic SSR mode instead, which skips the pre-stable @vitejs/plugin-rsc
+  // and react-server-dom-webpack dependencies entirely.
+  if (createOptions.rsc !== false) {
     developmentDependencies.push('@vitejs/plugin-rsc@0.5.27');
     dependencies.push('react-server-dom-webpack@19.2.8');
   }
@@ -472,7 +475,11 @@ export async function createApp(
     });
   }
 
-  if (createOptions.rsc) enableRsc(root);
+  if (createOptions.rsc === false) disableRsc(root);
+  // A no-op once a template's config already spells out `rsc: true` directly
+  // (every official template does), but keeps `--template <local-path>`
+  // pointed at an older, env-var-gated custom template working.
+  else enableRsc(root);
   if (typescriptTemplate) {
     await runNpm(root, [
       'install',
@@ -530,6 +537,53 @@ function enableRsc(root) {
     fs.writeFileSync(
       routerConfig,
       source.replace("process.env.NESS_EXPERIMENTAL_RSC === 'true'", 'true'),
+    );
+  }
+}
+
+/**
+ * The `--no-rsc` counterpart to `enableRsc`. Every official template now
+ * spells `rsc: true` directly (RSC is the default), so this only needs to
+ * flip that literal back — for a project that wants to avoid the pre-stable
+ * `@vitejs/plugin-rsc` dependency entirely, not because anything stops
+ * working under RSC: `router.prerender` works the same either way.
+ */
+function disableRsc(root) {
+  const unifiedConfig = ['ness.config.mjs', 'ness.config.js']
+    .map(filename => path.join(root, filename))
+    .find(fs.existsSync);
+  if (unifiedConfig) {
+    const source = fs.readFileSync(unifiedConfig, 'utf8');
+    fs.writeFileSync(
+      unifiedConfig,
+      source.replaceAll('rsc: true', 'rsc: false'),
+    );
+    return;
+  }
+
+  const viteConfig = ['vite.config.ts', 'vite.config.mjs', 'vite.config.js']
+    .map(filename => path.join(root, filename))
+    .find(fs.existsSync);
+  if (viteConfig) {
+    const source = fs.readFileSync(viteConfig, 'utf8');
+    fs.writeFileSync(
+      viteConfig,
+      source.replace('ness()', 'ness({rsc: false})'),
+    );
+  }
+
+  const routerConfig = [
+    'react-router.config.ts',
+    'react-router.config.mjs',
+    'react-router.config.js',
+  ]
+    .map(filename => path.join(root, filename))
+    .find(fs.existsSync);
+  if (routerConfig) {
+    const source = fs.readFileSync(routerConfig, 'utf8');
+    fs.writeFileSync(
+      routerConfig,
+      source.replaceAll('rsc: true', 'rsc: false'),
     );
   }
 }

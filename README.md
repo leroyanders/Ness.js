@@ -38,10 +38,10 @@ Use a local template directory:
 ness new my-app --template ./templates/company-app
 ```
 
-Experimental React Server Components and Server Functions are opt-in:
+React Server Components and Server Functions are the default rendering mode. Pass `--no-rsc` for classic SSR mode instead:
 
 ```bash
-ness new my-app --rsc
+ness new my-app --no-rsc
 ```
 
 Vite, React Router, Nest production mounting, RSC, and instrumentation are configured together in `ness.config.mjs`. TypeScript and Docker retain their native `tsconfig.json` and `Dockerfile` entrypoints.
@@ -121,7 +121,7 @@ Measured against Next.js on the same application, both self-hosted on Node, both
 
 Ness is behind on cold start and bundle size; both rows are explained in [the performance docs](https://nessjs.com/docs/documentation/performance) rather than omitted. Absolute values depend on the machine — compare the columns of one run, not numbers across runs.
 
-React Server Components stay behind `--rsc`. The pipeline builds and serves, and is covered by the same end-to-end suite, but it sits on two pre-stable upstream APIs (`@vitejs/plugin-rsc` 0.x and React Router's `unstable_reactRouterRSC`), and prerendering and standalone bundling are unavailable in that mode.
+These numbers are the classic SSR pipeline (`--no-rsc`), which is what this benchmark has always measured. React Server Components are the default mode otherwise — the pipeline builds and serves, and is covered by the same end-to-end suite, including prerendering/SSG and standalone bundling — but it sits on two pre-stable upstream APIs (`@vitejs/plugin-rsc` 0.x and React Router's `unstable_reactRouterRSC`), so it can change between minor versions.
 
 ## CLI
 

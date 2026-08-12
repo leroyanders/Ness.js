@@ -1,32 +1,71 @@
+import { cache } from 'react';
 import '../runtime/web-api.js';
 
-const RSC_FEATURE = 'experimental-rsc';
+const RSC_FEATURE = 'rsc';
+
+/**
+ * React 19's per-render memoization, re-exported under a name that does not
+ * collide with `@nessframework/cache`'s `cached()` — the two solve different
+ * problems. `requestCache` dedupes repeated calls with the same arguments
+ * *within a single render* (no TTL, nothing persisted); `cached()` is
+ * cross-request, TTL/tag-based ISR-style caching. Use `requestCache` to wrap
+ * a data function called from more than one Server Component in the same
+ * tree, so it fetches once per render instead of once per call site.
+ */
+const requestCache = cache;
 
 /**
  * What the RSC pipeline can and cannot do today.
  *
- * The build, SSR, hydration, and NestJS routes are covered by the end-to-end
- * suite on every commit, so they are not a guess. The gaps are real gaps, not
- * untested claims: prerendering and the build manifest are disabled by React
- * Router in RSC mode, and standalone bundling depends on the manifest.
+ * Everything in `supported` is verified against a real build and a real
+ * browser, not a guess — including the one entry in `unsupported`, which was
+ * found the same way: manually reproduced, isolated to its exact trigger, and
+ * confirmed to come from `react-router`'s own client entry rather than
+ * anything Ness generates. `ness-manifest.json` is written from a Vite
+ * `buildApp` hook fed by Ness's own route tree rather than React Router's
+ * `buildEnd`, because RSC Framework Mode's `validateConfig` rejects
+ * `buildEnd` outright — see `writeRscManifest` in `@nessframework/router/vite`.
+ * `router.prerender` needed no RSC-specific handling at all once Ness stopped
+ * stripping it before React Router's own RSC prerender plugin ever saw it —
+ * an earlier version of this table listed it as an upstream limitation, which
+ * was never actually true on `@react-router/dev@8.3.0`.
  *
- * RSC stays behind a flag because it sits on two upstream APIs that are
- * themselves pre-stable: `@vitejs/plugin-rsc` (0.x) and React Router's
- * `unstable_reactRouterRSC`. Calling it stable here would not make those
- * stable, and would promise a compatibility guarantee this project cannot keep.
+ * The one real gap: a route whose `page`/`layout` default export is itself an
+ * `async` function component (a genuine Server Component doing its own data
+ * fetching, no `page.server.js` loader) renders correct, fully-formed HTML on
+ * the initial response — that part works — but client-side hydration of that
+ * route then fails with a React error ("Only Server Components can be async
+ * at the moment"), independent of whether the page uses `'use client'` or
+ * `'use server'` at all. This reproduces with zero interactive children, so
+ * it is not about `'use client'`/`'use server'` specifically — `'use client'`
+ * composition and hydration, and calling a `'use server'` function directly
+ * from a `'use client'` component, both work cleanly on any route whose page
+ * component is a normal (non-async) function. Until React Router's RSC client
+ * entry handles this, keep data fetching in a `page.server.js` loader for any
+ * route that needs to stay interactive after the first paint — which is the
+ * existing, fully-supported pattern every official template already uses.
+ *
+ * RSC is the default mode `ness new` scaffolds, but it still sits on two
+ * upstream APIs that are themselves pre-stable: `@vitejs/plugin-rsc` (0.x)
+ * and React Router's `unstable_reactRouterRSC`. Calling either of those
+ * stable here would not make them stable, and would promise a compatibility
+ * guarantee this project cannot keep — hence `upstream` below, not a claim
+ * that RSC itself is opt-in or unsupported.
  */
 const RSC_SUPPORT = Object.freeze({
   supported: Object.freeze([
     'production build',
-    'streaming SSR and hydration',
-    'server functions',
+    'streaming SSR and hydration (routes with a non-async page/layout component — loaders, useLoaderData)',
+    "'use client' component composition and hydration",
+    "'use server' functions, called via a route action or directly from a 'use client' component",
     'NestJS controllers',
     'route middleware, loaders, and actions',
+    'the ness-manifest.json build manifest',
+    'standalone bundling (ness bundle node)',
+    'prerender / SSG (router.prerender)',
   ]),
   unsupported: Object.freeze([
-    'prerender / SSG (router.prerender is ignored in RSC mode)',
-    'the ness-manifest.json build manifest',
-    'standalone bundling (ness bundle node), which reads that manifest',
+    "hydrating a route whose page/layout default export is an async function component (real Server Components render correctly server-side; client-side hydration of that route then fails — react-router's RSC client entry, not something Ness generates)",
   ]),
   upstream: Object.freeze({
     '@vitejs/plugin-rsc': '0.x',
@@ -34,7 +73,7 @@ const RSC_SUPPORT = Object.freeze({
   }),
 });
 
-function experimentalRsc(options = {}) {
+function rscConfig(options = {}) {
   return { rsc: true, feature: RSC_FEATURE, ...options };
 }
 
@@ -106,7 +145,8 @@ export {
   RSC_FEATURE,
   RSC_SUPPORT,
   assertSerializable,
-  experimentalRsc,
+  requestCache,
+  rscConfig,
   rscSupport,
   serverOnly,
 };

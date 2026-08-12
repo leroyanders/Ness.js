@@ -33,7 +33,7 @@ The command prints how many packages were traced and how large the result is. If
 
 The output directory is emptied before it is written, so `--output` is refused when it is the project directory or contains it.
 
-`@nessframework/core/rsc` lists standalone bundling as unsupported in RSC mode, because RSC builds do not emit `build/ness-manifest.json`. The command itself has no such check: it copies the build output and traces `package.json`, and reads no manifest.
+Standalone bundling works the same way for RSC builds — the command copies the build output (including RSC's extra `build/server/__ssr_build` directory) and traces `package.json`; it reads no manifest, so nothing about RSC's build shape is special-cased here.
 
 ## Cloudflare
 

@@ -7,14 +7,17 @@ import {
 } from '../src/framework/config.js';
 
 test('framework config enables SSR defaults and removes unsupported hooks in RSC mode', () => {
-  const standard = defineConfig({ prerender: ['/'] });
+  const standard = defineConfig({ rsc: false, prerender: ['/'] });
   assert.equal(standard.ssr, true);
   assert.deepEqual(standard.prerender, ['/']);
   assert.equal(typeof standard.buildEnd, 'function');
 
-  const rsc = defineConfig({ rsc: true, prerender: ['/'] });
+  // RSC Framework Mode is the default and rejects `buildEnd` outright, so
+  // that hook is still stripped. `prerender` needs no special-casing at all —
+  // React Router's RSC prerender plugin honors it exactly like classic mode.
+  const rsc = defineConfig({ prerender: ['/'] });
   assert.equal(rsc.buildEnd, undefined);
-  assert.equal(rsc.prerender, undefined);
+  assert.deepEqual(rsc.prerender, ['/']);
 });
 
 test('unified config separates Vite, router, server, and instrumentation options', () => {

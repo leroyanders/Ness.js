@@ -21,7 +21,7 @@ The Ness.js v7 client runtime and umbrella package. Framework subsystems are pub
 | `@nessframework/deployment`      | Node, Express, serverless, and Edge adapters                                       |
 | `@nessframework/instrumentation` | request/error hooks and Core Web Vitals                                            |
 | `@nessframework/testing`         | route stubs, Web requests, cache, and response assertions                          |
-| `@nessframework/core/rsc`        | experimental RSC helpers                                                           |
+| `@nessframework/core/rsc`        | RSC helpers (`rscConfig`, `rscSupport`, `serverOnly`, `assertSerializable`)        |
 
 ## Minimal configuration
 

@@ -26,7 +26,7 @@ await createStandaloneOutput({ extraPackages: ['my-runtime-plugin'] });
 
 The defaults match what the CLI does — the project directory, `build`, and `build/standalone`.
 
-Standalone bundling is unavailable in RSC mode, which does not emit the build manifest it reads.
+Standalone bundling works in RSC mode too — it copies the build output as-is and traces `package.json`, so RSC's extra `build/server/__ssr_build` directory travels with the rest.
 
 ### Docker
 

@@ -3,14 +3,12 @@ import { ness } from '@nessframework/router/vite';
 import nest from '@nessframework/nest';
 import { nestServer } from '@nessframework/nest/server';
 
-const rsc = process.env.NESS_EXPERIMENTAL_RSC === 'true';
-
 export default defineNessConfig({
   vite: {
-    plugins: [ness({ rsc, plugins: [nest()] })],
+    plugins: [ness({ rsc: true, plugins: [nest()] })],
   },
   router: {
-    rsc,
+    rsc: true,
     prerender: ['/'],
   },
   server: {

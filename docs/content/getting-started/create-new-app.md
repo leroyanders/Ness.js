@@ -41,13 +41,15 @@ ness new my-app --template ./path/to/template
 
 The directory can contain the application files directly or expose them from a `template/` subdirectory. See [Custom and local templates](../templates/your-own-template.md) for package metadata, dependency merging, and copy-safety rules.
 
-## Experimental React Server Components
+## React Server Components
+
+RSC is the default rendering mode — `ness new my-app` already gets it. It supports Server Components, `'use client'`, and `'use server'` functions, and every production feature classic mode has: NestJS controllers, the `ness-manifest.json` build manifest, standalone bundling, and `router.prerender` / SSG. See [React Server Components](../documentation/rsc.md) for the authoring model and its one current caveat (hydrating a route whose page component is itself `async`).
+
+It still sits on two upstream APIs that are themselves pre-stable — `@vitejs/plugin-rsc` (0.x) and React Router's `unstable_reactRouterRSC` — and can change between minor versions as a result. Pass `--no-rsc` to scaffold the classic SSR mode instead, which avoids that dependency entirely:
 
 ```bash
-ness new my-app --rsc
+ness new my-app --no-rsc
 ```
-
-RSC mode supports Server Components, `'use client'`, and `'use server'` functions. It is experimental and can change between minor versions. Prerendering is disabled in RSC mode; standard SSR mode supports prerendering and ISR.
 
 ## Next steps
 

@@ -16,10 +16,10 @@
   },
   "dependencies": {
     "@nessframework/cache": "^7.0.0",
-    "@nessframework/cli": "^7.0.0",
-    "@nessframework/core": "^7.0.0",
+    "@nessframework/cli": "^8.0.0",
+    "@nessframework/core": "^8.0.0",
     "@nessframework/nest": "^2.0.0",
-    "@nessframework/router": "^7.0.0",
+    "@nessframework/router": "^8.0.0",
     "@nestjs/common": "11.1.28",
     "@nestjs/core": "11.1.28",
     "isbot": "^5.2.1",

@@ -6,13 +6,11 @@ import nest from '@nessframework/nest';
 import { nestServer } from '@nessframework/nest/server';
 import security from '@nessframework/security';
 
-const rsc = process.env.NESS_EXPERIMENTAL_RSC === 'true';
-
 export default defineNessConfig({
   vite: {
     plugins: [
       ness({
-        rsc,
+        rsc: true,
         plugins: [
           nest(),
           security(),
@@ -23,7 +21,7 @@ export default defineNessConfig({
     ],
   },
   router: {
-    rsc,
+    rsc: true,
     prerender: ['/'],
   },
   server: {

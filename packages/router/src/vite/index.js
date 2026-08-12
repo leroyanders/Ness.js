@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
+import { buildManifestPayload, writeNessManifest } from '../index.js';
 import { nessRoutes } from '../routes.js';
 import { nessErrorOverlay } from './overlay.js';
 
@@ -20,15 +22,72 @@ function rscPlugin() {
   );
 }
 
+/**
+ * `nessRoutes()` returns a tree (routes nest `children`); `ness-manifest.json`
+ * records a flat, id-keyed map instead, matching the shape a React-Router
+ * `buildEnd` hook would have handed `writeBuildManifest` in non-RSC mode.
+ */
+function flattenRouteTree(routes, parentId, manifest = {}) {
+  for (const route of routes) {
+    const { children, ...entry } = route;
+    manifest[route.id] = { ...entry, parentId };
+    if (children) flattenRouteTree(children, route.id, manifest);
+  }
+  return manifest;
+}
+
+/**
+ * RSC Framework Mode's `validateConfig` rejects a `buildEnd` config option
+ * outright, so `ness-manifest.json` can't be written the way the non-RSC path
+ * writes it (see `writeBuildManifest` in `../index.js`). This writes the same
+ * manifest shape from a plugin-level `buildApp` hook instead — a hook Vite's
+ * Builder API calls once after every environment (client/rsc/ssr) finishes,
+ * independent of React Router's own `buildEnd` wiring. Route data comes from
+ * Ness's own `nessRoutes()` rather than React Router's `buildManifest`, since
+ * RSC mode never produces one.
+ */
+async function writeRscManifest({ root, appDirectory, configFile }) {
+  const absoluteConfigFile = path.resolve(root, configFile);
+  if (!fs.existsSync(absoluteConfigFile)) return;
+  const imported = await import(
+    /* @vite-ignore */ pathToFileURL(absoluteConfigFile).href
+  );
+  const config = imported.default || imported;
+  const routerOptions = config?.ness?.router || {};
+  const absoluteAppDirectory = path.resolve(root, appDirectory);
+  const buildDirectory = path.resolve(
+    root,
+    routerOptions.buildDirectory || 'build',
+  );
+  const routes = await nessRoutes({
+    appDirectory: absoluteAppDirectory,
+    i18n: routerOptions.i18n,
+  });
+  writeNessManifest(
+    buildDirectory,
+    buildManifestPayload({
+      basename: routerOptions.basename || '/',
+      routes: flattenRouteTree(routes),
+      cache: routerOptions.cache,
+      deployment: routerOptions.deployment,
+      i18n: routerOptions.i18n,
+    }),
+  );
+}
+
 function nessVitePlugin(options = {}) {
   const configFile = options.configFile || 'ness.config.mjs';
+  // Defaults to RSC when called directly (not just through `ness()`), so a
+  // bare `nessVitePlugin()` and a bare `ness()` agree on what "no `rsc`
+  // option given" means.
+  const rsc = options.rsc !== false;
   return {
     name: 'ness:framework',
     enforce: 'pre',
     config() {
       return {
         envPrefix: ['VITE_', 'NESS_PUBLIC_'],
-        ...(options.rsc
+        ...(rsc
           ? {
               ssr: { noExternal: ['react-router'] },
               environments: {
@@ -64,6 +123,20 @@ function nessVitePlugin(options = {}) {
         this.error(`Server-only module imported by the client bundle: ${id}`);
       }
       return null;
+    },
+    // Only RSC mode needs this: the non-RSC build gets `ness-manifest.json`
+    // from React Router's own `buildEnd` hook (see `writeBuildManifest` in
+    // `../index.js`), which RSC Framework Mode does not support at all.
+    buildApp: {
+      order: 'post',
+      async handler() {
+        if (!rsc) return;
+        await writeRscManifest({
+          root: options.root || process.cwd(),
+          appDirectory: options.appDirectory || 'app',
+          configFile,
+        });
+      },
     },
     // The route wrappers under app/.ness/routes are generated when the app's
     // routes.ts runs nessRoutes() — once, at config evaluation. A wrapper
@@ -116,7 +189,12 @@ function nessVitePlugin(options = {}) {
 }
 
 function ness(options = {}) {
-  const { plugins = [], overlay = {}, ...frameworkOptions } = options;
+  const { plugins = [], overlay = {}, rsc = true, ...rest } = options;
+  // Normalized here, not just below, so `nessVitePlugin`'s own `options.rsc`
+  // checks (the RSC environment config, the manifest-writing `buildApp` hook)
+  // see the same default as the RSC-vs-classic plugin choice does — an
+  // omitted `rsc` must mean the same thing in both places.
+  const frameworkOptions = { ...rest, rsc };
   const integrations = [plugins].flat(Infinity).filter(Boolean);
   // The overlay registers its middleware after Vite's own, so it must come
   // last in the plugin array to be configured last.
@@ -125,7 +203,7 @@ function ness(options = {}) {
       ? []
       : [nessErrorOverlay(overlay === true ? {} : overlay)];
 
-  if (!frameworkOptions.rsc) {
+  if (frameworkOptions.rsc === false) {
     return [
       nessVitePlugin(frameworkOptions),
       ...reactRouter(),

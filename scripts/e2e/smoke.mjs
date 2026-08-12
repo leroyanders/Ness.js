@@ -1,11 +1,17 @@
 #!/usr/bin/env node
 /**
- * End-to-end smoke test for the official templates.
+ * End-to-end smoke test for the official templates, plus the welcome example.
  *
  * For every template this scaffolds a real application with the CLI, replaces
  * the published @nessframework/* packages with tarballs packed from this
  * working tree, builds it, starts the production server, and asserts the app
- * actually answers over HTTP.
+ * actually answers over HTTP. `welcome` (selectable the same way as a
+ * template, via --templates=) instead builds examples/welcome in place
+ * against the workspace's own packages, since it isn't scaffolded — and
+ * asserts its RSC authoring-model demo (a real async Server Component, a
+ * 'use server' function called directly from a 'use client' component)
+ * still renders, so that demo can't silently rot the way the framework's
+ * own claims about it once did.
  *
  * Packing rather than symlinking is deliberate: `npm pack` honours each
  * package's `files` field, so a file that exists locally but is missing from
@@ -13,6 +19,7 @@
  *
  *   node scripts/e2e/smoke.mjs
  *   node scripts/e2e/smoke.mjs --templates=default,minimal --keep
+ *   node scripts/e2e/smoke.mjs --templates=welcome
  */
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
@@ -29,26 +36,35 @@ import {
 } from '../lib/workspace.mjs';
 
 const TEMPLATES = {
+  // RSC is the default `ness new` scaffolds, so these five already cover the
+  // RSC pipeline — build, manifest, standalone bundle, prerendering.
   default: { api: '/api/health' },
   typescript: { api: '/api/health' },
   minimal: { api: '/api/health' },
   api: { api: '/api/health' },
   dashboard: { api: '/api/dashboard/metrics' },
-  // The RSC pipeline is a different build entirely, so it needs its own run
-  // rather than being assumed to work because the classic one does.
-  'typescript-rsc': {
+  // Classic SSR mode is a different build entirely (no @vitejs/plugin-rsc,
+  // no rsc/ssr Vite environments), so --no-rsc needs its own run rather than
+  // being assumed to work because the RSC default does.
+  'typescript-ssr': {
     template: 'typescript',
     api: '/api/health',
-    rsc: true,
-    // RSC builds do not emit the standalone-compatible server bundle yet.
-    standalone: false,
+    rsc: false,
   },
 };
 
 const BOOT_TIMEOUT = 90_000;
 
+// Not a template — the showcase app, built in place rather than scaffolded —
+// but selectable the same way so `--templates=` stays the one selection
+// mechanism instead of growing a parallel `--no-welcome`-style flag.
+const WELCOME_KEY = 'welcome';
+
 function parseArguments(argv) {
-  const options = { templates: Object.keys(TEMPLATES), keep: false };
+  const options = {
+    templates: [...Object.keys(TEMPLATES), WELCOME_KEY],
+    keep: false,
+  };
   for (const argument of argv) {
     if (argument === '--keep') options.keep = true;
     else if (argument.startsWith('--templates=')) {
@@ -63,10 +79,12 @@ function parseArguments(argv) {
       options.workdir = path.resolve(argument.slice('--workdir='.length));
     }
   }
-  const unknown = options.templates.filter(name => !(name in TEMPLATES));
+  const unknown = options.templates.filter(
+    name => name !== WELCOME_KEY && !(name in TEMPLATES),
+  );
   if (unknown.length) {
     throw new Error(
-      `Unknown template(s): ${unknown.join(', ')}. Known: ${Object.keys(TEMPLATES).join(', ')}`,
+      `Unknown template(s): ${unknown.join(', ')}. Known: ${[...Object.keys(TEMPLATES), WELCOME_KEY].join(', ')}`,
     );
   }
   return options;
@@ -213,7 +231,7 @@ async function verifyTemplate(template, tarballs, workdir) {
       appDirectory,
       '--template',
       path.join(ROOT, 'templates', config.template || template),
-      ...(config.rsc ? ['--rsc'] : []),
+      ...(config.rsc === false ? ['--no-rsc'] : []),
       ...overrideArguments(tarballs),
     ],
     { cwd: workdir },
@@ -298,6 +316,72 @@ async function verifyTemplate(template, tarballs, workdir) {
   log(`\x1b[32m${template} passed\x1b[0m`);
 }
 
+/**
+ * `examples/welcome` is not a scaffolded template — it's the showcase app,
+ * built in place against the workspace's own packages rather than packed
+ * tarballs. It carries the RSC authoring-model demo (a real async Server
+ * Component, and a `'use server'` function called directly from a `'use
+ * client'` component); this is what keeps that demo from silently rotting
+ * the way the framework's own claims about it once did.
+ */
+async function verifyWelcomeExample() {
+  const appDirectory = path.join(ROOT, 'examples', 'welcome');
+  log('building welcome example');
+  await run('npm', ['run', 'build', '--workspace', 'welcome'], { cwd: ROOT });
+
+  const port = await freePort();
+  log(`starting welcome example on port ${port}`);
+  const child = spawn(
+    process.execPath,
+    [path.join(appDirectory, 'node_modules', '.bin', 'ness'), 'start'],
+    {
+      cwd: appDirectory,
+      env: { ...process.env, PORT: String(port), HOST: '127.0.0.1' },
+      stdio: ['ignore', 'pipe', 'pipe'],
+      detached: true,
+    },
+  );
+  let serverOutput = '';
+  child.stdout.setEncoding('utf8').on('data', chunk => {
+    serverOutput += chunk;
+  });
+  child.stderr.setEncoding('utf8').on('data', chunk => {
+    serverOutput += chunk;
+  });
+
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    await waitForServer(`${base}/_ness/health`, child);
+
+    const home = await get(base);
+    assert.equal(home.status, 200, 'the home page responds');
+
+    const rscDemo = await get(`${base}/server-action-demo`);
+    assert.equal(rscDemo.status, 200, 'the server action demo route responds');
+    const html = await rscDemo.text();
+    assert.match(
+      html,
+      /Server action from a client component/,
+      'the demo page renders a real Server Component tree, not a fallback',
+    );
+  } catch (error) {
+    error.message = `[welcome] ${error.message}\n\n--- server output ---\n${serverOutput}`;
+    throw error;
+  } finally {
+    killTree(child);
+    await sleep(500);
+    if (child.exitCode === null) {
+      try {
+        process.kill(-child.pid, 'SIGKILL');
+      } catch {
+        child.kill('SIGKILL');
+      }
+    }
+  }
+
+  log('\x1b[32mwelcome example passed\x1b[0m');
+}
+
 async function main() {
   const options = parseArguments(process.argv.slice(2));
   const workdir =
@@ -312,7 +396,8 @@ async function main() {
     });
     for (const template of options.templates) {
       try {
-        await verifyTemplate(template, tarballs, workdir);
+        if (template === WELCOME_KEY) await verifyWelcomeExample();
+        else await verifyTemplate(template, tarballs, workdir);
       } catch (error) {
         failures.push({ template, error });
         console.error(

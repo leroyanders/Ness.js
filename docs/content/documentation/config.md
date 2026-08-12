@@ -9,14 +9,12 @@ import nest from '@nessframework/nest';
 import { nestServer } from '@nessframework/nest/server';
 import security from '@nessframework/security';
 
-const rsc = process.env.NESS_EXPERIMENTAL_RSC === 'true';
-
 export default defineNessConfig({
   vite: {
-    plugins: [ness({ rsc, plugins: [nest(), security()] })],
+    plugins: [ness({ rsc: true, plugins: [nest(), security()] })],
   },
   router: {
-    rsc,
+    rsc: true,
     ssr: true,
     prerender: ['/', '/about'],
     allowedActionOrigins: ['app.example.com'],
@@ -54,6 +52,8 @@ The `vite` section accepts standard Vite configuration. Official NestJS, Tailwin
 ## Router
 
 The `router` section accepts React Router Framework Mode options. Ness supplies ESM server bundles, route-module splitting, subresource integrity, lazy route discovery, streaming SSR, and the `build/` directory by default.
+
+`rsc` defaults to `true` — a project scaffolded with `ness new --no-rsc` sets it to `false` instead, which switches to React Router's classic (non-RSC) plugin. `prerender` works the same either way.
 
 ## Production server
 

@@ -69,6 +69,31 @@ export const DEFAULT_CACHE_PROFILES: Record<
   string,
   { stale: number; revalidate: number; expire: number }
 >;
+
+export interface NessManifest {
+  version: 1;
+  generatedAt: string;
+  basename: string | undefined;
+  routes: Record<string, unknown>;
+  cache: NonNullable<NessConfig['cache']>;
+  deployment: NonNullable<NessConfig['deployment']>;
+  i18n?: I18nConfig;
+}
+
+/** Builds the `ness-manifest.json` payload shared by the SSR and RSC build paths. */
+export function buildManifestPayload(options: {
+  basename?: string;
+  routes?: Record<string, unknown>;
+  cache?: NessConfig['cache'];
+  deployment?: NessConfig['deployment'];
+  i18n?: I18nConfig;
+}): NessManifest;
+
+/** Writes `ness-manifest.json` into `buildDirectory`. */
+export function writeNessManifest(
+  buildDirectory: string,
+  payload: NessManifest,
+): void;
 export function defineConfig(options?: NessConfig): Config;
 export function defineNessConfig(
   options?: UnifiedNessConfig,

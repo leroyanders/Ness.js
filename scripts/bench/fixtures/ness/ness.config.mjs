@@ -12,10 +12,15 @@ import { nestServer } from '@nessframework/nest/server';
  * comparing a cache read against a React render and calling it SSR throughput.
  *
  * `prerender` is off for the same reason: a prerendered route is a file read.
+ *
+ * `rsc` is pinned to `false` (RSC is the framework default otherwise) so this
+ * fixture keeps measuring the same classic SSR pipeline run over run; RSC
+ * adds its own serialization step and would need its own dedicated benchmark
+ * rather than silently changing what this one has been measuring.
  */
 export default defineNessConfig({
-  vite: { plugins: [ness({ plugins: [nest()] })] },
-  router: {},
+  vite: { plugins: [ness({ rsc: false, plugins: [nest()] })] },
+  router: { rsc: false },
   server: {
     configureServer: nestServer(),
     cachePolicy: () => undefined,

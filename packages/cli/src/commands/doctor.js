@@ -1,9 +1,58 @@
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import envinfo from 'envinfo';
 import fs from 'fs-extra';
 import semver from 'semver';
 import { paint } from '../lib/colors.js';
 import { resolvePackageDirectory } from '../lib/packages.js';
+
+function isInstalled(packageName, cwd) {
+  try {
+    resolvePackageDirectory(packageName, cwd);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * RSC is the default mode `ness new` scaffolds, so `ness doctor` surfaces its
+ * status the same way it does every other package check — plus, unlike a
+ * plain pass/fail, the known upstream gaps from `rscSupport()` (see
+ * `@nessframework/core/rsc`), since those aren't things a developer can fix.
+ */
+async function checkRsc(cwd) {
+  const rscInstalled = isInstalled('@vitejs/plugin-rsc', cwd);
+  if (!rscInstalled) {
+    return {
+      name: 'RSC mode',
+      ok: true,
+      detail:
+        'not installed (classic SSR mode; scaffold without --no-rsc to opt in)',
+      gaps: [],
+    };
+  }
+  try {
+    const coreDirectory = resolvePackageDirectory('@nessframework/core', cwd);
+    const rscModule = await import(
+      pathToFileURL(path.join(coreDirectory, 'src', 'rsc', 'index.js')).href
+    );
+    const support = rscModule.rscSupport();
+    return {
+      name: 'RSC mode',
+      ok: true,
+      detail: `@vitejs/plugin-rsc installed — ${support.supported.length} capabilities supported, ${support.unsupported.length} known upstream gap(s)`,
+      gaps: support.unsupported,
+    };
+  } catch (error) {
+    return {
+      name: 'RSC mode',
+      ok: true,
+      detail: `@vitejs/plugin-rsc installed (${error.message})`,
+      gaps: [],
+    };
+  }
+}
 
 export async function doctor(cwd = process.cwd()) {
   const checks = [];
@@ -71,11 +120,16 @@ export async function doctor(cwd = process.cwd()) {
     ),
     'app/server/app.module',
   );
+  const rsc = await checkRsc(cwd);
+  checks.push(rsc);
 
   for (const check of checks) {
     console.log(
       `${check.ok ? paint('green', '✓') : paint('red', '✗')} ${check.name}: ${check.detail}`,
     );
+  }
+  for (const gap of rsc.gaps) {
+    console.log(paint('yellow', `  ⚠ ${gap}`));
   }
   const failures = checks.filter(check => !check.ok);
   if (failures.length) {

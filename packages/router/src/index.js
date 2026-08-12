@@ -28,23 +28,42 @@ function chainHooks(first, second) {
   };
 }
 
+/**
+ * The `ness-manifest.json` payload shape, shared by both the classic
+ * `buildEnd`-driven path below and the RSC `buildApp`-driven path in
+ * `./vite/index.js` — RSC Framework Mode rejects a `buildEnd` config option
+ * outright, so it cannot reuse this function's caller, only this shape.
+ */
+function buildManifestPayload({ basename, routes, cache, deployment, i18n }) {
+  return {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    basename,
+    routes: routes || {},
+    cache: cache || { profiles: DEFAULT_CACHE_PROFILES },
+    deployment: deployment || { runtime: 'node' },
+    ...(i18n ? { i18n } : {}),
+  };
+}
+
+function writeNessManifest(buildDirectory, payload) {
+  const filename = path.join(buildDirectory, 'ness-manifest.json');
+  fs.mkdirSync(path.dirname(filename), { recursive: true });
+  fs.writeFileSync(filename, `${JSON.stringify(payload, null, 2)}\n`);
+}
+
 function writeBuildManifest(options) {
   return async ({ buildManifest, reactRouterConfig }) => {
-    const output = {
-      version: 1,
-      generatedAt: new Date().toISOString(),
-      basename: reactRouterConfig.basename,
-      routes: buildManifest?.routes || {},
-      cache: options.cache || { profiles: DEFAULT_CACHE_PROFILES },
-      deployment: options.deployment || { runtime: 'node' },
-      ...(options.i18n ? { i18n: options.i18n } : {}),
-    };
-    const filename = path.join(
+    writeNessManifest(
       reactRouterConfig.buildDirectory,
-      'ness-manifest.json',
+      buildManifestPayload({
+        basename: reactRouterConfig.basename,
+        routes: buildManifest?.routes || {},
+        cache: options.cache,
+        deployment: options.deployment,
+        i18n: options.i18n,
+      }),
     );
-    fs.mkdirSync(path.dirname(filename), { recursive: true });
-    fs.writeFileSync(filename, `${JSON.stringify(output, null, 2)}\n`);
   };
 }
 
@@ -54,7 +73,7 @@ function defineConfig(options = {}) {
     deployment,
     buildEnd,
     prerender,
-    rsc = false,
+    rsc = true,
     routeDirectory,
     i18n,
     ...reactRouterOptions
@@ -77,7 +96,7 @@ function defineConfig(options = {}) {
       ...(reactRouterOptions.future || {}),
     },
     ...reactRouterOptions,
-    ...(rsc ? {} : { prerender }),
+    prerender,
     ...(rsc
       ? {}
       : {
@@ -131,11 +150,13 @@ const config = {
 };
 
 export {
+  buildManifestPayload,
   DEFAULT_CACHE_PROFILES,
   defineConfig,
   defineNessConfig,
   defineRoutes,
   nessRoutes,
   resolveNessRouterConfig,
+  writeNessManifest,
 };
 export default config;

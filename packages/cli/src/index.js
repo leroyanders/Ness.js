@@ -54,7 +54,10 @@ export async function init() {
       'use typescript, javascript, minimal, api, dashboard, or a custom template',
       'typescript',
     )
-    .option('--rsc', 'enable experimental React Server Components')
+    .option(
+      '--no-rsc',
+      'scaffold classic SSR mode instead of the default RSC mode (skips the pre-stable @vitejs/plugin-rsc dependency)',
+    )
     .option(
       '--package-override <name=spec>',
       'install a specific version, tag, or tarball of a framework package (repeatable)',
