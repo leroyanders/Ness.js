@@ -27,6 +27,18 @@ export function nest(options = {}) {
         middleware(request, response, next),
       );
 
+      // WebSocket bridge: the application registers a handler on
+      // `globalThis.__nessWebSocketUpgrade` (matching only its own paths), so
+      // vite's HMR upgrade listener keeps working untouched.
+      const onUpgrade = (request, socket, head) => {
+        const handle = globalThis.__nessWebSocketUpgrade;
+        if (typeof handle === 'function') handle(request, socket, head);
+      };
+      server.httpServer?.on('upgrade', onUpgrade);
+      server.httpServer?.once('close', () =>
+        server.httpServer?.off('upgrade', onUpgrade),
+      );
+
       const reload = async () => {
         const currentVersion = ++version;
         const outDir = path.join('.ness', 'nest', `dev-${currentVersion}`);

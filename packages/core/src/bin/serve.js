@@ -197,6 +197,13 @@ async function main() {
       `[ness] http://${host === '0.0.0.0' ? 'localhost' : host}:${port}`,
     );
   });
+  // WebSocket bridge — same contract as the dev server (plugins/nest): the
+  // application registers `globalThis.__nessWebSocketUpgrade` and matches
+  // only its own paths.
+  server.on('upgrade', (request, socket, head) => {
+    const handle = globalThis.__nessWebSocketUpgrade;
+    if (typeof handle === 'function') handle(request, socket, head);
+  });
   gracefulShutdown(server, {
     timeout:
       Number(process.env.NESS_SHUTDOWN_TIMEOUT) ||

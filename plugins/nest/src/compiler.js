@@ -31,6 +31,38 @@ const CANDIDATES = {
 };
 
 /**
+ * Rebases a specifier that reaches outside the source tree (e.g. a shared
+ * `../../generated/client.ts` two directories above `app/server`).
+ *
+ * The compiled output only mirrors `app/server` itself — a file at
+ * `app/server/shared/db.ts` lands at `<outDir>/shared/db.js` — so the two
+ * trees sit at different depths from the specifier's real target. Reusing
+ * the original `../` count (the in-tree fast path below) silently walks up
+ * the wrong number of levels and resolves inside `<outDir>` instead of the
+ * project root. The target itself is never compiled or moved — it lives
+ * outside `app/server` on purpose — so this only recomputes the path
+ * prefix, from the importing file's new location to that unchanged target.
+ */
+function rebaseEscapingSpecifier(target, directory, sourceDirectory, outputDirectory) {
+  let resolvedTarget = target;
+  if (!RESOLVED.test(target) && !/\.(?:mts|ts|tsx)$/.test(target)) {
+    const source = Object.keys(CANDIDATES).find(extension =>
+      fs.existsSync(`${target}${extension}`),
+    );
+    if (source) resolvedTarget = `${target}${source}`;
+  }
+  const outputFileDirectory = path.join(
+    outputDirectory,
+    path.relative(sourceDirectory, directory),
+  );
+  const rebased = path
+    .relative(outputFileDirectory, resolvedTarget)
+    .split(path.sep)
+    .join('/');
+  return rebased.startsWith('.') ? rebased : `./${rebased}`;
+}
+
+/**
  * Turns a relative import into one Node can resolve.
  *
  * The compiled output is ESM, where a relative specifier must carry its
@@ -40,19 +72,28 @@ const CANDIDATES = {
  * type-checks, and runs in dev, then fails at boot in production with
  * ERR_MODULE_NOT_FOUND. Rewriting here is what keeps the two honest.
  *
- * Resolution runs against the source tree, since the output mirrors it. A
- * specifier that matches nothing is left as it was: it may be an alias this
- * compiler knows nothing about, and guessing would replace a clear error with
- * a confusing one.
+ * Resolution runs against the source tree, since the output mirrors it —
+ * except for a specifier that escapes `app/server` entirely, which needs its
+ * path prefix rebased instead (see rebaseEscapingSpecifier). A specifier
+ * that matches nothing is left as it was: it may be an alias this compiler
+ * knows nothing about, and guessing would replace a clear error with a
+ * confusing one.
  */
-function resolveSpecifier(specifier, directory) {
+function resolveSpecifier(specifier, directory, sourceDirectory, outputDirectory) {
   if (!specifier.startsWith('./') && !specifier.startsWith('../'))
     return specifier;
+
+  const target = path.resolve(directory, specifier);
+  const relativeToSource = path.relative(sourceDirectory, target);
+  const escapesSource =
+    relativeToSource.startsWith('..') || path.isAbsolute(relativeToSource);
+  if (escapesSource)
+    return rebaseEscapingSpecifier(target, directory, sourceDirectory, outputDirectory);
+
   // `./x.ts` under allowImportingTsExtensions: the file ships as `.js`.
   if (/\.(?:mts|ts|tsx)$/.test(specifier)) return outputFilename(specifier);
   if (RESOLVED.test(specifier)) return specifier;
 
-  const target = path.resolve(directory, specifier);
   for (const [source, emitted] of Object.entries(CANDIDATES)) {
     if (fs.existsSync(`${target}${source}`)) return `${specifier}${emitted}`;
   }
@@ -70,7 +111,7 @@ function resolveSpecifier(specifier, directory) {
  * character range leaves everything else byte-for-byte intact, which matters
  * for the plain `.js` files that are otherwise copied rather than compiled.
  */
-function rewriteSpecifiers(code, filename, directory) {
+function rewriteSpecifiers(code, filename, directory, sourceDirectory, outputDirectory) {
   const parsed = ts.createSourceFile(
     filename,
     code,
@@ -82,7 +123,7 @@ function rewriteSpecifiers(code, filename, directory) {
 
   const record = node => {
     if (!node || !ts.isStringLiteral(node)) return;
-    const resolved = resolveSpecifier(node.text, directory);
+    const resolved = resolveSpecifier(node.text, directory, sourceDirectory, outputDirectory);
     if (resolved === node.text) return;
     const start = node.getStart(parsed);
     // Keep the quoting the file already uses, so a rewritten line does not
@@ -176,7 +217,7 @@ export async function buildNestApplication({
       );
       fs.writeFileSync(
         destination,
-        rewriteSpecifiers(compiled, filename, directory),
+        rewriteSpecifiers(compiled, filename, directory, sourceDirectory, outputDirectory),
       );
     } else if (/\.(?:js|mjs)$/.test(filename)) {
       // Copied rather than compiled, but loaded by the same ESM loader, so an
@@ -187,6 +228,8 @@ export async function buildNestApplication({
           fs.readFileSync(filename, 'utf8'),
           filename,
           directory,
+          sourceDirectory,
+          outputDirectory,
         ),
       );
     } else {

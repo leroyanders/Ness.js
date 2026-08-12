@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
+import { nessRoutes } from '../routes.js';
 import { nessErrorOverlay } from './overlay.js';
 
 /**
@@ -63,6 +64,53 @@ function nessVitePlugin(options = {}) {
         this.error(`Server-only module imported by the client bundle: ${id}`);
       }
       return null;
+    },
+    // The route wrappers under app/.ness/routes are generated when the app's
+    // routes.ts runs nessRoutes() — once, at config evaluation. A wrapper
+    // snapshots which exports its page.server file had at that moment, so
+    // adding (say) an `action` to an existing page.server.ts left the wrapper
+    // stale: the route 405'd until the developer guessed a manual restart.
+    // Regenerating on every change to a file under app/routes keeps wrappers
+    // honest — writeIfChanged makes the frequent no-op case free — and when
+    // the route *tree* itself changes shape (a route directory added or
+    // removed), the config must be re-evaluated, so the server restarts.
+    configureServer(server) {
+      const root = options.root || server.config.root || process.cwd();
+      const appDirectory = path.resolve(root, options.appDirectory || 'app');
+      const routesDirectory = path.join(appDirectory, 'routes');
+      const generatedPrefix = path.join(appDirectory, '.ness') + path.sep;
+      const routesPrefix = routesDirectory + path.sep;
+
+      let lastTree;
+      let generating = Promise.resolve();
+      const regenerate = () => {
+        // Serialized: watcher events can burst (editor save = change+change),
+        // and generation reads the tree it also writes.
+        generating = generating.then(async () => {
+          const tree = await nessRoutes({ appDirectory });
+          const snapshot = JSON.stringify(tree);
+          if (lastTree !== undefined && snapshot !== lastTree) {
+            lastTree = snapshot;
+            await server.restart();
+            return;
+          }
+          lastTree = snapshot;
+        });
+        generating.catch(error => server.config.logger.error(error.stack));
+        return generating;
+      };
+
+      const onChange = filename => {
+        if (!filename.startsWith(routesPrefix)) return;
+        if (filename.startsWith(generatedPrefix)) return;
+        regenerate();
+      };
+      server.watcher.on('add', onChange);
+      server.watcher.on('change', onChange);
+      server.watcher.on('unlink', onChange);
+      // Seed the baseline so the first real change is compared against the
+      // tree this server actually booted with.
+      regenerate();
     },
   };
 }
