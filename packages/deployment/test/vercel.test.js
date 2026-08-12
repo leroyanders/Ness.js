@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import http from 'node:http';
+import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
@@ -60,12 +62,72 @@ test('the handler rejects a missing build', () => {
   assert.throws(() => createVercelHandler({}), /server build/);
 });
 
-test('the handler returns a request function without needing a request yet', () => {
+test('the handler is a raw http.Server without needing a request yet', () => {
   // Composition (applyRuntimeConfig, configureServer, Express) is deferred to
-  // the first request — constructing the handler must not require a live
-  // build, config resolution, or database, only the build export itself.
+  // the first request/upgrade — constructing the server must not require a
+  // live build, config resolution, or database, only the build export
+  // itself. It must be a real http.Server (not a plain function) because
+  // that is what Vercel's WebSocket support requires something to attach
+  // 'upgrade' to: https://vercel.com/docs/functions/websockets.
   const handler = createVercelHandler({ build: { fake: true } });
-  assert.equal(typeof handler, 'function');
+  assert.ok(handler instanceof http.Server);
+  handler.close();
+});
+
+test('an upgrade request is bridged to globalThis.__nessWebSocketUpgrade after prepare() resolves', async () => {
+  // Simulates configureServer() registering the global late — the same
+  // shape as the Nest plugin's ws-hub.ts, which only runs once the app
+  // module has loaded. The bridge must wait for that, not just check the
+  // global synchronously, or a WS connection racing a cold start would be
+  // dropped even though the app was fully able to serve it moments later.
+  const previous = globalThis.__nessWebSocketUpgrade;
+  const calls = [];
+  const build = {
+    fake: true,
+    configureServer: async () => {
+      globalThis.__nessWebSocketUpgrade = (request, socket) => {
+        calls.push(request.url);
+        socket.end();
+      };
+    },
+  };
+  // createVercelHandler only reads `build` for the truthiness check and
+  // hands the rest to applyRuntimeConfig/configureServer inside prepare();
+  // a fake `server.configureServer` is threaded through `config` instead,
+  // matching how the real runtime config shape works.
+  const handler = createVercelHandler({
+    build: { fake: true },
+    config: { server: { configureServer: build.configureServer } },
+  });
+  try {
+    await new Promise((resolve, reject) => {
+      handler.listen(0, '127.0.0.1', resolve);
+      handler.once('error', reject);
+    });
+    const { port } = handler.address();
+
+    await new Promise((resolve, reject) => {
+      const socket = net.connect(port, '127.0.0.1', () => {
+        socket.write(
+          'GET /api/ws HTTP/1.1\r\n' +
+            'Host: 127.0.0.1\r\n' +
+            'Upgrade: websocket\r\n' +
+            'Connection: Upgrade\r\n' +
+            'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n' +
+            'Sec-WebSocket-Version: 13\r\n' +
+            '\r\n',
+        );
+      });
+      socket.on('close', resolve);
+      socket.on('error', reject);
+      setTimeout(() => reject(new Error('upgrade was never bridged')), 2000);
+    });
+
+    assert.deepEqual(calls, ['/api/ws']);
+  } finally {
+    globalThis.__nessWebSocketUpgrade = previous;
+    handler.close();
+  }
 });
 
 /* createVercelOutput: filesystem fixture, same style as trace.test.js. */

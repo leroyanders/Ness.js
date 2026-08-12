@@ -36,9 +36,14 @@ export interface VercelOutputReport {
   bytes: number;
 }
 
+/**
+ * Returns a raw `http.Server` (not a plain request-handler function) — the
+ * shape Vercel's own WebSocket support requires something to attach
+ * `'upgrade'` to. See https://vercel.com/docs/functions/websockets.
+ */
 export function createVercelHandler(
   options: VercelHandlerOptions,
-): (request: unknown, response: unknown) => Promise<void>;
+): import('node:http').Server;
 
 export default createVercelHandler;
 
