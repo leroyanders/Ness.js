@@ -96,7 +96,7 @@ function generatorSource(type, name, typescript) {
     case 'page':
       return `export const meta = () => [{title: '${symbol} | Ness.js'}];\n\nexport default function ${symbol}Page() {\n  return <main><h1>${symbol}</h1></main>;\n}\n`;
     case 'layout':
-      return `import {Outlet} from 'react-router';\n\nexport default function ${symbol}Layout() {\n  return <Outlet />;\n}\n`;
+      return `import {RouteOutlet} from '@nessframework/core/client';\n\n// Shows the fallback below during a client-side transition between this\n// layout's child routes, and skips a re-fetch when navigating back to a\n// route already visited. Replace the fallback with whatever fits this\n// layout — see https://nessjs.com/docs/documentation/routing#route-outlet.\nexport default function ${symbol}Layout() {\n  return <RouteOutlet fallback={<p role="status">Loading…</p>} />;\n}\n`;
     case 'route':
       return `export async function GET() {\n  return Response.json({ok: true});\n}\n`;
     case 'controller':

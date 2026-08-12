@@ -1,3 +1,5 @@
+import type { ReactElement, ReactNode } from 'react';
+
 export {
   Form,
   Link,
@@ -6,6 +8,14 @@ export {
   useParams,
   useSearchParams,
 } from 'react-router';
+export function cachedClientLoader<
+  T extends (args: any) => Promise<any>,
+>(loader: T): T;
+export function clearClientCache(): void;
+export function RouteOutlet(props: {
+  fallback?: ReactNode;
+  context?: unknown;
+}): ReactElement;
 export interface NavigationProgress {
   location?: Location;
   pending: boolean;

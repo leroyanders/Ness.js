@@ -8,6 +8,9 @@ export {
 } from 'react-router';
 export { Image, Script } from '@nessframework/assets';
 export {
+  RouteOutlet,
+  cachedClientLoader,
+  clearClientCache,
   prefetch,
   reportWebVitals,
   useNavigationProgress,
