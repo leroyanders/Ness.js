@@ -16,14 +16,44 @@ test('the generated entry imports the runtime config when there is one', () => {
   assert.match(vercelEntry(), /createVercelHandler\(\{ build, root \}\)/);
 
   const withConfig = vercelEntry({ configPath: './ness.server.config.mjs' });
+  // A namespace import, not a default import: a runtime config module with
+  // only named exports (this project's own convention — `export const
+  // server = ...`) has no default export at all, so `import config from`
+  // fails to *link*, a SyntaxError before `serverConfig()`'s own
+  // `config?.default ?? config` leniency ever gets a chance to run.
   assert.match(
     withConfig,
-    /import config from '\.\/ness\.server\.config\.mjs'/,
+    /import \* as config from '\.\/ness\.server\.config\.mjs'/,
   );
   assert.match(
     withConfig,
     /createVercelHandler\(\{ build, root, config \}\)/,
   );
+});
+
+test('a namespace import of a named-exports-only runtime config round-trips through serverConfig', async () => {
+  // The exact scenario that broke: `vercelEntry` generates `import * as
+  // config from '<path>'`, and that config module — like this project's own
+  // ness.server.config.mjs — exports `server`/`instrumentation` as named
+  // bindings with no `default` at all. This is a real import, not a string
+  // match, so it also proves the import *links* successfully, which a
+  // `node --check` syntax check cannot: "does not provide an export named
+  // 'default'" is a module-linking error, one stage past parsing.
+  const { serverConfig } = await import('@nessframework/server/runtime');
+  const fixtureDirectory = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'ness-vercel-config-'),
+  );
+  const configFile = path.join(fixtureDirectory, 'ness.server.config.mjs');
+  fs.writeFileSync(
+    configFile,
+    'export const server = { trustProxy: true };\nexport const instrumentation = undefined;\n',
+  );
+
+  const config = await import(`file://${configFile}`);
+  const { server } = serverConfig(config);
+  assert.equal(server.trustProxy, true);
+
+  fs.rmSync(fixtureDirectory, { recursive: true, force: true });
 });
 
 test('the handler rejects a missing build', () => {
@@ -204,9 +234,13 @@ test('createVercelOutput works without the Nest plugin at all', async t => {
 
 test('createVercelOutput bundles a runtime config when one is on disk', async t => {
   const root = createFixtureApp(t, { withNest: false });
+  // Named exports only, no default — this project's own convention (and
+  // serve.js's own loader tries `.default` before falling back to the whole
+  // module for exactly this reason). A default-exported fixture here would
+  // pass even with the old, broken default-import entry.
   fs.writeFileSync(
     path.join(root, 'ness.server.config.mjs'),
-    'export default { server: {} };\n',
+    'export const server = {};\nexport const instrumentation = undefined;\n',
   );
 
   const report = await createVercelOutput({ root, logger: null });
@@ -219,7 +253,10 @@ test('createVercelOutput bundles a runtime config when one is on disk', async t 
     path.join(report.function, 'index.js'),
     'utf8',
   );
-  assert.match(entry, /import config from '\.\/ness\.server\.config\.mjs'/);
+  assert.match(
+    entry,
+    /import \* as config from '\.\/ness\.server\.config\.mjs'/,
+  );
 });
 
 test('createVercelOutput honours a custom runtime', async t => {

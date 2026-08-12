@@ -110,6 +110,17 @@ export default createVercelHandler({ build, root });
  * when there is one — same reasoning as \`workerEntry\`: \`ness.config.mjs\`
  * imports Vite plugins at module scope, which a deployed function cannot
  * carry, so a runtime-only config file is imported instead when present.
+ *
+ * The config is a namespace import (\`import * as config\`), not a default
+ * import: `serverConfig()` (`@nessframework/server/runtime`) is written to
+ * accept either shape (`config?.default ?? config`, falling back to the
+ * whole module when there is no default export) — but that fallback only
+ * runs if the import itself succeeds. A runtime config file that only has
+ * named exports (`export const server = ...`, matching this project's own
+ * convention, and `serve.js`'s own loader, which tries `module.default`
+ * before falling back to `module`) has no default export at all, so
+ * `import config from '...'` fails to *link* — a SyntaxError before
+ * `serverConfig`'s leniency ever gets a chance to run.
  */
 function vercelEntry({ configPath } = {}) {
   if (!configPath) return VERCEL_ENTRY;
@@ -117,7 +128,7 @@ function vercelEntry({ configPath } = {}) {
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as build from './build/server/index.js';
-import config from '${configPath}';
+import * as config from '${configPath}';
 import { createVercelHandler } from '@nessframework/deployment/vercel';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
