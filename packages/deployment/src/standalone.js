@@ -181,9 +181,14 @@ async function createStandaloneOutput({
   }
 
   // A second version of a name cannot share the top level, so it is nested
-  // under the package that asked for it — exactly where Node's resolver looks.
+  // under the package that asked for it — exactly where Node's resolver
+  // looks. `requiredBy` may itself be a nested destination (e.g.
+  // `multer/node_modules/type-is`, when the package doing the requiring is
+  // itself a conflict, not a top-level winner) — only its own top-level
+  // ancestor needs to actually exist for the nesting to be valid.
   for (const { name, directory, requiredBy } of conflicts) {
-    if (!packages.has(requiredBy)) continue;
+    const topLevelAncestor = requiredBy.split('/node_modules/')[0];
+    if (!packages.has(topLevelAncestor)) continue;
     copyDirectory(
       directory,
       path.join(modulesDirectory, requiredBy, 'node_modules', name),

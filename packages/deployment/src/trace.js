@@ -97,14 +97,37 @@ function traceDependencies(
       continue;
     }
 
-    // The first resolution of a name is the one the application itself would
-    // load, so that is the copy placed at the top level of the bundle.
+    // Where this exact resolution lands in the output — its own bare name if
+    // it wins the top level, otherwise nested under wherever the specific
+    // package that required *it* landed. Threaded to this resolution's own
+    // dependencies below, so a second-level conflict (a nested package whose
+    // own dependency also conflicts with something unrelated elsewhere in the
+    // tree) nests under *this* parent specifically, rather than colliding
+    // with every other package that happens to share this parent's name.
+    // Two different `type-is` instances — the hoisted one and one bundled
+    // inside another package — each pulling in a different `media-typer`
+    // used to collapse onto the single destination `type-is/node_modules/
+    // media-typer`, silently losing whichever lost that race; the runtime
+    // then resolved the wrong (and, in one real case, ESM-only) copy in
+    // place of the one actually on the require()ing package's own resolve
+    // path.
+    // `requiredBy` (the parent's own destination, unmodified) is what a
+    // conflict entry needs — the existing copy step appends `/node_modules/
+    // <name>` itself. `destination` (the parent's plus *this* package's own
+    // name) is what gets threaded to this resolution's children below; the
+    // two must stay different values, not the same one reused for both, or
+    // the copy step nests one directory level too deep.
+    let destination = name;
     if (!packages.has(name)) {
+      // The first resolution of a name is the one the application itself
+      // would load, so that is the copy placed at the top level of the
+      // bundle.
       packages.set(name, directory);
     } else if (packages.get(name) !== directory && requiredBy) {
       // A second version of the same name. It cannot share the top level, so
       // record where it has to be nested for Node to resolve it.
       conflicts.push({ name, directory, requiredBy });
+      destination = `${requiredBy}/node_modules/${name}`;
     }
 
     if (visited.has(directory)) continue;
@@ -118,7 +141,7 @@ function traceDependencies(
         name: dependency,
         from: directory,
         required: true,
-        requiredBy: packageManifest.name || name,
+        requiredBy: destination,
       });
     }
     for (const dependency of Object.keys(
@@ -128,7 +151,7 @@ function traceDependencies(
         name: dependency,
         from: directory,
         required: false,
-        requiredBy: packageManifest.name || name,
+        requiredBy: destination,
       });
     }
     // peerDependencies are deliberately not followed. A peer is the parent's
