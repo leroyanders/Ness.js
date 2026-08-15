@@ -62,9 +62,14 @@
   "devDependencies": {
     "@vitejs/plugin-rsc": "0.5.27",
     "prettier": "^3.9.6",
-    "react-server-dom-webpack": "19.2.8",
-    "react-router": "8.3.0"
+    "react-router": "8.3.0",
+    "react-server-dom-webpack": "19.2.8"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@nessframework/core": "^8.1.0",
+    "@nessframework/router": "^8.1.0",
+    "@nessframework/server": "^7.6.2"
+  }
 }

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
 import { buildManifestPayload, writeNessManifest } from '../index.js';
-import { nessRoutes } from '../routes.js';
+import { nessRoutePaths, nessRoutes } from '../routes.js';
 import { nessErrorOverlay } from './overlay.js';
 
 /**
@@ -11,6 +11,8 @@ import { nessErrorOverlay } from './overlay.js';
  * Vite accepts a promise in the plugin array, so importing it lazily keeps a
  * non-RSC build from failing on a package it never needed.
  */
+const PREFETCH_MODULE = 'virtual:ness/route-prefetch';
+
 function rscPlugin() {
   return import('@vitejs/plugin-rsc').then(
     module => (module.default || module)(),
@@ -106,14 +108,38 @@ function nessVitePlugin(options = {}) {
     },
     resolveId(id) {
       if (id === 'virtual:ness/config') return '\0virtual:ness/config';
+      if (id === PREFETCH_MODULE) return `\0${PREFETCH_MODULE}`;
       return null;
     },
-    load(id) {
-      if (id !== '\0virtual:ness/config') return null;
-      const absolute = path.resolve(options.root || process.cwd(), configFile);
-      return fs.existsSync(absolute)
-        ? `export {default} from ${JSON.stringify(absolute)}; export * from ${JSON.stringify(absolute)};`
-        : 'export default {};';
+    async load(id) {
+      if (id === '\0virtual:ness/config') {
+        const absolute = path.resolve(
+          options.root || process.cwd(),
+          configFile,
+        );
+        return fs.existsSync(absolute)
+          ? `export {default} from ${JSON.stringify(absolute)}; export * from ${JSON.stringify(absolute)};`
+          : 'export default {};';
+      }
+      // The table `prefetchRoute` matches an href against: every page's URL
+      // pattern next to a dynamic import of the module that serves it.
+      // Generated from the same route discovery that produced the router
+      // itself, so adding a page makes it prefetchable with no further step.
+      // Imports are dynamic on purpose — naming a route here must not pull it
+      // into the initial bundle, only make it reachable on demand.
+      if (id === `\0${PREFETCH_MODULE}`) {
+        const root = options.root || process.cwd();
+        const appDirectory = path.resolve(root, options.appDirectory || 'app');
+        const pages = await nessRoutePaths({ appDirectory, i18n: options.i18n });
+        const entries = pages
+          .map(page => {
+            const absolute = path.resolve(appDirectory, page.file);
+            return `  {path: ${JSON.stringify(page.path)}, id: ${JSON.stringify(page.id)}, load: () => import(${JSON.stringify(absolute)})}`;
+          })
+          .join(',\n');
+        return `export const routes = [\n${entries}\n];\n`;
+      }
+      return null;
     },
     transform(_code, id, context) {
       if (

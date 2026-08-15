@@ -479,9 +479,46 @@ async function nessRoutes({
   return isBareDefault(localization) ? [...routes, ...branches] : branches;
 }
 
+
+/**
+ * Every navigable page, as a full path pattern paired with the module that
+ * serves it.
+ *
+ * Derived from the route tree rather than from a second walk of the disk, so
+ * it cannot drift from what actually got routed. Pages only: a `route.ts`
+ * resource has no `clientLoader` to warm and nothing to navigate to.
+ *
+ * This is what makes prefetching a framework concern instead of a table every
+ * application has to hand-maintain — the framework already knows which module
+ * answers which URL, and an application repeating that knowledge is a copy
+ * that goes stale the first time someone adds a page.
+ */
+function flattenRoutePaths(routes, parentPath = '') {
+  const flat = [];
+  for (const route of routes) {
+    const segment = route.index ? '' : (route.path ?? '');
+    const joined = segment
+      ? `${parentPath.replace(/\/$/, '')}/${segment}`
+      : parentPath;
+    const full = joined || '/';
+    if (route.file && String(route.id).endsWith('__page')) {
+      flat.push({ id: route.id, path: full, file: route.file });
+    }
+    if (route.children?.length) {
+      flat.push(...flattenRoutePaths(route.children, full));
+    }
+  }
+  return flat;
+}
+
+async function nessRoutePaths(options = {}) {
+  return flattenRoutePaths(await nessRoutes(options));
+}
+
 export {
   RESERVED_FILES,
   ROUTE_EXTENSIONS,
+  nessRoutePaths,
   nessRoutes,
   prefixRouteIds,
   segmentPath,

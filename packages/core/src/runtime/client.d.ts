@@ -1,18 +1,34 @@
+import type * as React from 'react';
 import type { ReactElement, ReactNode } from 'react';
+
+import type { LinkProps, NavLinkProps } from 'react-router';
 
 export {
   Form,
-  Link,
-  NavLink,
   PrefetchPageLinks,
   useParams,
   useSearchParams,
 } from 'react-router';
+
+/**
+ * How eagerly a link warms the page behind it:
+ * - `intent` (default) — on hover or keyboard focus
+ * - `render` — as soon as the link is on screen
+ * - `none` — not at all
+ */
+export type PrefetchMode = 'intent' | 'render' | 'none';
+export const Link: React.ForwardRefExoticComponent<
+  LinkProps & { prefetch?: PrefetchMode } & React.RefAttributes<HTMLAnchorElement>
+>;
+export const NavLink: React.ForwardRefExoticComponent<
+  NavLinkProps & { prefetch?: PrefetchMode } & React.RefAttributes<HTMLAnchorElement>
+>;
 export function apiFetch(path: string | URL, init?: RequestInit): Promise<Response>;
 export function cachedClientLoader<
   T extends (args: any) => Promise<any>,
 >(loader: T): T;
 export function clearClientCache(): void;
+export function prefetchRoute(href: string): Promise<void>;
 export function RouteOutlet(props: {
   fallback?: ReactNode | ((pathname: string) => ReactNode);
   context?: unknown;
