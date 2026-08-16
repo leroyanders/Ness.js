@@ -22,6 +22,34 @@ app/routes/
 - `(marketing)` groups files without adding a URL segment.
 - `_components` is private and does not add a URL segment.
 
+## Segment configuration
+
+A page states its own caching rules, and the production server reads them from the build manifest before it renders anything:
+
+```ts title="app/routes/blog/[slug]/page.server.ts"
+export const revalidate = 60; // seconds; `false` never expires, `0` is per-request
+export const dynamic = 'force-dynamic'; // or 'force-static'
+```
+
+`force-dynamic` (and `revalidate = 0`) takes the URL out of the shared page cache entirely — it is neither answered from it nor stored in it. A page that says nothing follows the application-wide policy, as before. The values are read statically, so they must be literals.
+
+Prerendering a dynamic route's paths still happens in `ness.config.mjs` — `router.prerender` accepts a function — rather than as a per-route export.
+
+## Metadata files
+
+```text
+app/routes/
+├── sitemap.ts     # /sitemap.xml
+├── robots.ts      # /robots.txt
+└── manifest.ts    # /manifest.webmanifest
+```
+
+Each exports a default function returning ordinary data; the framework serializes it and sets the content type. They can live in any segment, published under that segment's path.
+
+## Templates
+
+A `template.tsx` wraps the segment's children like a layout, except it is rebuilt on every navigation instead of persisting — for an entry animation, or an effect that must run per visit. One instance sits in the tree, keyed by the history entry.
+
 ## Loading and navigation
 
 A `loading.tsx` is the segment's pending boundary. It covers what the segment renders _inside_ its own layout — its page and everything nested below it — and not the layout itself, which belongs to the segment above.

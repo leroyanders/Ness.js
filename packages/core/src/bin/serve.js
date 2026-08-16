@@ -99,6 +99,45 @@ async function loadInstrumentation(root) {
   registerInstrumentation(module.default || module);
 }
 
+/**
+ * The page list the build wrote into `ness-manifest.json`.
+ *
+ * It carries each page's own `revalidate`/`dynamic`, which the request handler
+ * needs before it renders anything. Missing manifest, unreadable manifest: the
+ * server still starts and every page follows the application-wide policy —
+ * caching rules are not worth refusing to boot over.
+ */
+function loadPages(root) {
+  const filename = path.join(root, 'build', 'ness-manifest.json');
+  try {
+    return JSON.parse(fs.readFileSync(filename, 'utf8')).pages || [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The project's own request middleware, if it wrote any.
+ *
+ * `middleware.mjs` beside `ness.config.mjs` runs for every request, before the
+ * router has matched anything — which is the point, and what the per-segment
+ * `middleware.ts` files cannot do: an auth gate, a rewrite by country, a bot
+ * rule, all want to answer before a route is chosen. Loaded from disk the same
+ * way `instrumentation.mjs` is, so neither needs a place in the config.
+ */
+async function loadRequestMiddleware(root) {
+  const filename = ['middleware.mjs', 'middleware.js']
+    .map(candidate => path.join(root, candidate))
+    .find(fs.existsSync);
+  if (!filename) return [];
+  const module = await import(
+    `${pathToFileURL(filename).href}?t=${fs.statSync(filename).mtimeMs}`
+  );
+  const middleware = module.default ?? module.middleware;
+  if (!middleware) return [];
+  return Array.isArray(middleware) ? middleware : [middleware];
+}
+
 async function main() {
   process.env.NODE_ENV = process.env.NODE_ENV || 'production';
   const root = process.cwd();
@@ -124,10 +163,15 @@ async function main() {
       : createImageHandler(
           typeof config.images === 'object' ? config.images : {},
         );
+  const fileMiddleware = await loadRequestMiddleware(root);
   const handler = createNessRequestHandler({
     build,
     imageHandler,
+    pages: loadPages(root),
     ...handlerConfig,
+    // The file runs ahead of anything the config named: it is the outermost
+    // thing the project wrote, the way Next's middleware is.
+    middleware: [...fileMiddleware, ...(handlerConfig.middleware || [])],
   });
   const app = express();
   app.disable('x-powered-by');

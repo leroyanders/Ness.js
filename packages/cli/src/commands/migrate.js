@@ -17,14 +17,14 @@ const ROUTE_FILES = new Set([
   'route',
   'forbidden',
   'unauthorized',
+  'template',
+  'sitemap',
+  'robots',
+  'manifest',
 ]);
 
 /** Files with no Ness equivalent; they are reported, not moved. */
 const UNSUPPORTED_FILES = new Map([
-  [
-    'template',
-    'Next template.tsx re-mounts on navigation; use a layout with a key.',
-  ],
   ['default', 'Parallel-route defaults are not supported.'],
   ['global-error', 'Use app/routes/error.tsx at the root instead.'],
   [

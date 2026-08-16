@@ -19,6 +19,8 @@ The route conventions are nearly the same, which is what makes this mechanical r
 | `app/layout.tsx` (nested)                                 | `app/routes/.../layout.tsx`    |
 | `app/layout.tsx` (root)                                   | `app/root.tsx`                 |
 | `app/loading.tsx`                                         | `app/routes/.../loading.tsx`   |
+| `app/template.tsx`                                        | `app/routes/.../template.tsx`  |
+| `app/sitemap.ts`, `app/robots.ts`, `app/manifest.ts`      | same names under `app/routes/` |
 | `app/error.tsx`                                           | `app/routes/.../error.tsx`     |
 | `app/not-found.tsx`                                       | `app/routes/.../not-found.tsx` |
 | `app/forbidden.tsx`, `app/unauthorized.tsx`               | same names under `app/routes/` |

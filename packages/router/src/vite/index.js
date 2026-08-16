@@ -70,6 +70,10 @@ async function writeRscManifest({ root, appDirectory, configFile }) {
     buildManifestPayload({
       basename: routerOptions.basename || '/',
       routes: flattenRouteTree(routes),
+      pages: await nessRoutePaths({
+        appDirectory: absoluteAppDirectory,
+        i18n: routerOptions.i18n,
+      }),
       cache: routerOptions.cache,
       deployment: routerOptions.deployment,
       i18n: routerOptions.i18n,
@@ -98,8 +102,28 @@ function nessVitePlugin(options = {}) {
               },
             }
           : {}),
+        // The framework's own runtime is source, not a third-party bundle, and
+        // pre-bundling it makes it stale in the one situation that matters:
+        // someone editing Ness itself alongside an application. Vite keys the
+        // optimizer's cache to the lockfile, so a changed file inside
+        // node_modules is invisible until the cache is deleted by hand — and
+        // the symptom is an export that "does not exist" while it plainly
+        // does. Excluded here so it is always read from disk.
+        optimizeDeps: {
+          exclude: [
+            '@nessframework/core',
+            '@nessframework/core/client',
+            '@nessframework/components',
+          ],
+        },
         server: {
           headers: { 'x-powered-by': 'Ness.js' },
+          // Excluding the runtime from pre-bundling is only half of it: Vite
+          // ignores node_modules in its watcher, so an edited framework file
+          // still sits in the module cache until the server restarts. This
+          // un-ignores the framework's own packages, which is exactly the case
+          // that matters — someone developing Ness against a real application.
+          watch: { ignored: ['!**/node_modules/@nessframework/**'] },
         },
         build: {
           target: 'es2022',
@@ -130,7 +154,10 @@ function nessVitePlugin(options = {}) {
       if (id === `\0${PREFETCH_MODULE}`) {
         const root = options.root || process.cwd();
         const appDirectory = path.resolve(root, options.appDirectory || 'app');
-        const pages = await nessRoutePaths({ appDirectory, i18n: options.i18n });
+        const pages = await nessRoutePaths({
+          appDirectory,
+          i18n: options.i18n,
+        });
         const entries = pages
           .map(page => {
             const absolute = path.resolve(appDirectory, page.file);

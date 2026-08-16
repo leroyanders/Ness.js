@@ -72,6 +72,11 @@ function createNextApp(context) {
   );
   write(
     root,
+    'app/@modal/default.tsx',
+    'export default function D(){ return null; }\n',
+  );
+  write(
+    root,
     'app/components/button.tsx',
     'export function Button(){ return null; }\n',
   );
@@ -122,14 +127,29 @@ test('files without an equivalent are reported instead of moved', async t => {
   const root = createNextApp(t);
   const plan = planMigration(root);
 
-  const template = plan.findings.find(finding =>
-    finding.file.endsWith('template.tsx'),
+  // Parallel routes still have no Ness equivalent.
+  const parallelDefault = plan.findings.find(finding =>
+    finding.file.endsWith('default.tsx'),
   );
-  assert.ok(template, 'template.tsx is reported');
-  assert.equal(template.level, 'manual');
+  assert.ok(parallelDefault, 'default.tsx is reported');
+  assert.equal(parallelDefault.level, 'manual');
   assert.ok(
-    !plan.moves.some(move => move.from.endsWith('template.tsx')),
-    'template.tsx must not be moved',
+    !plan.moves.some(move => move.from.endsWith('default.tsx')),
+    'default.tsx must not be moved',
+  );
+});
+
+test('a template is moved now that Ness has the convention', async t => {
+  const root = createNextApp(t);
+  const plan = planMigration(root);
+
+  assert.ok(
+    plan.moves.some(move => move.from.endsWith('template.tsx')),
+    'template.tsx is moved like any other route file',
+  );
+  assert.ok(
+    !plan.findings.some(finding => finding.file.endsWith('template.tsx')),
+    'and needs no note',
   );
 });
 

@@ -3,7 +3,12 @@ import test from 'node:test';
 import { createElement as h } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { RouterProvider, createMemoryRouter } from 'react-router';
-import { RouteOutlet, apiFetch, cachedClientLoader, clearClientCache } from '../src/runtime/client.js';
+import {
+  RouteOutlet,
+  apiFetch,
+  cachedClientLoader,
+  clearClientCache,
+} from '../src/runtime/client.js';
 
 /**
  * `cachedClientLoader` reads `window.location` — not present under Node's
@@ -24,7 +29,9 @@ test('apiFetch is a plain fetch pass-through, same name/shape as the server help
   try {
     const response = await apiFetch('/api/contacts', { method: 'GET' });
     assert.deepEqual(await response.json(), { ok: true });
-    assert.deepEqual(calls, [{ path: '/api/contacts', init: { method: 'GET' } }]);
+    assert.deepEqual(calls, [
+      { path: '/api/contacts', init: { method: 'GET' } },
+    ]);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -39,7 +46,9 @@ test('cachedClientLoader calls through and caches on a miss', async () => {
   };
   const wrapped = cachedClientLoader(loader);
 
-  const result = await wrapped({ request: new Request('https://example.com/other') });
+  const result = await wrapped({
+    request: new Request('https://example.com/other'),
+  });
   assert.deepEqual(result, { calls: 1 });
   assert.equal(calls, 1);
 });
@@ -53,8 +62,12 @@ test('cachedClientLoader returns the cached value for a different URL without re
   };
   const wrapped = cachedClientLoader(loader);
 
-  const first = await wrapped({ request: new Request('https://example.com/target?x=1') });
-  const second = await wrapped({ request: new Request('https://example.com/target?x=1') });
+  const first = await wrapped({
+    request: new Request('https://example.com/target?x=1'),
+  });
+  const second = await wrapped({
+    request: new Request('https://example.com/target?x=1'),
+  });
   assert.equal(calls, 1);
   assert.equal(second, first);
 });
@@ -74,8 +87,14 @@ test('cachedClientLoader always re-fetches when request.url matches window.locat
   // Now simulate having arrived at /current (window.location matches it) and
   // React Router revalidating that same route after a mutation.
   setLocation('/current');
-  const revalidated = await wrapped({ request: new Request('https://example.com/current') });
-  assert.equal(calls, 2, 'a same-URL revalidation must never be served from cache');
+  const revalidated = await wrapped({
+    request: new Request('https://example.com/current'),
+  });
+  assert.equal(
+    calls,
+    2,
+    'a same-URL revalidation must never be served from cache',
+  );
   assert.deepEqual(revalidated, { calls: 2 });
 });
 
@@ -92,7 +111,9 @@ test('cachedClientLoader treats different search params as distinct cache entrie
   await wrapped({ request: new Request('https://example.com/board?b=2') });
   assert.equal(calls, 2);
 
-  const revisit = await wrapped({ request: new Request('https://example.com/board?b=1') });
+  const revisit = await wrapped({
+    request: new Request('https://example.com/board?b=1'),
+  });
   assert.equal(calls, 2, 'revisiting an already-cached ?b=1 must not re-fetch');
   assert.match(revisit.url, /b=1/);
 });
@@ -147,7 +168,11 @@ test('RouteOutlet renders the fallback during a genuine cross-route pending navi
 
   const markup = renderToStaticMarkup(h(RouterProvider, { router }));
   assert.match(markup, /skeleton/);
-  assert.doesNotMatch(markup, /other/, 'the target route must not render until its loader resolves');
+  assert.doesNotMatch(
+    markup,
+    /other/,
+    'the target route must not render until its loader resolves',
+  );
 });
 
 test('RouteOutlet calls a function fallback with the destination pathname, for a distinct skeleton per route', () => {

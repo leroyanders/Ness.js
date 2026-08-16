@@ -9,11 +9,40 @@ const RESERVED_FILES = [
   'route',
   'error',
   'loading',
+  'template',
   'middleware',
   'not-found',
   'forbidden',
   'unauthorized',
+  'sitemap',
+  'robots',
+  'manifest',
 ];
+
+/**
+ * The metadata files a segment can declare, and the URL each is published at.
+ *
+ * A file exporting a default function; the framework serializes what it
+ * returns. Same convention as Next, and for the same reason: a sitemap is a
+ * route, but writing it as one means hand-rolling the XML and remembering the
+ * content type, every project, every time.
+ */
+const METADATA_FILES = [
+  { basename: 'sitemap', path: 'sitemap.xml', serializer: 'createSitemap' },
+  { basename: 'robots', path: 'robots.txt', serializer: 'createRobots' },
+  {
+    basename: 'manifest',
+    path: 'manifest.webmanifest',
+    serializer: 'createManifest',
+  },
+];
+
+/**
+ * Route-module exports that configure the segment rather than render it.
+ * Recorded in the build manifest so the production server can read a page's
+ * caching rules without importing the page.
+ */
+const SEGMENT_CONFIG = ['revalidate', 'dynamic'];
 
 function slash(value) {
   return value.split(path.sep).join('/');
@@ -44,11 +73,35 @@ function importPath(from, to) {
   return relative;
 }
 
+/**
+ * Every file this pass generated. A route directory that goes away leaves its
+ * wrapper behind otherwise — dead on the router, but not dead to the dev
+ * server, which keeps trying to reload a module whose imports no longer
+ * resolve and fills the console with 404s for a route nobody has any more.
+ */
+let generatedThisPass = null;
+
 function writeIfChanged(filename, content) {
+  generatedThisPass?.add(path.resolve(filename));
   fs.mkdirSync(path.dirname(filename), { recursive: true });
   if (fs.existsSync(filename) && fs.readFileSync(filename, 'utf8') === content)
     return;
   fs.writeFileSync(filename, content);
+}
+
+/** Removes wrappers left over from routes that no longer exist. */
+function pruneGenerated(generatedDirectory, written) {
+  if (!fs.existsSync(generatedDirectory)) return;
+  for (const entry of fs.readdirSync(generatedDirectory, {
+    withFileTypes: true,
+  })) {
+    if (!entry.isFile()) continue;
+    const filename = path.resolve(generatedDirectory, entry.name);
+    if (written.has(filename)) continue;
+    if (!ROUTE_EXTENSIONS.some(extension => filename.endsWith(extension)))
+      continue;
+    fs.rmSync(filename, { force: true });
+  }
 }
 
 function findAdjacentServer(generatedFile, sourceFile) {
@@ -69,6 +122,31 @@ function findAdjacentServer(generatedFile, sourceFile) {
     exports,
     module: JSON.stringify(importPath(generatedFile, serverFile)),
   };
+}
+
+/**
+ * Reads a segment's caching rules off its source: `export const revalidate =
+ * 60`, `export const dynamic = 'force-dynamic'`.
+ *
+ * Statically, from the text, because the answer is needed where the module
+ * cannot be run — at build time to write the manifest, and in a production
+ * server that must decide whether a URL may be cached before it renders it.
+ * A value that is not a literal is not configuration; it is ignored, exactly
+ * as Next ignores one it cannot see.
+ */
+function findSegmentConfig(source) {
+  const config = {};
+  const revalidate = source.match(
+    /\bexport\s+const\s+revalidate\s*(?::[^=]+)?=\s*(\d+|false)\b/,
+  );
+  if (revalidate)
+    config.revalidate =
+      revalidate[1] === 'false' ? false : Number(revalidate[1]);
+  const dynamic = source.match(
+    /\bexport\s+const\s+dynamic\s*(?::[^=]+)?=\s*['"`](force-dynamic|force-static|auto)['"`]/,
+  );
+  if (dynamic) config.dynamic = dynamic[1];
+  return Object.keys(config).length ? config : undefined;
 }
 
 function findNamedExports(source) {
@@ -177,7 +255,7 @@ function appendStreamedRoute(
   lines.push(
     `const NessStreamed = streamRoute(NessRoute, NessLoading, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}});`,
   );
-  lines.push('export default NessStreamed.Component;');
+  lines.push('const NessComponent = NessStreamed.Component;');
   lines.push('export const clientLoader = NessStreamed.clientLoader;');
   lines.push('export const shouldRevalidate = NessStreamed.shouldRevalidate;');
   // The same boundary answers for hydration, so a cold load and a navigation
@@ -198,12 +276,39 @@ function appendStreamedRoute(
     );
 }
 
+/**
+ * Wraps the route's element in the segment's `template.tsx`, keyed by the
+ * history entry.
+ *
+ * That key is the whole difference between a template and a layout: a layout
+ * persists across a navigation and keeps its state, a template is torn down
+ * and built again, which is what an entry animation or a per-visit effect
+ * needs. It goes around the element rather than inside the layout because the
+ * layout is the application's own file and the framework has nowhere to reach
+ * into it — and the child element sits exactly where Next puts a template
+ * anyway: inside the layout, around the part that changes.
+ */
+function appendTemplate(lines, { generatedFile, templateFile }) {
+  lines.push(
+    `import NessTemplate from ${JSON.stringify(importPath(generatedFile, templateFile))};`,
+  );
+  lines.push("import {useLocation as nessUseLocation} from 'react-router';");
+  lines.push("import {createElement as nessCreateElement} from 'react';");
+  lines.push(
+    'function NessTemplated(props){\n' +
+      '  const location = nessUseLocation();\n' +
+      '  return nessCreateElement(NessTemplate, {key: location.key}, nessCreateElement(NessComponent, props));\n' +
+      '}',
+  );
+}
+
 function createWrapper({
   generatedFile,
   sourceFile,
   errorFile,
   loadingFile,
   boundaryFile,
+  templateFile,
   routeId,
   middlewareFile,
   notFoundFile,
@@ -240,7 +345,7 @@ function createWrapper({
         server,
       });
     } else {
-      lines.push(`export {default} from ${modulePath};`);
+      lines.push(`import NessComponent from ${modulePath};`);
       if (namedExports.length)
         lines.push(`export {${namedExports.join(', ')}} from ${modulePath};`);
       if (serverExports.length)
@@ -250,9 +355,15 @@ function createWrapper({
     }
   } else if (fallbackLayout) {
     lines.push("import {Outlet} from 'react-router';");
-    lines.push(
-      'export default function NessSegmentLayout(){ return <Outlet />; }',
-    );
+    lines.push('function NessComponent(){ return <Outlet />; }');
+  }
+  if (sourceFile || fallbackLayout) {
+    if (templateFile) {
+      appendTemplate(lines, { generatedFile, templateFile });
+      lines.push('export default NessTemplated;');
+    } else {
+      lines.push('export default NessComponent;');
+    }
   }
   if (
     status &&
@@ -325,6 +436,46 @@ ${middlewareExport}
   writeIfChanged(generatedFile, content);
 }
 
+/**
+ * A `sitemap`/`robots`/`manifest` module, published as the file it describes.
+ *
+ * The application exports a default function returning ordinary data; the
+ * serialization — the XML, the content type, the escaping — is the
+ * framework's, because getting it wrong is silent and every project would
+ * otherwise write it again.
+ */
+function createMetadataWrapper({ generatedFile, sourceFile, serializer }) {
+  const modulePath = JSON.stringify(importPath(generatedFile, sourceFile));
+  writeIfChanged(
+    generatedFile,
+    `// Generated by Ness.js. Do not edit.
+import NessMetadata from ${modulePath};
+import {${serializer}} from '@nessframework/core/metadata';
+
+export async function loader(args) {
+  return ${serializer}(
+    typeof NessMetadata === 'function' ? await NessMetadata(args) : NessMetadata,
+  );
+}
+`,
+  );
+}
+
+/** A page's own config, or its `.server` module's — whichever declares it. */
+function segmentConfigFor(sourceFile) {
+  const own = findSegmentConfig(fs.readFileSync(sourceFile, 'utf8'));
+  const extension = path.extname(sourceFile);
+  const base = sourceFile.slice(0, -extension.length);
+  const serverFile = ROUTE_EXTENSIONS.map(
+    candidate => `${base}.server${candidate}`,
+  ).find(fs.existsSync);
+  const server = serverFile
+    ? findSegmentConfig(fs.readFileSync(serverFile, 'utf8'))
+    : undefined;
+  if (!own && !server) return undefined;
+  return { ...server, ...own };
+}
+
 function moduleId(routesDirectory, directory, suffix) {
   const relative = slash(path.relative(routesDirectory, directory)) || 'root';
   return `${relative.replace(/[^a-zA-Z0-9_-]+/g, '__')}__${suffix}`;
@@ -341,6 +492,7 @@ function discoverDirectory({
   directory,
   root = false,
   inheritedLoadingFile,
+  parentTemplateFile,
 }) {
   const layoutFile = findModule(directory, 'layout');
   const pageFile = findModule(directory, 'page');
@@ -364,6 +516,10 @@ function discoverDirectory({
   // page area, and a navigation that reloads the layout falls back a level up.
   const childLoadingFile = loadingFile ?? inheritedLoadingFile;
 
+  // A template belongs to its own segment's children and no deeper: one
+  // instance in the tree, in the same position the boundary sits in.
+  const templateFile = findModule(directory, 'template');
+
   const childDirectories = fs.existsSync(directory)
     ? fs
         .readdirSync(directory, { withFileTypes: true })
@@ -382,6 +538,7 @@ function discoverDirectory({
       generatedDirectory,
       `${moduleId(routesDirectory, directory, 'page')}.tsx`,
     );
+    const segmentConfig = segmentConfigFor(pageFile);
     createWrapper({
       generatedFile,
       routeId: moduleId(routesDirectory, directory, 'page'),
@@ -389,6 +546,7 @@ function discoverDirectory({
       errorFile: layoutFile ? undefined : errorFile,
       loadingFile: layoutFile ? undefined : loadingFile,
       boundaryFile: childLoadingFile,
+      templateFile,
       middlewareFile: layoutFile ? undefined : middlewareFile,
       notFoundFile: layoutFile ? undefined : notFoundFile,
       forbiddenFile: layoutFile ? undefined : forbiddenFile,
@@ -397,6 +555,26 @@ function discoverDirectory({
     children.push({
       id: moduleId(routesDirectory, directory, 'page'),
       index: true,
+      file: routeFile(appDirectory, generatedFile),
+      ...(segmentConfig ? { config: segmentConfig } : {}),
+    });
+  }
+
+  for (const metadata of METADATA_FILES) {
+    const sourceFile = findModule(directory, metadata.basename);
+    if (!sourceFile) continue;
+    const generatedFile = path.join(
+      generatedDirectory,
+      `${moduleId(routesDirectory, directory, metadata.basename)}.ts`,
+    );
+    createMetadataWrapper({
+      generatedFile,
+      sourceFile,
+      serializer: metadata.serializer,
+    });
+    children.push({
+      id: moduleId(routesDirectory, directory, metadata.basename),
+      path: metadata.path,
       file: routeFile(appDirectory, generatedFile),
     });
   }
@@ -425,6 +603,7 @@ function discoverDirectory({
       generatedDirectory,
       directory: path.join(directory, child.name),
       inheritedLoadingFile: childLoadingFile,
+      parentTemplateFile: templateFile,
     });
     if (childRoute) children.push(childRoute);
   }
@@ -461,6 +640,7 @@ function discoverDirectory({
     errorFile,
     loadingFile,
     boundaryFile: inheritedLoadingFile,
+    templateFile: parentTemplateFile,
     middlewareFile,
     notFoundFile,
     forbiddenFile,
@@ -532,13 +712,28 @@ async function nessRoutes({
       `Ness routes directory does not exist: ${absoluteRoutesDirectory}`,
     );
   }
-  const routes = discoverDirectory({
-    appDirectory: absoluteAppDirectory,
-    routesDirectory: absoluteRoutesDirectory,
-    generatedDirectory: absoluteGeneratedDirectory,
-    directory: absoluteRoutesDirectory,
-    root: true,
-  });
+  const written = new Set();
+  const previous = generatedThisPass;
+  generatedThisPass = written;
+  let routes;
+  try {
+    routes = discoverDirectory({
+      appDirectory: absoluteAppDirectory,
+      routesDirectory: absoluteRoutesDirectory,
+      generatedDirectory: absoluteGeneratedDirectory,
+      directory: absoluteRoutesDirectory,
+      root: true,
+    });
+    const localization = normalizeI18n(i18n);
+    if (localization) createLocaleLayout(absoluteGeneratedDirectory);
+    writeRouteTypes(
+      absoluteAppDirectory,
+      flattenRoutePaths(Array.isArray(routes) ? routes : [routes]),
+    );
+  } finally {
+    generatedThisPass = previous;
+    pruneGenerated(absoluteGeneratedDirectory, written);
+  }
 
   const localization = normalizeI18n(i18n);
   if (!localization) return routes;
@@ -587,7 +782,12 @@ function flattenRoutePaths(routes, parentPath = '') {
       : parentPath;
     const full = joined || '/';
     if (route.file && String(route.id).endsWith('__page')) {
-      flat.push({ id: route.id, path: full, file: route.file });
+      flat.push({
+        id: route.id,
+        path: full,
+        file: route.file,
+        ...(route.config ? { config: route.config } : {}),
+      });
     }
     if (route.children?.length) {
       flat.push(...flattenRoutePaths(route.children, full));
@@ -598,6 +798,46 @@ function flattenRoutePaths(routes, parentPath = '') {
 
 async function nessRoutePaths(options = {}) {
   return flattenRoutePaths(await nessRoutes(options));
+}
+
+/**
+ * Declares every route pattern the application has, so `href()` can be checked
+ * against it.
+ *
+ * Written as declaration merging rather than as an exported type: an
+ * application calls `href` from `@nessframework/core` and gets its own routes
+ * typed, without importing anything generated or naming the file at all.
+ */
+function writeRouteTypes(appDirectory, pages) {
+  const entries = pages
+    .map(page => {
+      const names = [...String(page.path).matchAll(/:([A-Za-z0-9_]+)/g)].map(
+        match => match[1],
+      );
+      const params = String(page.path).includes('*')
+        ? [...names, 'splat']
+        : names;
+      const shape = params.length
+        ? `{ ${params.map(name => `${name}: string | number`).join('; ')} }`
+        : 'Record<string, never>';
+      return `    ${JSON.stringify(page.path)}: ${shape};`;
+    })
+    .join('\n');
+  // Beside the application's own files rather than inside `.ness`, because
+  // TypeScript skips dot-directories when it expands a wildcard `include` —
+  // a declaration nobody's compiler reads is a declaration that does nothing.
+  writeIfChanged(
+    path.join(appDirectory, 'ness-routes.d.ts'),
+    `// Generated by Ness.js. Do not edit.
+import '@nessframework/core';
+
+declare module '@nessframework/core' {
+  interface NessRouteMap {
+${entries}
+  }
+}
+`,
+  );
 }
 
 export {

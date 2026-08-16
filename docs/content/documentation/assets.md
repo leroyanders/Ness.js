@@ -71,6 +71,34 @@ export default defineNessConfig({
 
 `cache: false` re-encodes on every request. `revalidateTag('images')` clears every stored variant.
 
+## Share cards
+
+```tsx title="app/routes/og/route.tsx"
+import { ImageResponse } from '@nessframework/core/og';
+
+export async function GET() {
+  return new ImageResponse(
+    <div
+      style={{
+        display: 'flex',
+        width: '100%',
+        height: '100%',
+        background: '#faf6ef',
+      }}
+    >
+      <h1 style={{ margin: 'auto', fontSize: 64 }}>Ness.js</h1>
+    </div>,
+    {
+      width: 1200,
+      height: 630,
+      fonts: [{ name: 'Inter', data: await inter() }],
+    },
+  );
+}
+```
+
+Rendered with [satori](https://github.com/vercel/satori), an optional peer — install it in the projects that want cards, and nothing else pays for it. Rasterization goes through the same `sharp` the image pipeline already uses; `format: 'svg'` skips it. There is no default font: satori cannot lay out text without one, and shipping a face inside the framework would be choosing a typeface, and a licence, for every application.
+
 ## Fonts and scripts
 
 `localFont` creates self-hosted `@font-face` rules, preload links, stable class names, fallbacks, and CSS variables. `<Script>` supports `beforeInteractive`, `afterInteractive`, and `lazyOnload` strategies.

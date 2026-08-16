@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { normalizeI18n } from './i18n.js';
-import { nessRoutes } from './routes.js';
+import { nessRoutePaths, nessRoutes } from './routes.js';
 
 export { RESERVED_FILES, ROUTE_EXTENSIONS, segmentPath } from './routes.js';
 export {
@@ -34,12 +34,24 @@ function chainHooks(first, second) {
  * `./vite/index.js` — RSC Framework Mode rejects a `buildEnd` config option
  * outright, so it cannot reuse this function's caller, only this shape.
  */
-function buildManifestPayload({ basename, routes, cache, deployment, i18n }) {
+function buildManifestPayload({
+  basename,
+  routes,
+  pages,
+  cache,
+  deployment,
+  i18n,
+}) {
   return {
     version: 1,
     generatedAt: new Date().toISOString(),
     basename,
     routes: routes || {},
+    // Every page as a full URL pattern, with whatever `revalidate` /
+    // `dynamic` it declared. The production server reads this to answer a
+    // question it has before it renders anything: may this URL be served from
+    // the shared cache, and for how long is a stored copy good.
+    pages: pages || [],
     cache: cache || { profiles: DEFAULT_CACHE_PROFILES },
     deployment: deployment || { runtime: 'node' },
     ...(i18n ? { i18n } : {}),
@@ -59,6 +71,10 @@ function writeBuildManifest(options) {
       buildManifestPayload({
         basename: reactRouterConfig.basename,
         routes: buildManifest?.routes || {},
+        pages: await nessRoutePaths({
+          appDirectory: reactRouterConfig.appDirectory,
+          i18n: options.i18n,
+        }).catch(() => []),
         cache: options.cache,
         deployment: options.deployment,
         i18n: options.i18n,

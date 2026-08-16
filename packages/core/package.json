@@ -27,7 +27,7 @@
   },
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "type": "module",
   "main": "./src/index.js",
   "types": "./src/index.d.ts",
@@ -61,7 +61,8 @@
     "./vite": {
       "types": "./src/vite/index.d.ts",
       "default": "./src/vite/index.js"
-    }
+    },
+    "./og": "./src/assets/og.js"
   },
   "bin": {
     "ness-serve": "src/bin/serve.js"
