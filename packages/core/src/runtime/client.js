@@ -26,6 +26,18 @@ function prefetch(href, { signal, headers } = {}) {
   return fetch(url, { headers, signal, credentials: 'same-origin' });
 }
 
+/**
+ * `{scroll: false}` is how Next spells "stay where you are", and applications
+ * moving over write it without thinking; react-router spells the same thing
+ * `preventScrollReset`. Both are accepted, and an explicit `preventScrollReset`
+ * wins if somebody passes both.
+ */
+function navigateOptions(options) {
+  if (!options || !('scroll' in options)) return options;
+  const { scroll, ...rest } = options;
+  return { preventScrollReset: scroll === false, ...rest };
+}
+
 function useRouter() {
   const navigate = router.useNavigate();
   const revalidator = router.useRevalidator();
@@ -34,9 +46,10 @@ function useRouter() {
       back: () => navigate(-1),
       forward: () => navigate(1),
       prefetch,
-      push: (href, options) => navigate(href, options),
+      push: (href, options) => navigate(href, navigateOptions(options)),
       refresh: () => revalidator.revalidate(),
-      replace: (href, options) => navigate(href, { ...options, replace: true }),
+      replace: (href, options) =>
+        navigate(href, { ...navigateOptions(options), replace: true }),
     }),
     [navigate, revalidator],
   );
@@ -164,6 +177,306 @@ function cachedClientLoader(loader) {
 }
 
 /**
+ * What a streamed route's `clientLoader` hands the router while its data is
+ * still on the way. A symbol, because every plainer answer — `null`,
+ * `undefined`, `{}` — is something a real loader might mean on purpose.
+ */
+const NESS_PENDING = Symbol('ness.pending');
+
+/**
+ * How long the router is given to come back for a result that settled after
+ * its navigation had already committed.
+ *
+ * The hand-off normally happens within a frame of the data landing. This is
+ * for when it never happens at all — the reader navigated away mid-flight, or
+ * the tab went to the background and its timers were throttled — so that a
+ * result nobody claimed is refetched on the next visit rather than served
+ * arbitrarily stale.
+ */
+const STREAM_HANDOFF_TTL_MS = 5000;
+
+/**
+ * How long a load is given to finish before the page stops waiting for it and
+ * shows the segment's `loading.tsx`.
+ *
+ * Zero is the literal reading of "commit immediately", and it would put a
+ * skeleton on screen for the twenty milliseconds a warm request takes — a
+ * flash that reads as a glitch rather than as loading. A window this small is
+ * imperceptible as a delay, and comfortably longer than a loader answering
+ * from memory: a cached route still navigates in a single frame with no
+ * fallback at all, which is the case most worth protecting.
+ */
+const PENDING_GRACE_MS = 8;
+
+/** Results that settled after their navigation committed, keyed route+URL. */
+const streamedResults = new Map();
+
+/** The loads those results will come from, same keys. */
+const streamedLoads = new Map();
+
+/**
+ * How many settle passes are in flight — the revalidation a streamed route
+ * asks for once its data lands, purely so the router will come back and take
+ * it.
+ *
+ * Every route in the chain is polled on that pass, and none of them should
+ * act on it: nobody asked for fresh data, one route asked to be re-rendered
+ * with data it is already holding. `shouldRevalidate` on a generated route
+ * reads this and declines. Routes the framework does not generate — a
+ * `loader` in the application's own `root.tsx` — are outside its reach and
+ * will refetch, which for the per-URL things a root loader usually computes
+ * is the right answer anyway.
+ */
+let settlePasses = 0;
+
+/** Whether the navigation now loading came from Back or Forward. */
+let popNavigation = false;
+
+if (typeof window !== 'undefined') {
+  // Back and Forward render from cache, always: those pages were on screen a
+  // moment ago and the reader expects them as they left them. Ordinary
+  // forward navigation is not cached unless the application asks for it with
+  // `cachedClientLoader` — the same bargain Next.js ended up at.
+  window.addEventListener('popstate', () => {
+    popNavigation = true;
+    // The loaders for a POP run in the task the browser dispatched it on.
+    setTimeout(() => {
+      popNavigation = false;
+    }, 0);
+  });
+}
+
+function streamKey(routeId, url) {
+  return `${routeId}\n${urlKey(url)}`;
+}
+
+/** Takes a settled result off the shelf, if there is one still worth having. */
+function claimStreamedResult(key) {
+  const settled = streamedResults.get(key);
+  if (!settled) return null;
+  streamedResults.delete(key);
+  return Date.now() - settled.at > STREAM_HANDOFF_TTL_MS ? null : settled;
+}
+
+function beginStreamedLoad(key, load, args) {
+  const entry = { streamed: false };
+  const settled = Promise.resolve().then(() => load(args));
+  entry.settled = settled;
+  // Filed the moment it lands, so the settle pass finds it waiting. Attached
+  // before anything else races this promise, which is what makes the ordering
+  // in `streamedClientLoader` deterministic: this handler runs first, so a
+  // load that beats the grace window can delete what it just wrote.
+  settled.then(
+    value => {
+      streamedResults.set(key, { at: Date.now(), ok: true, value });
+      // Also kept under the plain URL, which is what Back and Forward read.
+      // Those pages were on screen a moment ago; re-fetching them to show
+      // the same thing again is a wait the reader did not agree to.
+      clientDataCache.set(urlKey(args.request.url), value);
+    },
+    error => streamedResults.set(key, { at: Date.now(), ok: false, error }),
+  );
+  streamedLoads.set(key, entry);
+  const finish = () => {
+    if (streamedLoads.get(key) === entry) streamedLoads.delete(key);
+    // Only a load whose navigation already committed has anything to hand
+    // over; one that beat the grace window was returned to the router the
+    // ordinary way and has nobody waiting on a second pass.
+    if (entry.streamed) settlePass();
+  };
+  settled.then(finish, finish);
+  return entry;
+}
+
+/**
+ * The router's `revalidate`, kept where a settling load can reach it.
+ *
+ * A load that finishes after its navigation committed has to tell the router
+ * to come and collect, and it has no other way to say so: it is a promise in
+ * a module, not a component. Every streamed route publishes this while it is
+ * on screen, so there is always a current one to call. Which route published
+ * it does not matter — they all revalidate the same router.
+ */
+let requestRevalidate = null;
+
+function publishRevalidate(revalidate) {
+  requestRevalidate = revalidate;
+}
+
+/**
+ * Ask the router to re-run the loaders, so the one holding a settled result
+ * can hand it over. Returns whether there was anyone to ask.
+ */
+function settlePass() {
+  if (!requestRevalidate) return false;
+  settlePasses += 1;
+  requestRevalidate();
+  // `shouldRevalidate` is polled synchronously inside `revalidate()`; the
+  // flag only has to outlive that call.
+  setTimeout(() => {
+    settlePasses = Math.max(0, settlePasses - 1);
+  }, 0);
+  return true;
+}
+
+/**
+ * The `clientLoader` of a route covered by a `loading.tsx`.
+ *
+ * It answers in one of two ways. When the data arrives inside the grace
+ * window — from `cachedClientLoader`, from a prefetch, from Back — it is
+ * returned outright, and the navigation is an ordinary blocking one that
+ * happened not to block. Otherwise it returns `NESS_PENDING` immediately,
+ * which lets the router commit: the address bar changes, the layouts above
+ * stay exactly as they are, and the segment renders its `loading.tsx` while
+ * the load carries on. When the load lands the route asks for a revalidation
+ * and this hands over what it kept.
+ *
+ * A revalidation of the page already on screen — after a `<Form>`, after
+ * `revalidate()` — is never streamed. There the reader is looking at real
+ * content, and replacing it with a skeleton would be a step backwards, so
+ * those keep awaiting the loader as they always did.
+ */
+function streamedClientLoader(routeId, load) {
+  return async args => {
+    const key = streamKey(routeId, args.request.url);
+    const claimed = claimStreamedResult(key);
+    if (claimed) {
+      if (!claimed.ok) throw claimed.error;
+      return claimed.value;
+    }
+
+    const target = urlKey(args.request.url);
+    if (target === renderedKey) return load(args);
+
+    if (popNavigation && clientDataCache.has(target)) {
+      servedFromCache.add(target);
+      return clientDataCache.get(target);
+    }
+
+    const entry = streamedLoads.get(key) ?? beginStreamedLoad(key, load, args);
+    let raced;
+    try {
+      raced = await Promise.race([
+        entry.settled,
+        new Promise(resolve =>
+          setTimeout(() => resolve(NESS_PENDING), PENDING_GRACE_MS),
+        ),
+      ]);
+    } catch (error) {
+      // Redirects are thrown, and a guard that throws one is the commonest
+      // thing a loader does inside the grace window. Whatever it was, it has
+      // been handed to the router now and must not be handed over twice.
+      streamedResults.delete(key);
+      throw error;
+    }
+    if (raced === NESS_PENDING) {
+      // From here the load owns the hand-off: when it lands it will ask the
+      // router to come back for it.
+      entry.streamed = true;
+      return NESS_PENDING;
+    }
+    // This navigation never showed a fallback, so there is no hand-off to
+    // come and nothing should be left on the shelf for the next visit. What
+    // Back reads is a different shelf, written by the load itself.
+    streamedResults.delete(key);
+    return raced;
+  };
+}
+
+/**
+ * A route that renders its segment's `loading.tsx` while its own data is on
+ * the way, and the page itself once the data is there.
+ *
+ * This is the whole of the nesting rule. A boundary belongs to whichever
+ * route is waiting, so a layout that is not reloading simply keeps rendering
+ * — moving between two pages under the same layout replaces the page area and
+ * nothing else, and a navigation that does reload the layout falls back at
+ * the level above instead. Nothing has to work out which fallback belongs to
+ * which destination, because each route only ever answers for itself.
+ */
+function streamedComponent(Page, Loading, routeId) {
+  return function NessStreamedRoute(props) {
+    const data = router.useLoaderData();
+    const location = router.useLocation();
+    const revalidator = router.useRevalidator();
+    const pending = data === NESS_PENDING;
+    const path = location.pathname + location.search;
+
+    // Lend the router's `revalidate` to the module, so a load that settles
+    // after this navigation committed has a way to ask for its hand-off.
+    React.useEffect(() => {
+      publishRevalidate(revalidator.revalidate);
+    }, [revalidator.revalidate]);
+
+    // The safety net for the one case the load itself cannot cover: it landed
+    // before this route was ever rendered, so the ask it made went nowhere.
+    React.useEffect(() => {
+      if (!pending) return;
+      const key = streamKey(routeId, path);
+      if (streamedResults.has(key)) settlePass();
+    }, [pending, path]);
+
+    // The same bookkeeping `RouteOutlet` does, done here too so it holds in a
+    // layout that renders a plain `<Outlet/>`: publish what is really on
+    // screen, and settle up for anything answered from cache.
+    React.useEffect(() => {
+      if (pending) return;
+      setRenderedKey(urlKey(path));
+      if (
+        consumeServedFromCache(urlKey(path)) &&
+        revalidator.state === 'idle'
+      ) {
+        revalidator.revalidate();
+      }
+    }, [pending, path, revalidator]);
+
+    return pending
+      ? React.createElement(Loading)
+      : React.createElement(Page, props);
+  };
+}
+
+/**
+ * Wires a route module and the `loading.tsx` covering it into the three
+ * exports react-router asks for. Called by generated route modules; an
+ * application never writes this itself.
+ *
+ * A route with no loader has nothing to wait for and is handed back
+ * untouched, so `loading.tsx` costs nothing where there is no data.
+ */
+function streamRoute(route, Loading, options = {}) {
+  const { id, serverLoader = false, shouldRevalidate } = options;
+  const load =
+    typeof route.clientLoader === 'function'
+      ? route.clientLoader
+      : serverLoader
+        ? args => args.serverLoader()
+        : null;
+  if (!load || typeof Loading !== 'function') {
+    return {
+      Component: route.default,
+      clientLoader: route.clientLoader,
+      shouldRevalidate,
+    };
+  }
+  const clientLoader = streamedClientLoader(id, load);
+  // A route that asked to run its own loader on hydration still does.
+  if (route.clientLoader?.hydrate) clientLoader.hydrate = true;
+  return {
+    Component: streamedComponent(route.default, Loading, id),
+    clientLoader,
+    shouldRevalidate(args) {
+      // On a settle pass exactly one route has something to collect.
+      if (settlePasses > 0)
+        return streamedResults.has(streamKey(id, args.nextUrl));
+      return typeof shouldRevalidate === 'function'
+        ? shouldRevalidate(args)
+        : args.defaultShouldRevalidate;
+    },
+  };
+}
+
+/**
  * The generated table of every page's URL pattern and the module that serves
  * it, emitted by the router plugin (`virtual:ness/route-prefetch`).
  *
@@ -246,11 +559,57 @@ const prefetchesInFlight = new Set();
 const PREFETCH_INTENT_DELAY_MS = 120;
 
 /**
+ * What `prefetch="auto"` — the default — actually means.
+ *
+ * In a build, a link warms itself as soon as it is on screen, which is what
+ * Next does and what makes a navigation land in one frame instead of three.
+ * In development it waits for hover: the pages are being edited, every warm-up
+ * is a module graph compiled for a page nobody asked for, and the wait for the
+ * one page you did ask for gets longer.
+ *
+ * Save-Data, and connections slow enough that the browser says so, turn it off
+ * entirely — a prefetch is a guess, and a guess is not worth someone's data.
+ */
+function autoPrefetchMode() {
+  if (typeof navigator !== 'undefined') {
+    const connection = navigator.connection;
+    if (connection?.saveData) return 'none';
+    if (/2g/.test(connection?.effectiveType ?? '')) return 'none';
+  }
+  const production =
+    typeof import.meta !== 'undefined' && import.meta.env?.PROD === true;
+  return production ? 'viewport' : 'intent';
+}
+
+/** Warms a link once it comes into view, then stops watching it. */
+function useViewportPrefetch(elementRef, href, active) {
+  React.useEffect(() => {
+    if (!active || !href || typeof IntersectionObserver === 'undefined')
+      return undefined;
+    const element = elementRef.current;
+    if (!element) return undefined;
+    const observer = new IntersectionObserver(
+      entries => {
+        if (!entries.some(entry => entry.isIntersecting)) return;
+        observer.disconnect();
+        void prefetchRoute(href);
+      },
+      // Started slightly before the link is actually visible, so a link
+      // scrolled to deliberately is usually warm by the time it is read.
+      { rootMargin: '200px' },
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [active, href, elementRef]);
+}
+
+/**
  * The hover/focus handlers behind `<Link prefetch>`.
  *
- * `intent` is the default because it costs nothing until someone shows an
- * intention to click; `render` is for the handful of links worth paying for
- * up front; `none` opts out.
+ * `auto` is the default and resolves per environment (see above); `intent` is
+ * hover or keyboard focus; `viewport` is as soon as the link is on screen;
+ * `render` is as soon as it exists, for the handful worth paying for up front;
+ * `none` opts out.
  */
 function usePrefetchHandlers(to, prefetch) {
   const timer = React.useRef(undefined);
@@ -262,7 +621,7 @@ function usePrefetchHandlers(to, prefetch) {
     if (active && prefetch === 'render') void prefetchRoute(href);
   }, [active, prefetch, href]);
 
-  if (!active || prefetch === 'render') return null;
+  if (!active || prefetch === 'render' || prefetch === 'viewport') return null;
   const start = () => {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(
@@ -284,13 +643,39 @@ function chain(own, given) {
 
 function withPrefetch(Component, displayName) {
   const Wrapped = React.forwardRef(function NessLink(
-    { prefetch = 'intent', onPointerEnter, onFocus, onPointerLeave, onBlur, ...props },
+    {
+      prefetch = 'auto',
+      scroll,
+      onPointerEnter,
+      onFocus,
+      onPointerLeave,
+      onBlur,
+      ...props
+    },
     ref,
   ) {
-    const handlers = usePrefetchHandlers(props.to, prefetch);
+    const mode = prefetch === 'auto' ? autoPrefetchMode() : prefetch;
+    const handlers = usePrefetchHandlers(props.to, mode);
+    const element = React.useRef(null);
+    const setRef = React.useCallback(
+      node => {
+        element.current = node;
+        if (typeof ref === 'function') ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref],
+    );
+    useViewportPrefetch(
+      element,
+      typeof props.to === 'string' ? props.to : null,
+      mode === 'viewport',
+    );
     return React.createElement(Component, {
+      // Next's `scroll={false}`, spelled `preventScrollReset` here. Written
+      // first so a link passing react-router's own name still wins.
+      ...(scroll === false ? { preventScrollReset: true } : null),
       ...props,
-      ref,
+      ref: setRef,
       onPointerEnter: handlers
         ? chain(handlers.start, onPointerEnter)
         : onPointerEnter,
@@ -314,7 +699,6 @@ function withPrefetch(Component, displayName) {
  */
 const Link = withPrefetch(router.Link, 'Link');
 const NavLink = withPrefetch(router.NavLink, 'NavLink');
-
 
 /**
  * Drop-in replacement for react-router's `<Outlet/>` in a layout route:
@@ -441,6 +825,7 @@ export {
   hasCachedRoute,
   prefetchRoute,
   reportWebVitals,
+  streamRoute,
   useLinkStatus,
   useNavigationProgress,
   useOptimisticAction,

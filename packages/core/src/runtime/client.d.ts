@@ -12,21 +12,49 @@ export {
 
 /**
  * How eagerly a link warms the page behind it:
- * - `intent` (default) — on hover or keyboard focus
- * - `render` — as soon as the link is on screen
+ * - `auto` (default) — once on screen in a build, on hover in development,
+ *   and not at all on a metered or slow connection
+ * - `intent` — on hover or keyboard focus
+ * - `viewport` — once the link is on screen
+ * - `render` — as soon as the link exists
  * - `none` — not at all
  */
-export type PrefetchMode = 'intent' | 'render' | 'none';
+export type PrefetchMode = 'auto' | 'intent' | 'viewport' | 'render' | 'none';
+/** `scroll={false}` is Next's name for react-router's `preventScrollReset`. */
+export type NessLinkProps = { prefetch?: PrefetchMode; scroll?: boolean };
 export const Link: React.ForwardRefExoticComponent<
-  LinkProps & { prefetch?: PrefetchMode } & React.RefAttributes<HTMLAnchorElement>
+  LinkProps & NessLinkProps & React.RefAttributes<HTMLAnchorElement>
 >;
 export const NavLink: React.ForwardRefExoticComponent<
-  NavLinkProps & { prefetch?: PrefetchMode } & React.RefAttributes<HTMLAnchorElement>
+  NavLinkProps & NessLinkProps & React.RefAttributes<HTMLAnchorElement>
 >;
-export function apiFetch(path: string | URL, init?: RequestInit): Promise<Response>;
-export function cachedClientLoader<
-  T extends (args: any) => Promise<any>,
->(loader: T): T;
+/**
+ * Wires a route module together with the `loading.tsx` covering it. Called by
+ * generated route modules — an application never writes this itself.
+ */
+export function streamRoute(
+  route: {
+    default?: React.ComponentType<any>;
+    clientLoader?: ((args: any) => unknown) & { hydrate?: boolean };
+  },
+  Loading: React.ComponentType,
+  options?: {
+    id?: string;
+    serverLoader?: boolean;
+    shouldRevalidate?: (args: any) => boolean;
+  },
+): {
+  Component?: React.ComponentType<any>;
+  clientLoader?: (args: any) => unknown;
+  shouldRevalidate?: (args: any) => boolean;
+};
+export function apiFetch(
+  path: string | URL,
+  init?: RequestInit,
+): Promise<Response>;
+export function cachedClientLoader<T extends (args: any) => Promise<any>>(
+  loader: T,
+): T;
 export function clearClientCache(): void;
 export function prefetchRoute(href: string): Promise<void>;
 /** Whether a URL's loader data is already cached — no wait needed to show it. */
@@ -55,8 +83,14 @@ export interface NessRouter {
   forward(): void;
   prefetch: typeof prefetch;
   refresh(): void;
-  push(href: string, options?: Record<string, unknown>): void;
-  replace(href: string, options?: Record<string, unknown>): void;
+  push(
+    href: string,
+    options?: Record<string, unknown> & { scroll?: boolean },
+  ): void;
+  replace(
+    href: string,
+    options?: Record<string, unknown> & { scroll?: boolean },
+  ): void;
 }
 export function useRouter(): NessRouter;
 export function useSelectedLayoutSegment(index?: number): string | null;
