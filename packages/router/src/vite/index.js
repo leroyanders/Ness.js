@@ -81,6 +81,30 @@ async function writeRscManifest({ root, appDirectory, configFile }) {
   );
 }
 
+/**
+ * The application directory a given Vite root is actually serving.
+ *
+ * A Vite root is not always the project root. `ness dev` points React Router
+ * at a generated root under `.ness/config`, which holds a `react-router.config
+ * .mjs` and an `app/` of nothing but generated types — no `routes/`, and never
+ * any. Resolving `app` against that root names a directory that has never
+ * existed, which is what this used to hand to `nessRoutes` on every start.
+ *
+ * So the question is asked of the filesystem instead of assumed: the nearest
+ * `app/routes` from here upwards. `undefined` when there is none — that Vite
+ * server is not serving a Ness route tree, and has nothing to keep in sync.
+ */
+function resolveAppDirectory(root, appDirectory) {
+  let current = path.resolve(root);
+  for (;;) {
+    const candidate = path.resolve(current, appDirectory);
+    if (fs.existsSync(path.join(candidate, 'routes'))) return candidate;
+    const parent = path.dirname(current);
+    if (parent === current) return undefined;
+    current = parent;
+  }
+}
+
 function nessVitePlugin(options = {}) {
   const configFile = options.configFile || 'ness.config.mjs';
   // Defaults to RSC when called directly (not just through `ness()`), so a
@@ -202,7 +226,14 @@ function nessVitePlugin(options = {}) {
     // removed), the config must be re-evaluated, so the server restarts.
     configureServer(server) {
       const root = options.root || server.config.root || process.cwd();
-      const appDirectory = path.resolve(root, options.appDirectory || 'app');
+      const appDirectory = resolveAppDirectory(
+        root,
+        options.appDirectory || 'app',
+      );
+      // Nothing to regenerate, and nothing worth an error about it: the
+      // generated `.ness/config` root gets its own Vite server, and it has no
+      // routes of its own by design.
+      if (!appDirectory) return;
       const routesDirectory = path.join(appDirectory, 'routes');
       const generatedPrefix = path.join(appDirectory, '.ness') + path.sep;
       const routesPrefix = routesDirectory + path.sep;
