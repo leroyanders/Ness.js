@@ -135,6 +135,34 @@ function hasCachedRoute(href) {
   return clientDataCache.has(urlKey(href));
 }
 
+/**
+ * Whether two URL keys address the same page — same path, arguments aside.
+ *
+ * `urlKey` carries the query because the *data* differs per query; this
+ * question is about the *page*, which does not.
+ */
+function samePage(a, b) {
+  if (!a || !b) return false;
+  return a.split('?')[0] === b.split('?')[0];
+}
+
+/**
+ * The page on screen right now.
+ *
+ * `renderedKey` is the reliable answer and the reason it exists: on a POP the
+ * browser has already changed the address before a single loader runs, so
+ * `window.location` would claim the destination is what the reader is looking
+ * at. It is only unset before anything has committed — first paint, or a tree
+ * that renders neither `RouteOutlet` nor a streamed route — and there the
+ * address is as good an answer as there is.
+ */
+function currentPage() {
+  if (renderedKey) return renderedKey;
+  return typeof window === 'undefined'
+    ? null
+    : urlKey(window.location.pathname + (window.location.search || ''));
+}
+
 function urlKey(url) {
   const parsed = new URL(url, 'http://ness.local');
   return parsed.pathname + parsed.search;
@@ -346,7 +374,16 @@ function streamedClientLoader(routeId, load) {
     }
 
     const target = urlKey(args.request.url);
-    if (target === renderedKey) return load(args);
+    // Same page, whatever its arguments say: this is not a navigation the
+    // reader made, it is the page changing its own mind — a month in a
+    // calendar, a tab, a filter, a sort. They are already looking at real
+    // content, and taking it away to show a skeleton of it is a step
+    // backwards, so these keep awaiting the loader as they always did. The
+    // page shows its own pending state (`useNavigation`) if it wants one.
+    //
+    // A revalidation of the very same URL — after a `<Form>`, after
+    // `revalidate()` — is the same case and covered by the same test.
+    if (samePage(target, currentPage())) return load(args);
 
     if (popNavigation && clientDataCache.has(target)) {
       servedFromCache.add(target);

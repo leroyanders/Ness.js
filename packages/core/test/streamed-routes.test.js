@@ -133,3 +133,67 @@ test('a route with only a server loader is streamed through serverLoader()', asy
   });
   assert.deepEqual(data, { from: 'server' });
 });
+
+/**
+ * The page on screen is normally published by the route that committed; under
+ * the test runner nothing renders effects, so the address stands in for it —
+ * the same fallback the runtime uses before anything has committed.
+ */
+function setLocation(pathname, search = '') {
+  globalThis.window = { location: { pathname, search } };
+}
+
+test('changing a page’s own arguments keeps the page on screen — no skeleton for a calendar’s next month', async () => {
+  let loads = 0;
+  const streamed = streamRoute(
+    {
+      default: Page,
+      clientLoader: async ({ request }) => {
+        loads += 1;
+        await tick(30); // Slower than the grace window: this would stream.
+        return { month: new URL(request.url).searchParams.get('m') };
+      },
+    },
+    Loading,
+    { id: 'calendar' },
+  );
+
+  // The reader is looking at August.
+  setLocation('/dashboard/calendar', '?m=2026-08');
+  const next = await streamed.clientLoader({
+    request: new Request('https://example.com/dashboard/calendar?m=2026-09'),
+  });
+
+  assert.deepEqual(
+    next,
+    { month: '2026-09' },
+    'the loader is awaited, so the page keeps rendering August until September is here',
+  );
+  assert.equal(loads, 1);
+  delete globalThis.window;
+});
+
+test('a different page under the same layout still streams', async () => {
+  const streamed = streamRoute(
+    {
+      default: Page,
+      clientLoader: async () => {
+        await tick(30);
+        return { page: 'chat' };
+      },
+    },
+    Loading,
+    { id: 'chat' },
+  );
+
+  setLocation('/dashboard/calendar', '?m=2026-08');
+  const answer = await streamed.clientLoader({
+    request: new Request('https://example.com/dashboard/chat'),
+  });
+  assert.notDeepEqual(
+    answer,
+    { page: 'chat' },
+    'a real page change is still allowed to show its loading.tsx',
+  );
+  delete globalThis.window;
+});
