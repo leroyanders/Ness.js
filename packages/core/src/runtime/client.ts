@@ -162,6 +162,14 @@ function apiFetch(path: string | URL, init?: RequestInit): Promise<Response> {
 const clientDataCache = new Map<string, unknown>();
 
 /**
+ * Expiry times for entries that were stored under a page's `clientCache`
+ * TTL. An entry present in `clientDataCache` but absent here (a prefetch, a
+ * back/forward snapshot) is not served by the TTL path — only by the flows
+ * that always served it.
+ */
+const clientCacheExpiry = new Map<string, number>();
+
+/**
  * The URL whose data is on screen right now, and the set of URLs that were
  * answered from the cache and still owe a refresh.
  *
@@ -178,6 +186,7 @@ const servedFromCache = new Set<string>();
 
 function clearClientCache(): void {
   clientDataCache.clear();
+  clientCacheExpiry.clear();
   servedFromCache.clear();
 }
 
@@ -452,13 +461,21 @@ function settlePass(): boolean {
 function streamedClientLoader(
   routeId: string,
   load: ClientLoader,
+  cacheSeconds = 0,
 ): ClientLoader {
+  const store = (target: string, value: unknown): unknown => {
+    if (cacheSeconds > 0) {
+      clientDataCache.set(target, value);
+      clientCacheExpiry.set(target, Date.now() + cacheSeconds * 1000);
+    }
+    return value;
+  };
   return async (args: ClientLoaderArgs) => {
     const key = streamKey(routeId, args.request.url);
     const claimed = claimStreamedResult(key);
     if (claimed) {
       if (!claimed.ok) throw claimed.error;
-      return claimed.value;
+      return store(urlKey(args.request.url), claimed.value);
     }
 
     const target = urlKey(args.request.url);
@@ -470,8 +487,24 @@ function streamedClientLoader(
     // page shows its own pending state (`useNavigation`) if it wants one.
     //
     // A revalidation of the very same URL — after a `<Form>`, after
-    // `revalidate()` — is the same case and covered by the same test.
-    if (samePage(target, currentPage())) return load(args);
+    // `revalidate()` — is the same case and covered by the same test, and
+    // its fresh answer re-arms the TTL below.
+    if (samePage(target, currentPage())) return store(target, await load(args));
+
+    // The page's own `clientCache` window: within it a navigation is
+    // answered from memory outright — no fetch, no revalidation pass. Past
+    // it the entry is just stale memory, and the ordinary load below
+    // replaces it.
+    if (cacheSeconds > 0) {
+      const expiresAt = clientCacheExpiry.get(target);
+      if (
+        expiresAt !== undefined &&
+        expiresAt > Date.now() &&
+        clientDataCache.has(target)
+      ) {
+        return clientDataCache.get(target);
+      }
+    }
 
     if (popNavigation && clientDataCache.has(target)) {
       servedFromCache.add(target);
@@ -504,7 +537,7 @@ function streamedClientLoader(
     // come and nothing should be left on the shelf for the next visit. What
     // Back reads is a different shelf, written by the load itself.
     streamedResults.delete(key);
-    return raced;
+    return store(target, raced);
   };
 }
 
@@ -594,6 +627,14 @@ function streamedComponent(
 export interface RouteModule {
   default?: React.ComponentType<Record<string, unknown>>;
   clientLoader?: ClientLoader & { hydrate?: boolean };
+  /**
+   * `export const clientCache = 60` on a page: client-side navigations to it
+   * are answered from memory for that many seconds instead of refetching the
+   * server loader. Mutations still clear the whole cache (`RouteOutlet`),
+   * and a document request never sees this — it is purely the navigation
+   * layer's memory.
+   */
+  clientCache?: number;
 }
 
 export interface StreamRouteOptions {
@@ -636,7 +677,16 @@ function streamRoute(
       shouldRevalidate,
     };
   }
-  const clientLoader = streamedClientLoader(id!, load) as ClientLoader & {
+  const clientLoader = streamedClientLoader(
+    id!,
+    load,
+    // The page's own statement about how long a navigation may reuse its
+    // data. Read off the module so the generated wrapper needs no new
+    // plumbing to carry it.
+    typeof route.clientCache === 'number' && route.clientCache > 0
+      ? route.clientCache
+      : 0,
+  ) as ClientLoader & {
     hydrate?: boolean;
   };
   // A route that asked to run its own loader on hydration still does.

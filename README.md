@@ -6,7 +6,7 @@
 
 <p align="center">One filesystem.<br />Both sides of the request.</p>
 
-Ness.js is a full-stack React framework with a NestJS backend. Version 7 combines React 19, React Router Framework Mode, Vite 8, NestJS controllers and DI, streaming SSR, typed loaders and actions, caching shared across instances, localized routing, pre-rendering, image optimization, and self-hosted deployment that ships as a single directory.
+Ness.js is a full-stack React framework with a NestJS backend. It combines React 19, React Router Framework Mode, Vite 8, NestJS controllers and DI, streaming SSR, typed loaders and actions, caching shared across instances, localized routing, pre-rendering, image optimization, and self-hosted deployment that ships as a single directory.
 
 ## Create an application
 
