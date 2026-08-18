@@ -187,10 +187,18 @@ async function createStandaloneOutput({
     copyDirectory(publicSource, path.join(output, 'public'));
   }
 
+  // `ness.server.config.*` belongs here as much as the others: the documented
+  // way to keep Vite out of a runtime config is to split the server half into
+  // that file and import it from `ness.config.*`. The Vercel bundler already
+  // knows about it; leaving it out here copied a config whose own import
+  // could not resolve, and the bundle died at boot on ERR_MODULE_NOT_FOUND.
   for (const configFile of [
     'ness.config.ts',
     'ness.config.mjs',
     'ness.config.js',
+    'ness.server.config.ts',
+    'ness.server.config.mjs',
+    'ness.server.config.js',
     'instrumentation.ts',
     'instrumentation.mjs',
     'instrumentation.js',

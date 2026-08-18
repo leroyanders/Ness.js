@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/deployment",
-  "version": "8.0.0",
+  "version": "8.0.1",
   "description": "Standalone output, dependency tracing, and Node, Lambda, Cloudflare Workers, and Vercel adapters for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/deployment",
   "bugs": {
