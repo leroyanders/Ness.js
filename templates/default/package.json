@@ -2,7 +2,7 @@
   "name": "@nessframework/default",
   "version": "4.2.4",
   "type": "module",
-  "description": "Official JavaScript starter for Ness.js.",
+  "description": "Official starter for Ness.js.",
   "homepage": "https://nessjs.com/docs/templates",
   "bugs": {
     "url": "https://github.com/leroyanders/Ness.js/issues"
@@ -14,7 +14,7 @@
     "starter",
     "react",
     "nestjs",
-    "javascript",
+    "typescript",
     "boilerplate",
     "full-stack",
     "ssr",
@@ -29,7 +29,7 @@
     "directory": "templates/default"
   },
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.18.0"
   },
   "files": [
     "template",

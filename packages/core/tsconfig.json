@@ -1,0 +1,34 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "tsBuildInfoFile": "./.tsbuildinfo",
+    "types": ["node"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"]
+  },
+  "include": ["src/**/*"],
+  "references": [
+    {
+      "path": "../../packages/assets"
+    },
+    {
+      "path": "../../packages/cache"
+    },
+    {
+      "path": "../../packages/deployment"
+    },
+    {
+      "path": "../../packages/instrumentation"
+    },
+    {
+      "path": "../../packages/router"
+    },
+    {
+      "path": "../../packages/server"
+    },
+    {
+      "path": "../../packages/testing"
+    }
+  ]
+}

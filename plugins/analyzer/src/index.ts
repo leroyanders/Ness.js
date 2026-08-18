@@ -1,0 +1,138 @@
+import type { Plugin } from 'vite';
+
+/**
+ * The parts of a Rollup bundle entry this reads. Described structurally
+ * rather than imported: rollup is a transitive dependency of vite here, not
+ * one this plugin declares.
+ */
+interface BundleChunk {
+  type: 'chunk';
+  code: string;
+  imports?: string[];
+  dynamicImports?: string[];
+  modules?: Record<string, unknown>;
+}
+
+interface BundleAsset {
+  type: 'asset';
+  source: string | Uint8Array;
+}
+
+export type BundleOutput = BundleChunk | BundleAsset;
+
+export interface AnalyzerOptions {
+  reportFile?: string;
+  html?: boolean;
+  htmlFile?: string;
+  maxSize?: number;
+}
+
+export interface BundleReportEntry {
+  file: string;
+  type: string;
+  size: number;
+  imports?: string[];
+  dynamicImports?: string[];
+  modules?: string[];
+}
+
+export interface BundleReport {
+  version: 1;
+  generatedAt: string;
+  totalSize: number;
+  files: BundleReportEntry[];
+}
+
+function byteLength(source: unknown): number {
+  if (source == null) return 0;
+  if (typeof source === 'string') return Buffer.byteLength(source);
+  const sized = source as { byteLength?: number; length?: number };
+  return sized.byteLength ?? sized.length ?? 0;
+}
+
+function bundleEntries(
+  bundle: Record<string, BundleOutput>,
+): BundleReportEntry[] {
+  return Object.entries(bundle)
+    .map(([file, output]) => ({
+      file,
+      type: output.type,
+      size: byteLength(output.type === 'chunk' ? output.code : output.source),
+      ...(output.type === 'chunk'
+        ? {
+            imports: output.imports || [],
+            dynamicImports: output.dynamicImports || [],
+            modules: Object.keys(output.modules || {}),
+          }
+        : {}),
+    }))
+    .sort((left, right) => right.size - left.size);
+}
+
+function createReport(entries: BundleReportEntry[]): BundleReport {
+  return {
+    version: 1,
+    generatedAt: new Date().toISOString(),
+    totalSize: entries.reduce((total, entry) => total + entry.size, 0),
+    files: entries,
+  };
+}
+
+function escapeHtml(value: unknown): string {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function reportHtml(report: BundleReport): string {
+  const rows = report.files
+    .map(
+      file =>
+        `<tr><td>${escapeHtml(file.file)}</td><td>${escapeHtml(file.type)}</td><td>${file.size.toLocaleString()} B</td></tr>`,
+    )
+    .join('');
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Ness bundle report</title><style>body{font:14px ui-monospace,monospace;margin:40px;color:#18181b}table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #ddd;text-align:left}td:last-child,th:last-child{text-align:right}</style></head><body><h1>Ness bundle report</h1><p>Total: ${report.totalSize.toLocaleString()} bytes</p><table><thead><tr><th>File</th><th>Type</th><th>Size</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+}
+
+function assertBudget(
+  context: { error(message: string): never },
+  report: BundleReport,
+  maxSize: number | undefined,
+): void {
+  if (maxSize && report.totalSize > maxSize) {
+    context.error(
+      `Ness bundle size ${report.totalSize} bytes exceeds the ${maxSize} byte budget.`,
+    );
+  }
+}
+
+function analyzer(options: AnalyzerOptions = {}): Plugin {
+  const reportFile = options.reportFile || 'ness-bundle-report.json';
+  return {
+    name: 'ness:analyzer',
+    apply: 'build',
+    generateBundle(_outputOptions, bundle) {
+      const report = createReport(
+        bundleEntries(bundle as unknown as Record<string, BundleOutput>),
+      );
+      assertBudget(this, report, options.maxSize);
+      this.emitFile({
+        type: 'asset',
+        fileName: reportFile,
+        source: `${JSON.stringify(report, null, 2)}\n`,
+      });
+      if (options.html !== false) {
+        this.emitFile({
+          type: 'asset',
+          fileName: options.htmlFile || 'ness-bundle-report.html',
+          source: reportHtml(report),
+        });
+      }
+    },
+  };
+}
+
+export { analyzer, bundleEntries, createReport };
+export default analyzer;

@@ -1,4 +1,4 @@
-import { listProducts } from '../catalog.mjs';
+import { listProducts } from '../catalog.ts';
 
 export async function loader() {
   return listProducts();

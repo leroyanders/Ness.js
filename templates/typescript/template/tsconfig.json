@@ -17,5 +17,5 @@
     "skipLibCheck": true,
     "types": ["node", "vite/client"]
   },
-  "include": ["app/**/*", ".react-router/types/**/*"]
+  "include": ["app/**/*", ".react-router/types/**/*", "ness.config.ts"]
 }

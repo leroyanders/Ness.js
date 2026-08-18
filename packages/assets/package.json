@@ -30,35 +30,36 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./font": {
-      "types": "./src/font.d.ts",
-      "default": "./src/font.js"
+      "types": "./dist/font.d.ts",
+      "default": "./dist/font.js"
     },
     "./image": {
-      "types": "./src/image.d.ts",
-      "browser": "./src/image.js",
-      "default": "./src/image-server.js"
+      "types": "./dist/image.d.ts",
+      "browser": "./dist/image.js",
+      "default": "./dist/image-server.js"
     },
     "./image/server": {
-      "types": "./src/image-server.d.ts",
-      "default": "./src/image-server.js"
+      "types": "./dist/image-server.d.ts",
+      "default": "./dist/image-server.js"
     },
     "./metadata": {
-      "types": "./src/metadata.d.ts",
-      "default": "./src/metadata.js"
+      "types": "./dist/metadata.d.ts",
+      "default": "./dist/metadata.js"
     },
     "./script": {
-      "types": "./src/script.d.ts",
-      "default": "./src/script.js"
+      "types": "./dist/script.d.ts",
+      "default": "./dist/script.js"
     },
-    "./og": "./src/image-response.js"
+    "./og": "./dist/image-response.js"
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "dependencies": {
     "@nessframework/cache": "^7.0.0",
@@ -78,5 +79,9 @@
     "satori": {
       "optional": true
     }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
   }
 }

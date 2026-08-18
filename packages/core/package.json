@@ -29,47 +29,48 @@
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "version": "8.3.1",
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
-    "./cache": "./src/cache/index.js",
-    "./client": "./src/runtime/client.js",
+    "./cache": "./dist/cache/index.js",
+    "./client": "./dist/runtime/client.js",
     "./config": {
-      "types": "./src/framework/config.d.ts",
-      "default": "./src/framework/config.js"
+      "types": "./dist/framework/config.d.ts",
+      "default": "./dist/framework/config.js"
     },
-    "./deployment": "./src/deployment/index.js",
-    "./font": "./src/assets/font.js",
+    "./deployment": "./dist/deployment/index.js",
+    "./font": "./dist/assets/font.js",
     "./image": {
-      "browser": "./src/assets/image.js",
-      "default": "./src/assets/image-server.js"
+      "browser": "./dist/assets/image.js",
+      "default": "./dist/assets/image-server.js"
     },
-    "./image/server": "./src/assets/image-server.js",
-    "./instrumentation": "./src/instrumentation/index.js",
-    "./metadata": "./src/metadata/index.js",
-    "./rsc": "./src/rsc/index.js",
-    "./script": "./src/assets/script.js",
-    "./server": "./src/runtime/server.js",
-    "./server/responses": "./src/runtime/responses.js",
-    "./testing": "./src/testing/index.js",
+    "./image/server": "./dist/assets/image-server.js",
+    "./instrumentation": "./dist/instrumentation/index.js",
+    "./metadata": "./dist/metadata/index.js",
+    "./rsc": "./dist/rsc/index.js",
+    "./script": "./dist/assets/script.js",
+    "./server": "./dist/runtime/server.js",
+    "./server/responses": "./dist/runtime/responses.js",
+    "./testing": "./dist/testing/index.js",
     "./types/*": "./src/types/*",
     "./vite": {
-      "types": "./src/vite/index.d.ts",
-      "default": "./src/vite/index.js"
+      "types": "./dist/vite/index.d.ts",
+      "default": "./dist/vite/index.js"
     },
-    "./og": "./src/assets/og.js"
+    "./og": "./dist/assets/og.js"
   },
   "bin": {
     "ness-serve": "src/bin/serve.js"
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "engines": {
     "node": ">=20.19.0"
@@ -96,5 +97,9 @@
     "@types/node": "^26.1.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
   }
 }

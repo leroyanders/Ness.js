@@ -9,7 +9,9 @@ executors:
     parameters:
       version:
         type: string
-        default: '22.11'
+        # 22.18 is where Node runs TypeScript by stripping types, which the
+        # test suite and every script in this repository now rely on.
+        default: '22.18'
     docker:
       - image: cimg/node:<< parameters.version >>
     working_directory: ~/ness
@@ -43,11 +45,29 @@ jobs:
           name: Formatting
           command: npm run format:check
       - run:
-          name: Unit tests
-          command: npm run test:unit
+          # Type-checks and builds every workspace, then runs the suites
+          # against that output — the tests import from dist, not from source.
+          name: Types and unit tests
+          command: npm test
+
+  published-output:
+    # The packages support Node 20; nothing else here runs on it any more.
+    parameters:
+      version:
+        type: string
+    executor: node
+    steps:
+      - install
       - run:
-          name: Type tests
-          command: npm run test:types
+          name: Build the packages
+          command: npm run build:packages
+      - run:
+          name: Load every entry point on Node << parameters.version >>
+          command: |
+            curl -fsSL https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+            export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh"
+            nvm install << parameters.version >>
+            nvm exec << parameters.version >> node scripts/ci/imports.mjs
 
   e2e:
     parameters:
@@ -57,8 +77,13 @@ jobs:
     steps:
       - install
       - run:
+          # The suite drives the CLI from its compiled bin and packs each
+          # workspace, so the build has to exist before it starts.
+          name: Build the packages
+          command: npm run build:packages
+      - run:
           name: Scaffold, build, and serve the << parameters.template >> template
-          command: node scripts/e2e/smoke.mjs --templates=<< parameters.template >>
+          command: node scripts/e2e/smoke.ts --templates=<< parameters.template >>
           no_output_timeout: 25m
 
 workflows:
@@ -67,9 +92,21 @@ workflows:
       - check:
           matrix:
             parameters:
-              version: ['20.18', '22.11', '24.0']
+              version: ['22.18', '24.0']
+      - published-output:
+          matrix:
+            parameters:
+              version: ['20.19']
       - e2e:
           matrix:
             parameters:
               template:
-                [default, typescript, minimal, api, dashboard, typescript-rsc]
+                [
+                  default,
+                  typescript,
+                  minimal,
+                  api,
+                  dashboard,
+                  typescript-ssr,
+                  welcome,
+                ]

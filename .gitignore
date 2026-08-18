@@ -8,6 +8,7 @@
 **/.docusaurus/
 **/.react-router/
 **/.ness/
+*.tsbuildinfo
 
 # Local tooling and OS files
 .DS_Store

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { listProducts } from '../catalog.mjs';
+import { listProducts } from '../catalog.ts';
 
 export const dynamic = 'force-dynamic';
 

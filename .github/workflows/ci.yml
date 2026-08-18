@@ -27,20 +27,24 @@ jobs:
       - run: npm ci
       - run: npm run format:check
 
-  unit:
-    name: Unit (node ${{ matrix.node }}, ${{ matrix.os }})
+  test:
+    # 22.18 is the floor for the toolchain, not for the packages: the test
+    # suite is TypeScript and Node runs it by stripping types, which arrived
+    # unflagged in 22.18. What ships is compiled ES2022 and still supports
+    # Node 20 — the `published-output` job below is what proves it.
+    name: Test (node ${{ matrix.node }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        node: [20, 22, 24]
+        node: ['22.18', 24]
         os: [ubuntu-latest]
         include:
           # One run per platform catches path, line-ending, and fs differences
           # without paying for the full grid.
-          - node: 22
+          - node: 24
             os: macos-latest
-          - node: 22
+          - node: 24
             os: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -49,8 +53,34 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      - run: npm run test:unit
-      - run: npm run test:types
+      # `npm test` type-checks and builds every workspace first, then runs the
+      # suites against that compiled output — the order matters, because the
+      # tests import from dist rather than from source.
+      - run: npm test
+
+  published-output:
+    # The packages declare `engines: >=20.19.0`. Nothing else in CI runs on 20
+    # any more, so without this the floor would be a claim nobody checks.
+    name: Published output (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.19', 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:packages
+      # Switch to the runtime under test only after the build, which needs the
+      # newer Node itself.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node scripts/ci/imports.mjs
 
   e2e:
     name: E2E ${{ matrix.template }}
@@ -59,7 +89,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: [default, typescript, minimal, api, dashboard, typescript-rsc]
+        template:
+          [
+            default,
+            typescript,
+            minimal,
+            api,
+            dashboard,
+            typescript-ssr,
+            welcome,
+          ]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -67,9 +106,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # The suite drives the CLI from its compiled bin and packs each workspace
+      # into a tarball, so the build has to exist before it starts.
+      - run: npm run build:packages
       # Scaffolds the template from this working tree, builds it, boots the
       # production server, and asserts it answers over HTTP.
-      - run: node scripts/e2e/smoke.mjs --templates=${{ matrix.template }}
+      - run: node scripts/e2e/smoke.ts --templates=${{ matrix.template }}
 
   docs:
     name: Docs
@@ -81,4 +123,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run typecheck --workspace docs
       - run: npm run build --workspace docs

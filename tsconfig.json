@@ -1,0 +1,53 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/cache"
+    },
+    {
+      "path": "./packages/instrumentation"
+    },
+    {
+      "path": "./packages/components"
+    },
+    {
+      "path": "./packages/router"
+    },
+    {
+      "path": "./packages/cli"
+    },
+    {
+      "path": "./packages/server"
+    },
+    {
+      "path": "./packages/testing"
+    },
+    {
+      "path": "./packages/assets"
+    },
+    {
+      "path": "./packages/deployment"
+    },
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./plugins/analyzer"
+    },
+    {
+      "path": "./plugins/compression"
+    },
+    {
+      "path": "./plugins/env"
+    },
+    {
+      "path": "./plugins/security"
+    },
+    {
+      "path": "./plugins/tailwind"
+    },
+    {
+      "path": "./plugins/nest"
+    }
+  ]
+}

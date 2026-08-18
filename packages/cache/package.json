@@ -29,38 +29,43 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./resolve": {
-      "types": "./src/resolve.d.ts",
-      "default": "./src/resolve.js"
+      "types": "./dist/resolve.d.ts",
+      "default": "./dist/resolve.js"
     },
     "./filesystem": {
-      "types": "./src/adapters/filesystem.d.ts",
-      "default": "./src/adapters/filesystem.js"
+      "types": "./dist/adapters/filesystem.d.ts",
+      "default": "./dist/adapters/filesystem.js"
     },
     "./redis": {
-      "types": "./src/adapters/redis.d.ts",
-      "default": "./src/adapters/redis.js"
+      "types": "./dist/adapters/redis.d.ts",
+      "default": "./dist/adapters/redis.js"
     },
     "./sqlite": {
-      "types": "./src/adapters/sqlite.d.ts",
-      "default": "./src/adapters/sqlite.js"
+      "types": "./dist/adapters/sqlite.d.ts",
+      "default": "./dist/adapters/sqlite.js"
     },
     "./tiered": {
-      "types": "./src/adapters/tiered.d.ts",
-      "default": "./src/adapters/tiered.js"
+      "types": "./dist/adapters/tiered.d.ts",
+      "default": "./dist/adapters/tiered.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "engines": {
     "node": ">=20.19.0"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
+  }
 }

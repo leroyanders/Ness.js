@@ -27,21 +27,22 @@
     "directory": "plugins/nest"
   },
   "type": "module",
-  "main": "./src/index.js",
-  "types": "./src/index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./server": {
-      "types": "./src/server.d.ts",
-      "default": "./src/server.js"
+      "types": "./dist/server.d.ts",
+      "default": "./dist/server.js"
     }
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "engines": {
     "node": ">=20.19.0"
@@ -61,5 +62,9 @@
     "tinyglobby": "0.2.17",
     "typescript": "5.7.3"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
+  }
 }

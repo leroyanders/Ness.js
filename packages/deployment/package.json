@@ -31,34 +31,35 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./standalone": {
-      "types": "./src/standalone.d.ts",
-      "default": "./src/standalone.js"
+      "types": "./dist/standalone.d.ts",
+      "default": "./dist/standalone.js"
     },
     "./cloudflare": {
-      "types": "./src/cloudflare.d.ts",
-      "default": "./src/cloudflare.js"
+      "types": "./dist/cloudflare.d.ts",
+      "default": "./dist/cloudflare.js"
     },
     "./lambda": {
-      "types": "./src/lambda.d.ts",
-      "default": "./src/lambda.js"
+      "types": "./dist/lambda.d.ts",
+      "default": "./dist/lambda.js"
     },
     "./vercel": {
-      "types": "./src/vercel.d.ts",
-      "default": "./src/vercel.js"
+      "types": "./dist/vercel.d.ts",
+      "default": "./dist/vercel.js"
     },
     "./trace": {
-      "types": "./src/trace.d.ts",
-      "default": "./src/trace.js"
+      "types": "./dist/trace.d.ts",
+      "default": "./dist/trace.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "dependencies": {
     "@remix-run/node-fetch-server": "0.13.3",
@@ -70,5 +71,9 @@
     "node": ">=20.19.0"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
+  }
 }

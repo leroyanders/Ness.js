@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": ">=16.0.0"
+    "node": ">=22.18.0"
   },
   "scripts": {
     "start": "ness dev",
@@ -12,7 +12,7 @@
     "build": "ness build",
     "start:prod": "ness start",
     "typegen": "ness typegen",
-    "check": "ness typegen"
+    "check": "ness typegen && tsc --noEmit"
   },
   "dependencies": {
     "@nessframework/cache": "^7.0.0",

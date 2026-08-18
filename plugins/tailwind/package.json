@@ -25,17 +25,18 @@
     "directory": "plugins/tailwind"
   },
   "type": "module",
-  "main": "./src/index.js",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/index.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./styles/base.css": "./src/styles/base.css"
   },
   "files": [
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",
@@ -51,5 +52,9 @@
     "cssnano": "^8.0.2",
     "mini-css-extract-plugin": "^2.10.2",
     "tailwindcss": "^4.3.3"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
   }
 }

@@ -8,17 +8,17 @@ Every official template uses ESM, React Router for UI and SSR, and NestJS contro
 
 `typescript` is what `ness new` scaffolds when `--template` is left out.
 
-| Alias               | Package                     | Best for                                       |
-| ------------------- | --------------------------- | ---------------------------------------------- |
-| `typescript` (`ts`) | `@nessframework/typescript` | Strict TypeScript full-stack applications      |
-| `javascript` (`js`) | `@nessframework/default`    | The same application without the types         |
-| `minimal`           | `@nessframework/minimal`    | Small prototypes with the fewest source files  |
-| `api`               | `@nessframework/api`        | NestJS-first services with a small React UI    |
-| `dashboard`         | `@nessframework/dashboard`  | Internal tools, consoles, and admin interfaces |
+| Alias                          | Package                     | Best for                                                   |
+| ------------------------------ | --------------------------- | ---------------------------------------------------------- |
+| `typescript` (`ts`)            | `@nessframework/typescript` | Strict TypeScript full-stack applications                  |
+| `default` (`javascript`, `js`) | `@nessframework/default`    | The same application; the older aliases still resolve here |
+| `minimal`                      | `@nessframework/minimal`    | Small prototypes with the fewest source files              |
+| `api`                          | `@nessframework/api`        | NestJS-first services with a small React UI                |
+| `dashboard`                    | `@nessframework/dashboard`  | Internal tools, consoles, and admin interfaces             |
 
 ```bash
 ness new my-app
-ness new my-prototype --template javascript
+ness new my-prototype --template default
 ness new my-api --template api
 ness new my-dashboard --template dashboard
 ```

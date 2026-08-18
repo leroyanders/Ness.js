@@ -15,7 +15,7 @@
     "example": "examples"
   },
   "engines": {
-    "node": ">=20.19.0"
+    "node": ">=22.18.0"
   },
   "overrides": {
     "@jsonjoy.com/fs-node-builtins": "4.64.0",
@@ -28,15 +28,18 @@
     "uuid": "^11.1.1"
   },
   "scripts": {
-    "build": "npm run build --workspace docs && npm run build --workspace welcome",
+    "build": "npm run build:packages && npm run build --workspace docs && npm run build --workspace welcome",
+    "build:packages": "tsc --build",
+    "build:packages:watch": "tsc --build --watch",
+    "clean:packages": "tsc --build --clean",
     "check": "npm run format:check && npm test && npm run build",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
-    "test": "npm run test:unit && npm run test:types",
-    "test:e2e": "node scripts/e2e/smoke.mjs",
-    "release": "node scripts/release/publish.mjs",
-    "test:unit": "node --test packages/*/test/*.test.js plugins/*/test/*.test.js",
-    "test:types": "tsc --noEmit --skipLibCheck false --module NodeNext --moduleResolution NodeNext --target ES2022 --lib ES2022,DOM --types node,react --jsx react-jsx packages/core/test/types-smoke.ts plugins/types-smoke.ts",
+    "test": "npm run test:types && npm run test:unit",
+    "test:types": "tsc --build",
+    "test:unit": "node --test \"packages/*/test/*.test.ts\" \"plugins/*/test/*.test.ts\"",
+    "test:e2e": "node scripts/e2e/smoke.ts",
+    "release": "node scripts/release/publish.ts",
     "publish:core": "npm publish --workspace @nessframework/core --access public",
     "publish:assets": "npm publish --workspace @nessframework/assets --access public",
     "publish:cache": "npm publish --workspace @nessframework/cache --access public",
@@ -57,13 +60,23 @@
     "publish:compression": "npm publish --workspace @nessframework/compression --access public",
     "publish:env": "npm publish --workspace @nessframework/env --access public",
     "publish:security": "npm publish --workspace @nessframework/security --access public",
-    "publish:components": "npm publish --workspace @nessframework/components --access public"
+    "publish:components": "npm publish --workspace @nessframework/components --access public",
+    "test:types:tests": "tsc -p tsconfig.tests.json"
   },
   "devDependencies": {
+    "@types/cross-spawn": "^6.0.6",
+    "@types/express": "^5.0.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^26.1.2",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/semver": "^7.7.1",
     "@vitejs/plugin-rsc": "0.5.27",
     "prettier": "^3.9.6",
     "react-router": "8.3.0",
-    "react-server-dom-webpack": "19.2.8"
+    "react-server-dom-webpack": "19.2.8",
+    "typescript": "^7.0.2"
   },
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",

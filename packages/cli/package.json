@@ -30,15 +30,18 @@
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "type": "module",
   "exports": {
-    ".": "./src/index.js"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   },
   "bin": {
-    "ness": "bin/index.js"
+    "ness": "./dist/bin/index.js"
   },
   "files": [
-    "bin",
-    "src",
-    "readme.md"
+    "dist",
+    "readme.md",
+    "src"
   ],
   "dependencies": {
     "commander": "^11.1.0",
@@ -49,5 +52,11 @@
   },
   "engines": {
     "node": ">=20.19.0"
-  }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "prepack": "tsc --build"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts"
 }

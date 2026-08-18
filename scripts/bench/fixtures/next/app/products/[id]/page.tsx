@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getProduct } from '../../../catalog.mjs';
+import { getProduct } from '../../../catalog.ts';
 
 export const dynamic = 'force-dynamic';
 
