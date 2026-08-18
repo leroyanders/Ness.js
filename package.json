@@ -81,8 +81,8 @@
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@nessframework/core": "^8.1.0",
-    "@nessframework/router": "^8.1.0",
-    "@nessframework/server": "^7.6.2"
+    "@nessframework/core": "^9.0.0",
+    "@nessframework/router": "^9.0.0",
+    "@nessframework/server": "^8.0.0"
   }
 }

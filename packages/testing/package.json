@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/testing",
-  "version": "7.1.2",
+  "version": "8.0.0",
   "description": "Test utilities for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/documentation/packages",
   "bugs": {
@@ -33,13 +33,14 @@
     }
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
   ],
   "dependencies": {
-    "@nessframework/cache": "^7.0.0",
-    "@nessframework/server": "^7.0.0",
+    "@nessframework/cache": "^8.0.0",
+    "@nessframework/server": "^8.0.0",
     "react-router": "8.3.0"
   },
   "engines": {

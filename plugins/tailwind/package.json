@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/tailwind",
-  "version": "2.1.4",
+  "version": "3.0.0",
   "description": "Tailwind CSS integration for Ness.js",
   "homepage": "https://nessjs.com/docs/plugins/tailwind",
   "bugs": {
@@ -34,6 +34,7 @@
     "./styles/base.css": "./src/styles/base.css"
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
@@ -44,7 +45,7 @@
     "node": ">=20.19.0"
   },
   "peerDependencies": {
-    "@nessframework/core": ">=7.0.0",
+    "@nessframework/core": ">=9.0.0",
     "vite": ">=5.0.0"
   },
   "dependencies": {

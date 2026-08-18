@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/cli",
-  "version": "8.0.0",
+  "version": "9.0.0",
   "license": "MIT",
   "description": "Develop, build, diagnose, and create Ness.js applications.",
   "homepage": "https://nessjs.com/docs/getting-started/commands",
@@ -39,6 +39,7 @@
     "ness": "./dist/bin/index.js"
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"

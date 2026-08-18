@@ -88,9 +88,13 @@ export async function doctor(
         'package.json',
       ),
     ) as { version: string };
+    // A floor, not a caret range. What this catches is an install left
+    // behind by an old CLI; drifting permissive as the framework moves on is
+    // the harmless direction, while a caret pinned to one major goes stale on
+    // the next release and fails a perfectly healthy application.
     add(
       '@nessframework/core',
-      semver.satisfies(core.version, '^6.0.0'),
+      semver.satisfies(core.version, '>=9.0.0'),
       core.version,
     );
   } catch (error) {
@@ -105,7 +109,7 @@ export async function doctor(
     ) as { version: string };
     add(
       '@nessframework/nest',
-      semver.satisfies(nest.version, '^1.0.0'),
+      semver.satisfies(nest.version, '>=3.0.0'),
       nest.version,
     );
   } catch (error) {

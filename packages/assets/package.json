@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/assets",
-  "version": "7.3.0",
+  "version": "8.0.0",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/documentation/assets",
   "bugs": {
@@ -57,13 +57,14 @@
     "./og": "./dist/image-response.js"
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
   ],
   "dependencies": {
-    "@nessframework/cache": "^7.0.0",
-    "@nessframework/server": "^7.0.0",
+    "@nessframework/cache": "^8.0.0",
+    "@nessframework/server": "^8.0.0",
     "sharp": "0.35.3"
   },
   "peerDependencies": {

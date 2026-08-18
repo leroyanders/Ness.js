@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/deployment",
-  "version": "7.5.0",
+  "version": "8.0.0",
   "description": "Standalone output, dependency tracing, and Node, Lambda, Cloudflare Workers, and Vercel adapters for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/deployment",
   "bugs": {
@@ -57,14 +57,15 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
   ],
   "dependencies": {
     "@remix-run/node-fetch-server": "0.13.3",
-    "@nessframework/assets": "^7.0.0",
-    "@nessframework/server": "^7.0.0",
+    "@nessframework/assets": "^8.0.0",
+    "@nessframework/server": "^8.0.0",
     "express": "^5.2.1"
   },
   "engines": {

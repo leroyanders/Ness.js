@@ -15,23 +15,24 @@
     "check": "ness typegen && tsc --noEmit"
   },
   "dependencies": {
-    "@nessframework/cache": "^7.0.0",
-    "@nessframework/cli": "^8.0.0",
-    "@nessframework/core": "^8.0.0",
-    "@nessframework/nest": "^2.0.0",
-    "@nessframework/router": "^8.0.0",
+    "@nessframework/cache": "^8.0.0",
+    "@nessframework/cli": "^9.0.0",
+    "@nessframework/components": "^2.0.0",
+    "@nessframework/core": "^9.0.0",
+    "@nessframework/nest": "^3.0.0",
+    "@nessframework/router": "^9.0.0",
     "@nestjs/common": "11.1.28",
     "@nestjs/core": "11.1.28",
     "isbot": "^5.2.1",
-    "reflect-metadata": "0.2.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router": "8.3.0",
+    "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2"
   },
   "devDependencies": {
-    "@nessframework/analyzer": "^2.0.0",
-    "@nessframework/compression": "^2.0.0",
-    "@nessframework/security": "^2.0.0"
+    "@nessframework/analyzer": "^3.0.0",
+    "@nessframework/compression": "^3.0.0",
+    "@nessframework/security": "^3.0.0"
   }
 }

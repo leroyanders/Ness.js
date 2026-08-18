@@ -27,7 +27,7 @@
   },
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "version": "8.3.1",
+  "version": "9.0.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -68,6 +68,7 @@
     "ness-serve": "src/bin/serve.js"
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
@@ -80,13 +81,13 @@
     "react-dom": ">=19.2.7"
   },
   "dependencies": {
-    "@nessframework/assets": "^7.0.0",
-    "@nessframework/cache": "^7.0.0",
-    "@nessframework/deployment": "^7.0.0",
-    "@nessframework/instrumentation": "^7.0.0",
-    "@nessframework/router": "^8.0.0",
-    "@nessframework/server": "^7.0.0",
-    "@nessframework/testing": "^7.0.0",
+    "@nessframework/assets": "^8.0.0",
+    "@nessframework/cache": "^8.0.0",
+    "@nessframework/deployment": "^8.0.0",
+    "@nessframework/instrumentation": "^8.0.0",
+    "@nessframework/router": "^9.0.0",
+    "@nessframework/server": "^8.0.0",
+    "@nessframework/testing": "^8.0.0",
     "@remix-run/node-fetch-server": "0.13.3",
     "express": "^5.2.1",
     "mime-types": "^3.0.1",

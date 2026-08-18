@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/security",
-  "version": "2.1.2",
+  "version": "3.0.0",
   "description": "Secure development and preview headers for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/plugins/security",
   "bugs": {
@@ -33,12 +33,13 @@
     }
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
   ],
   "peerDependencies": {
-    "@nessframework/core": ">=7.0.0",
+    "@nessframework/core": ">=9.0.0",
     "vite": ">=5.0.0"
   },
   "engines": {

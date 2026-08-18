@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/nest",
-  "version": "2.3.0",
+  "version": "3.0.0",
   "description": "NestJS server routes for Ness.js applications",
   "homepage": "https://nessjs.com/docs/plugins/nest",
   "bugs": {
@@ -40,6 +40,7 @@
     }
   },
   "files": [
+    "!dist/.tsbuildinfo",
     "dist",
     "readme.md",
     "src"
@@ -48,7 +49,7 @@
     "node": ">=20.19.0"
   },
   "peerDependencies": {
-    "@nessframework/core": ">=7.0.0",
+    "@nessframework/core": ">=9.0.0",
     "@nestjs/common": "^11.1.28",
     "@nestjs/core": "^11.1.28",
     "express": "^5.1.0",
@@ -64,7 +65,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
-    "prepack": "tsc --build"
+    "build": "node ../../node_modules/typescript/bin/tsc --build",
+    "prepack": "node ../../node_modules/typescript/bin/tsc --build"
   }
 }

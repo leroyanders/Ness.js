@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/default",
-  "version": "4.2.4",
+  "version": "5.0.0",
   "type": "module",
   "description": "Official starter for Ness.js.",
   "homepage": "https://nessjs.com/docs/templates",
