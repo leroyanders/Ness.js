@@ -519,6 +519,26 @@ function streamedClientLoader(
  * the level above instead. Nothing has to work out which fallback belongs to
  * which destination, because each route only ever answers for itself.
  */
+/**
+ * Holds the document title steady while a streamed route shows its loading
+ * boundary.
+ *
+ * On a client navigation the previous page unmounts — taking its hoisted
+ * `<title>` with it — while the loading boundary renders nothing into the
+ * head, so for the length of the fetch the document had no title at all and
+ * the tab flashed the bare URL. The old title is captured in a lazy state
+ * initializer, which runs during the render in which the previous page is
+ * still committed, and re-rendered from here until the real page mounts and
+ * its own title takes over.
+ */
+function HeldTitle(): React.ReactElement | null {
+  const [held] = React.useState(() =>
+    typeof document === 'undefined' ? '' : document.title,
+  );
+  if (!held) return null;
+  return React.createElement('title', null, held);
+}
+
 function streamedComponent(
   Page: React.ComponentType<Record<string, unknown>>,
   Loading: React.ComponentType,
@@ -560,7 +580,12 @@ function streamedComponent(
     }, [pending, path, revalidator]);
 
     return pending
-      ? React.createElement(Loading)
+      ? React.createElement(
+          React.Fragment,
+          null,
+          React.createElement(HeldTitle),
+          React.createElement(Loading),
+        )
       : React.createElement(Page, props);
   };
 }
