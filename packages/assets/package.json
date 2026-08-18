@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/assets",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/documentation/assets",
   "bugs": {

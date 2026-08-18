@@ -71,6 +71,7 @@ const sidebars: SidebarsConfig = {
         'documentation/styling',
         'documentation/config',
         'documentation/deployment',
+        'documentation/next-parity',
         'documentation/migrating-from-next',
       ],
     },

@@ -18,12 +18,22 @@ const RESERVED_FILES = [
   'sitemap',
   'robots',
   'manifest',
+  'default',
+  'global-error',
+  'opengraph-image',
+  'twitter-image',
 ];
 
-/** What a segment declares about its own caching, read statically. */
+/** What a segment declares about itself, read statically. */
 export interface SegmentConfig {
   revalidate?: number | false;
   dynamic?: 'force-dynamic' | 'force-static' | 'auto';
+  runtime?: 'node' | 'edge' | 'serverless';
+  maxDuration?: number;
+  dynamicParams?: boolean;
+  fetchCache?: 'default-cache' | 'default-no-store';
+  preferredRegion?: string | string[];
+  ppr?: boolean;
 }
 
 /** A node of the generated route tree, shaped as React Router expects. */
@@ -75,7 +85,16 @@ const METADATA_FILES = [
  * Recorded in the build manifest so the production server can read a page's
  * caching rules without importing the page.
  */
-const SEGMENT_CONFIG = ['revalidate', 'dynamic'];
+const SEGMENT_CONFIG = [
+  'revalidate',
+  'dynamic',
+  'runtime',
+  'maxDuration',
+  'dynamicParams',
+  'fetchCache',
+  'preferredRegion',
+  'ppr',
+];
 
 function slash(value: string): string {
   return value.split(path.sep).join('/');
@@ -170,6 +189,154 @@ function findAdjacentServer(
 }
 
 /**
+ * The image and icon files a segment can declare by name, Next-style:
+ * `icon.png`, `apple-icon.png`, `opengraph-image.png`, `twitter-image.png`
+ * beside a page. Static files become hashed Vite assets referenced by tags;
+ * `opengraph-image.tsx`/`twitter-image.tsx` become resource routes.
+ */
+const STATIC_METADATA_FILES: Record<string, string[]> = {
+  icon: ['.ico', '.png', '.svg', '.jpg', '.jpeg'],
+  'apple-icon': ['.png', '.jpg', '.jpeg'],
+  'opengraph-image': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+  'twitter-image': ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+};
+
+/** What one directory declared through files rather than exports. */
+interface FileMetadata {
+  icon: string[];
+  apple: string[];
+  ogStatic: string[];
+  twitterStatic: string[];
+  /** A module default-exporting an ImageResponse producer. */
+  ogModule?: string | undefined;
+  twitterModule?: string | undefined;
+}
+
+function findStatic(directory: string, basename: string): string[] {
+  const found: string[] = [];
+  for (const extension of STATIC_METADATA_FILES[basename] ?? []) {
+    const filename = path.join(directory, `${basename}${extension}`);
+    if (fs.existsSync(filename)) found.push(filename);
+  }
+  return found;
+}
+
+function findFileMetadata(directory: string): FileMetadata | undefined {
+  const metadata: FileMetadata = {
+    icon: findStatic(directory, 'icon'),
+    apple: findStatic(directory, 'apple-icon'),
+    ogStatic: findStatic(directory, 'opengraph-image'),
+    twitterStatic: findStatic(directory, 'twitter-image'),
+    ogModule: findModule(directory, 'opengraph-image'),
+    twitterModule: findModule(directory, 'twitter-image'),
+  };
+  const declared =
+    metadata.icon.length ||
+    metadata.apple.length ||
+    metadata.ogStatic.length ||
+    metadata.twitterStatic.length ||
+    metadata.ogModule ||
+    metadata.twitterModule;
+  return declared ? metadata : undefined;
+}
+
+/**
+ * Whether a module exports `metadata` or `generateMetadata`, read off the
+ * text the same way segment config is.
+ */
+function metadataExports(source: string): {
+  metadata: boolean;
+  generateMetadata: boolean;
+} {
+  return {
+    metadata:
+      /\bexport\s+(?:const|let|var)\s+metadata\b/.test(source) ||
+      /\bexport\s*\{[^}]*\bmetadata\b[^}]*\}/.test(source),
+    generateMetadata:
+      /\bexport\s+(?:async\s+)?function\s+generateMetadata\b/.test(source) ||
+      /\bexport\s+(?:const|let|var)\s+generateMetadata\b/.test(source),
+  };
+}
+
+/**
+ * One intercepting route: navigating client-side to a URL matching `pattern`
+ * from a page under `from` renders `file` in an overlay instead of the real
+ * route. A hard load of the same URL never sees this table.
+ */
+export interface InterceptorEntry {
+  from: string;
+  pattern: string;
+  file: string;
+}
+
+/**
+ * Filled during a discovery pass and read back by `nessInterceptors()` —
+ * same lifecycle as the generated wrappers themselves.
+ */
+let collectedInterceptors: InterceptorEntry[] = [];
+
+/** `(.)photo`, `(..)photo`, `(..)(..)photo`, `(...)photo` — or nothing. */
+const INTERCEPTOR_PREFIX = /^((?:\(\.{1,3}\))+)(.*)$/;
+
+/**
+ * Resolves an interceptor directory name against the URL path of the segment
+ * it sits in. `(.)` intercepts a sibling, each `(..)` climbs one segment,
+ * `(...)` starts over at the root — the same arithmetic as a relative path.
+ */
+function resolveInterceptorBase(
+  name: string,
+  urlPath: string,
+): { targetBase: string; rest: string } | undefined {
+  const match = name.match(INTERCEPTOR_PREFIX);
+  if (!match) return undefined;
+  const markers = match[1]!.match(/\(\.{1,3}\)/g) ?? [];
+  let segments = urlPath.split('/').filter(Boolean);
+  for (const marker of markers) {
+    if (marker === '(...)') segments = [];
+    else if (marker === '(..)') segments = segments.slice(0, -1);
+    // '(.)' keeps the current level.
+  }
+  return { targetBase: segments.join('/'), rest: match[2] ?? '' };
+}
+
+/**
+ * Walks an interceptor directory for pages and records the URL each one
+ * intercepts. Only pages: an interceptor exists to be rendered over the
+ * current screen, and only a page is a screen.
+ */
+function collectInterceptors(
+  directory: string,
+  name: string,
+  urlPath: string,
+): void {
+  const resolved = resolveInterceptorBase(name, urlPath);
+  if (!resolved) return;
+  const firstSegment = resolved.rest ? segmentPath(resolved.rest) : undefined;
+  const start = [resolved.targetBase, firstSegment]
+    .filter(value => value !== undefined && value !== '')
+    .join('/');
+  const walk = (current: string, targetPath: string): void => {
+    const pageFile = findModule(current, 'page');
+    if (pageFile) {
+      collectedInterceptors.push({
+        from: `/${urlPath}`.replace(/\/+$/, '') || '/',
+        pattern: `/${targetPath}`.replace(/\/{2,}/g, '/'),
+        file: pageFile,
+      });
+    }
+    for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue;
+      const segment = segmentPath(entry.name);
+      walk(
+        path.join(current, entry.name),
+        segment === undefined ? targetPath : `${targetPath}/${segment}`,
+      );
+    }
+  };
+  walk(directory, start);
+}
+
+/**
  * Reads a segment's caching rules off its source: `export const revalidate =
  * 60`, `export const dynamic = 'force-dynamic'`.
  *
@@ -191,6 +358,37 @@ function findSegmentConfig(source: string): SegmentConfig | undefined {
     /\bexport\s+const\s+dynamic\s*(?::[^=]+)?=\s*['"`](force-dynamic|force-static|auto)['"`]/,
   );
   if (dynamic) config.dynamic = dynamic[1] as SegmentConfig['dynamic'];
+  const runtime = source.match(
+    /\bexport\s+const\s+runtime\s*(?::[^=]+)?=\s*['"`](nodejs|node|edge|serverless)['"`]/,
+  );
+  if (runtime)
+    config.runtime = (runtime[1] === 'nodejs' ? 'node' : runtime[1]) as
+      | 'node'
+      | 'edge'
+      | 'serverless';
+  const maxDuration = source.match(
+    /\bexport\s+const\s+maxDuration\s*(?::[^=]+)?=\s*(\d+(?:\.\d+)?)\b/,
+  );
+  if (maxDuration) config.maxDuration = Number(maxDuration[1]);
+  const dynamicParams = source.match(
+    /\bexport\s+const\s+dynamicParams\s*(?::[^=]+)?=\s*(true|false)\b/,
+  );
+  if (dynamicParams) config.dynamicParams = dynamicParams[1] === 'true';
+  const fetchCache = source.match(
+    /\bexport\s+const\s+fetchCache\s*(?::[^=]+)?=\s*['"`](default-cache|default-no-store)['"`]/,
+  );
+  if (fetchCache)
+    config.fetchCache = fetchCache[1] as SegmentConfig['fetchCache'];
+  const preferredRegion = source.match(
+    /\bexport\s+const\s+preferredRegion\s*(?::[^=]+)?=\s*['"`]([^'"`]+)['"`]/,
+  );
+  if (preferredRegion) config.preferredRegion = preferredRegion[1];
+  // Both spellings: the experimental name Next code arrives with, and the
+  // name it will keep here.
+  const ppr = source.match(
+    /\bexport\s+const\s+(?:experimental_ppr|ppr)\s*(?::[^=]+)?=\s*(true|false)\b/,
+  );
+  if (ppr) config.ppr = ppr[1] === 'true';
   return Object.keys(config).length ? config : undefined;
 }
 
@@ -361,7 +559,8 @@ function appendTemplate(
   {
     generatedFile,
     templateFile,
-  }: { generatedFile: string; templateFile: string },
+    component,
+  }: { generatedFile: string; templateFile: string; component: string },
 ): void {
   lines.push(
     `import NessTemplate from ${JSON.stringify(importPath(generatedFile, templateFile))};`,
@@ -371,7 +570,7 @@ function appendTemplate(
   lines.push(
     'function NessTemplated(props){\n' +
       '  const location = nessUseLocation();\n' +
-      '  return nessCreateElement(NessTemplate, {key: location.key}, nessCreateElement(NessComponent, props));\n' +
+      `  return nessCreateElement(NessTemplate, {key: location.key}, nessCreateElement(${component}, props));\n` +
       '}',
   );
 }
@@ -386,6 +585,14 @@ interface WrapperOptions extends BoundaryFiles {
   middlewareFile?: string | undefined;
   fallbackLayout?: boolean;
   status?: number | undefined;
+  /** Ancestor layout files that export static `metadata`, outermost first. */
+  metadataParents?: string[];
+  /** File-declared metadata for this segment (icons, social images). */
+  fileMetadata?: FileMetadata | undefined;
+  /** This segment's public URL path, for file-metadata route hrefs. */
+  urlPath?: string;
+  /** Parallel-route slots: prop name → generated slot module. */
+  slots?: Array<{ name: string; file: string }>;
 }
 
 function createWrapper({
@@ -402,6 +609,10 @@ function createWrapper({
   unauthorizedFile,
   fallbackLayout = false,
   status,
+  metadataParents = [],
+  fileMetadata,
+  urlPath = '',
+  slots = [],
 }: WrapperOptions): void {
   const lines = ['// Generated by Ness.js. Do not edit.'];
   let namedExports: string[] = [];
@@ -444,11 +655,90 @@ function createWrapper({
     lines.push('function NessComponent(){ return <Outlet />; }');
   }
   if (sourceFile || fallbackLayout) {
+    // The default export is built up in stages: slots compose around the
+    // component, metadata tags render beside it, the template wraps last.
+    // Each stage takes the previous stage's name and leaves a new one.
+    let component = 'NessComponent';
+
+    if (slots.length) {
+      for (const slot of slots) {
+        lines.push(
+          `import NessSlot_${slot.name} from ${JSON.stringify(importPath(generatedFile, slot.file))};`,
+        );
+      }
+      const slotProps = slots
+        .map(
+          slot =>
+            `${JSON.stringify(slot.name)}: <NessSlot_${slot.name} params={props?.params ?? {}} />`,
+        )
+        .join(', ');
+      lines.push(
+        `function NessSlotted(props){ return <${component} {...props} {...{${slotProps}}} />; }`,
+      );
+      component = 'NessSlotted';
+    }
+
+    const ownMetadata = sourceFile
+      ? metadataExports(fs.readFileSync(sourceFile, 'utf8'))
+      : { metadata: false, generateMetadata: false };
+    if (ownMetadata.metadata || ownMetadata.generateMetadata) {
+      lines.push(
+        "import {RouteMetadata as NessRouteMetadata} from '@nessframework/components';",
+      );
+      lines.push(
+        `import * as NessMetadataModule from ${JSON.stringify(importPath(generatedFile, sourceFile!))};`,
+      );
+      const parents = metadataParents.map((file, index) => {
+        lines.push(
+          `import * as NessMetadataParent${index} from ${JSON.stringify(importPath(generatedFile, file))};`,
+        );
+        return `NessMetadataParent${index}.metadata`;
+      });
+      const expression = ownMetadata.metadata
+        ? 'NessMetadataModule.metadata'
+        : 'NessMetadataModule.generateMetadata';
+      const previous = component;
+      lines.push(
+        `function NessWithMetadata(props){ return (<><NessRouteMetadata metadata={${expression}} args={{params: props?.params ?? {}, loaderData: props?.loaderData}} parents={[${parents.join(', ')}]} /><${previous} {...props} /></>); }`,
+      );
+      component = 'NessWithMetadata';
+    }
+
+    if (fileMetadata) {
+      lines.push(
+        "import {FileMetadataTags as NessFileMetadataTags} from '@nessframework/components';",
+      );
+      const asset = (file: string, index: number, kind: string): string => {
+        lines.push(
+          `import nessAsset_${kind}${index} from ${JSON.stringify(importPath(generatedFile, file))};`,
+        );
+        return `nessAsset_${kind}${index}`;
+      };
+      const icon = fileMetadata.icon.map((file, i) => asset(file, i, 'icon'));
+      const apple = fileMetadata.apple.map((file, i) =>
+        asset(file, i, 'apple'),
+      );
+      const og = fileMetadata.ogStatic.map((file, i) => asset(file, i, 'og'));
+      const twitter = fileMetadata.twitterStatic.map((file, i) =>
+        asset(file, i, 'twitter'),
+      );
+      const prefix = urlPath ? `/${urlPath}` : '';
+      if (fileMetadata.ogModule)
+        og.push(JSON.stringify(`${prefix}/opengraph-image`));
+      if (fileMetadata.twitterModule)
+        twitter.push(JSON.stringify(`${prefix}/twitter-image`));
+      const previous = component;
+      lines.push(
+        `function NessWithFileMetadata(props){ return (<><NessFileMetadataTags icon={[${icon.join(', ')}]} apple={[${apple.join(', ')}]} og={[${og.join(', ')}]} twitter={[${twitter.join(', ')}]} params={props?.params ?? {}} /><${previous} {...props} /></>); }`,
+      );
+      component = 'NessWithFileMetadata';
+    }
+
     if (templateFile) {
-      appendTemplate(lines, { generatedFile, templateFile });
+      appendTemplate(lines, { generatedFile, templateFile, component });
       lines.push('export default NessTemplated;');
     } else {
-      lines.push('export default NessComponent;');
+      lines.push(`export default ${component};`);
     }
   }
   if (
@@ -563,6 +853,86 @@ export async function loader(args) {
   );
 }
 
+/**
+ * A parallel-route slot, composed as a component the layout receives by prop.
+ *
+ * `@analytics/page.tsx` renders wherever the layout puts `{analytics}`; the
+ * slot's own `loading.tsx` and `error.tsx` become its Suspense and error
+ * boundaries, so one slot failing or suspending never takes the others down.
+ * `default.tsx` renders when the slot has no page of its own.
+ */
+function createSlotWrapper({
+  generatedFile,
+  pageFile,
+  defaultFile,
+  loadingFile,
+  errorFile,
+}: {
+  generatedFile: string;
+  pageFile?: string | undefined;
+  defaultFile?: string | undefined;
+  loadingFile?: string | undefined;
+  errorFile?: string | undefined;
+}): void {
+  const lines = ['// Generated by Ness.js. Do not edit.'];
+  const contentFile = pageFile ?? defaultFile;
+  lines.push("import {SlotBoundary} from '@nessframework/components';");
+  if (contentFile)
+    lines.push(
+      `import NessSlotContent from ${JSON.stringify(importPath(generatedFile, contentFile))};`,
+    );
+  if (loadingFile)
+    lines.push(
+      `import NessSlotLoading from ${JSON.stringify(importPath(generatedFile, loadingFile))};`,
+    );
+  if (errorFile)
+    lines.push(
+      `import NessSlotError from ${JSON.stringify(importPath(generatedFile, errorFile))};`,
+    );
+  const content = contentFile ? '<NessSlotContent {...props} />' : 'null';
+  const fallback = loadingFile ? ' fallback={<NessSlotLoading />}' : '';
+  const errorFallback = errorFile
+    ? ' errorFallback={<NessSlotError />}'
+    : '';
+  lines.push(
+    `export default function NessSlot(props){ return (<SlotBoundary${fallback}${errorFallback}>${content}</SlotBoundary>); }`,
+  );
+  writeIfChanged(generatedFile, `${lines.join('\n')}\n`);
+}
+
+/**
+ * An `opengraph-image.tsx`/`twitter-image.tsx` module, published as the image
+ * route it describes. The module default-exports a function receiving
+ * `{params}` and returning a `Response` — usually an `ImageResponse` from
+ * `@nessframework/assets/og`.
+ */
+function createImageRouteWrapper({
+  generatedFile,
+  sourceFile,
+}: {
+  generatedFile: string;
+  sourceFile: string;
+}): void {
+  const modulePath = JSON.stringify(importPath(generatedFile, sourceFile));
+  writeIfChanged(
+    generatedFile,
+    `// Generated by Ness.js. Do not edit.
+import * as NessImageModule from ${modulePath};
+
+export async function loader(args: {request: Request; params: Record<string, string | undefined>}) {
+  const produced = await NessImageModule.default(args);
+  if (produced instanceof Response) return produced;
+  return new Response(produced, {
+    headers: {
+      'content-type': (NessImageModule as {contentType?: string}).contentType || 'image/png',
+      'cache-control': 'public, max-age=0, must-revalidate',
+    },
+  });
+}
+`,
+  );
+}
+
 /** A page's own config, or its `.server` module's — whichever declares it. */
 function segmentConfigFor(sourceFile: string): SegmentConfig | undefined {
   const own = findSegmentConfig(fs.readFileSync(sourceFile, 'utf8'));
@@ -599,6 +969,10 @@ interface DiscoverOptions {
   root?: boolean;
   inheritedLoadingFile?: string | undefined;
   parentTemplateFile?: string | undefined;
+  /** This directory's public URL path, without a leading slash. */
+  urlPath?: string;
+  /** Ancestor layouts with a static `metadata` export, outermost first. */
+  metadataParents?: string[];
 }
 
 function discoverDirectory(
@@ -617,6 +991,8 @@ function discoverDirectory({
   root = false,
   inheritedLoadingFile,
   parentTemplateFile,
+  urlPath = '',
+  metadataParents = [],
 }: DiscoverOptions): NessRoute[] | NessRoute | undefined {
   const layoutFile = findModule(directory, 'layout');
   const pageFile = findModule(directory, 'page');
@@ -627,11 +1003,20 @@ function discoverDirectory({
   const notFoundFile = findModule(directory, 'not-found');
   const forbiddenFile = findModule(directory, 'forbidden');
   const unauthorizedFile = findModule(directory, 'unauthorized');
+  const fileMetadata = findFileMetadata(directory);
   if (pageFile && resourceFile) {
     throw new Error(
       `A Ness route cannot contain both page and route modules: ${directory}`,
     );
   }
+
+  // Children see this layout in their metadata chain only when it actually
+  // declares a static `metadata` object — a template cannot be read off a
+  // `generateMetadata` without running it.
+  const childMetadataParents =
+    layoutFile && metadataExports(fs.readFileSync(layoutFile, 'utf8')).metadata
+      ? [...metadataParents, layoutFile]
+      : metadataParents;
 
   // A segment's `loading.tsx` covers what the segment renders *inside* its own
   // layout — its page and everything nested under it — and not the layout
@@ -644,7 +1029,7 @@ function discoverDirectory({
   // instance in the tree, in the same position the boundary sits in.
   const templateFile = findModule(directory, 'template');
 
-  const childDirectories = fs.existsSync(directory)
+  const allDirectories = fs.existsSync(directory)
     ? fs
         .readdirSync(directory, { withFileTypes: true })
         .filter(
@@ -655,7 +1040,59 @@ function discoverDirectory({
         )
         .sort((a, b) => a.name.localeCompare(b.name))
     : [];
+  // Slots and interceptors are not route children: a slot renders inside its
+  // own layout's props, and an interceptor renders over whatever is already
+  // on screen. Both are pulled out before ordinary recursion.
+  const slotDirectories = allDirectories.filter(entry =>
+    entry.name.startsWith('@'),
+  );
+  const interceptorDirectories = allDirectories.filter(entry =>
+    INTERCEPTOR_PREFIX.test(entry.name),
+  );
+  const childDirectories = allDirectories.filter(
+    entry =>
+      !entry.name.startsWith('@') && !INTERCEPTOR_PREFIX.test(entry.name),
+  );
   const children: NessRoute[] = [];
+
+  for (const entry of interceptorDirectories) {
+    collectInterceptors(path.join(directory, entry.name), entry.name, urlPath);
+  }
+
+  const slots: Array<{ name: string; file: string }> = [];
+  for (const entry of slotDirectories) {
+    const slotDirectory = path.join(directory, entry.name);
+    const name = entry.name.slice(1).replace(/[^A-Za-z0-9_$]/g, '_');
+    const generatedFile = path.join(
+      generatedDirectory,
+      `${moduleId(routesDirectory, slotDirectory, 'slot')}.tsx`,
+    );
+    createSlotWrapper({
+      generatedFile,
+      pageFile: findModule(slotDirectory, 'page'),
+      defaultFile: findModule(slotDirectory, 'default'),
+      loadingFile: findModule(slotDirectory, 'loading'),
+      errorFile: findModule(slotDirectory, 'error'),
+    });
+    slots.push({ name, file: generatedFile });
+    // Interceptors live inside slots in the canonical modal pattern.
+    for (const nested of fs.readdirSync(slotDirectory, {
+      withFileTypes: true,
+    })) {
+      if (nested.isDirectory() && INTERCEPTOR_PREFIX.test(nested.name)) {
+        collectInterceptors(
+          path.join(slotDirectory, nested.name),
+          nested.name,
+          urlPath,
+        );
+      }
+    }
+  }
+  if (slots.length && !layoutFile) {
+    throw new Error(
+      `Parallel route slots need a layout.tsx to receive them as props: ${directory}`,
+    );
+  }
 
   if (pageFile) {
     const generatedFile = path.join(
@@ -675,12 +1112,34 @@ function discoverDirectory({
       notFoundFile: layoutFile ? undefined : notFoundFile,
       forbiddenFile: layoutFile ? undefined : forbiddenFile,
       unauthorizedFile: layoutFile ? undefined : unauthorizedFile,
+      metadataParents: childMetadataParents,
+      // The layout announces the segment's file metadata when there is one;
+      // otherwise the page carries its own.
+      fileMetadata: layoutFile ? undefined : fileMetadata,
+      urlPath,
     });
     children.push({
       id: moduleId(routesDirectory, directory, 'page'),
       index: true,
       file: routeFile(appDirectory, generatedFile),
       ...(segmentConfig ? { config: segmentConfig } : {}),
+    });
+  }
+
+  for (const [basename, moduleFile] of [
+    ['opengraph-image', fileMetadata?.ogModule],
+    ['twitter-image', fileMetadata?.twitterModule],
+  ] as const) {
+    if (!moduleFile) continue;
+    const generatedFile = path.join(
+      generatedDirectory,
+      `${moduleId(routesDirectory, directory, basename.replace('-', '_'))}.ts`,
+    );
+    createImageRouteWrapper({ generatedFile, sourceFile: moduleFile });
+    children.push({
+      id: moduleId(routesDirectory, directory, basename.replace('-', '_')),
+      path: basename,
+      file: routeFile(appDirectory, generatedFile),
     });
   }
 
@@ -721,6 +1180,7 @@ function discoverDirectory({
   }
 
   for (const child of childDirectories) {
+    const childSegment = segmentPath(child.name);
     const childRoute = discoverDirectory({
       appDirectory,
       routesDirectory,
@@ -728,6 +1188,12 @@ function discoverDirectory({
       directory: path.join(directory, child.name),
       inheritedLoadingFile: childLoadingFile,
       parentTemplateFile: templateFile,
+      // Groups and private folders add no URL segment.
+      urlPath:
+        childSegment === undefined
+          ? urlPath
+          : [urlPath, childSegment].filter(Boolean).join('/'),
+      metadataParents: childMetadataParents,
     });
     if (childRoute) children.push(childRoute as NessRoute);
   }
@@ -770,6 +1236,10 @@ function discoverDirectory({
     forbiddenFile,
     unauthorizedFile,
     fallbackLayout: !layoutFile,
+    metadataParents,
+    fileMetadata: layoutFile ? fileMetadata : undefined,
+    urlPath,
+    slots,
   });
   const entry: NessRoute = {
     id: moduleId(routesDirectory, directory, 'layout'),
@@ -822,6 +1292,46 @@ export default function NessLocaleLayout() {
   return generatedFile;
 }
 
+/**
+ * The last boundary standing: `app/routes/global-error.tsx`, wrapped around
+ * the entire route tree as a pathless route whose ErrorBoundary it becomes.
+ *
+ * It catches whatever no segment boundary caught. Unlike Next's, it renders
+ * inside `root.tsx` rather than replacing it — the document shell is the
+ * application's own file here and stays up; what this replaces is everything
+ * inside it. The component receives Next's `{error, reset}` contract.
+ */
+function createGlobalErrorLayout(
+  generatedDirectory: string,
+  sourceFile: string,
+): string {
+  const generatedFile = path.join(generatedDirectory, 'ness__global_error.tsx');
+  writeIfChanged(
+    generatedFile,
+    `// Generated by Ness.js. Do not edit.
+import {Outlet, useRouteError} from 'react-router';
+import NessGlobalError from ${JSON.stringify(importPath(generatedFile, sourceFile))};
+
+export default function NessGlobalErrorShell() {
+  return <Outlet />;
+}
+
+export function ErrorBoundary() {
+  const raw = useRouteError();
+  const error =
+    raw instanceof Error
+      ? raw
+      : new Error(typeof raw === 'string' ? raw : JSON.stringify(raw));
+  const reset = () => {
+    if (typeof window !== 'undefined') window.location.reload();
+  };
+  return <NessGlobalError error={error} reset={reset} />;
+}
+`,
+  );
+  return generatedFile;
+}
+
 async function nessRoutes({
   appDirectory = path.join(process.cwd(), 'app'),
   routesDirectory,
@@ -843,7 +1353,9 @@ async function nessRoutes({
   const written = new Set<string>();
   const previous = generatedThisPass;
   generatedThisPass = written;
+  collectedInterceptors = [];
   let routes: NessRoute[];
+  let globalErrorLayout: string | undefined;
   try {
     routes = discoverDirectory({
       appDirectory: absoluteAppDirectory,
@@ -854,6 +1366,12 @@ async function nessRoutes({
     });
     const localization = normalizeI18n(i18n);
     if (localization) createLocaleLayout(absoluteGeneratedDirectory);
+    const globalErrorFile = findModule(absoluteRoutesDirectory, 'global-error');
+    if (globalErrorFile)
+      globalErrorLayout = createGlobalErrorLayout(
+        absoluteGeneratedDirectory,
+        globalErrorFile,
+      );
     writeRouteTypes(absoluteAppDirectory, flattenRoutePaths(routes));
   } finally {
     generatedThisPass = previous;
@@ -861,28 +1379,54 @@ async function nessRoutes({
   }
 
   const localization = normalizeI18n(i18n);
-  if (!localization) return routes;
+  if (localization) {
+    const layoutFile = createLocaleLayout(absoluteGeneratedDirectory);
+    const file = routeFile(absoluteAppDirectory, layoutFile);
 
-  const layoutFile = createLocaleLayout(absoluteGeneratedDirectory);
-  const file = routeFile(absoluteAppDirectory, layoutFile);
+    // `prefix-except-default` serves the default locale at the root, so it
+    // gets no prefixed branch of its own — emitting one would publish every
+    // page at two URLs.
+    const prefixed = localization.locales.filter(
+      locale =>
+        !(isBareDefault(localization) && locale === localization.defaultLocale),
+    );
+    const branches: NessRoute[] = prefixed.map(locale => ({
+      id: `ness__locale__${locale}`,
+      path: locale,
+      file,
+      children: prefixRouteIds(routes, `locale/${locale}`),
+    }));
 
-  // `prefix-except-default` serves the default locale at the root, so it gets
-  // no prefixed branch of its own — emitting one would publish every page at
-  // two URLs.
-  const prefixed = localization.locales.filter(
-    locale =>
-      !(isBareDefault(localization) && locale === localization.defaultLocale),
-  );
-  const branches: NessRoute[] = prefixed.map(locale => ({
-    id: `ness__locale__${locale}`,
-    path: locale,
-    file,
-    children: prefixRouteIds(routes, `locale/${locale}`),
-  }));
+    // With `prefix-except-default` the untranslated tree stays mounted at the
+    // root, so existing URLs keep resolving after locales are introduced.
+    routes = isBareDefault(localization) ? [...routes, ...branches] : branches;
+  }
 
-  // With `prefix-except-default` the untranslated tree stays mounted at the
-  // root, so existing URLs keep resolving after locales are introduced.
-  return isBareDefault(localization) ? [...routes, ...branches] : branches;
+  // Outermost of all, so it catches what every locale branch and segment
+  // boundary let through.
+  if (globalErrorLayout) {
+    routes = [
+      {
+        id: 'ness__global-error',
+        file: routeFile(absoluteAppDirectory, globalErrorLayout),
+        children: routes,
+      },
+    ];
+  }
+
+  return routes;
+}
+
+/**
+ * Every intercepting route the application declared, resolved to the URL it
+ * intercepts. Runs discovery the same way `nessRoutePaths` does, so the
+ * table can never disagree with the tree that actually got routed.
+ */
+async function nessInterceptors(
+  options: NessRoutesOptions = {},
+): Promise<InterceptorEntry[]> {
+  await nessRoutes(options);
+  return [...collectedInterceptors];
 }
 
 /**
@@ -974,6 +1518,7 @@ export {
   RESERVED_FILES,
   ROUTE_EXTENSIONS,
   SEGMENT_CONFIG,
+  nessInterceptors,
   nessRoutePaths,
   nessRoutes,
   prefixRouteIds,

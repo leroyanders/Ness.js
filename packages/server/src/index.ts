@@ -1,18 +1,55 @@
 import { randomUUID } from 'node:crypto';
-import { createRequestHandler as createRouterRequestHandler } from 'react-router';
-import type { RouterContextProvider, ServerBuild } from 'react-router';
+import {
+  createRequestHandler as createRouterRequestHandler,
+  RouterContextProvider,
+} from 'react-router';
+import type { ServerBuild } from 'react-router';
 import { getCache, normalizeLife } from '@nessframework/cache';
 import type { CacheLife, CacheProfile } from '@nessframework/cache';
 import * as instrumentation from '@nessframework/instrumentation';
+import {
+  createRequestStore,
+  flushRequestStore,
+  requestStore as requestStoreRef,
+  runWithRequestStore,
+} from './context.js';
+import type { RequestStore } from './context.js';
+import { installFetchCache } from './fetch-cache.js';
 
 export * from './responses.js';
 export * from './draft.js';
+export {
+  after,
+  assertUntainted,
+  connection,
+  isDynamicRequest,
+  noStore,
+  requestStore,
+  taintObjectReference,
+  taintUniqueValue,
+  unstable_noStore,
+  waitUntil,
+} from './context.js';
+export type { RequestStore } from './context.js';
+export { installFetchCache, nessFetch } from './fetch-cache.js';
+export type { FetchCacheInit } from './fetch-cache.js';
 
 export interface RoutingRule {
   source: string | RegExp;
   destination: string;
   status?: number;
   permanent?: boolean;
+}
+
+/**
+ * One zone of a multi-zone deployment: everything under `basePath` is served
+ * by the application at `destination`, which itself serves its pages under
+ * the same base path. The composing app proxies — the visitor sees one
+ * domain, and each zone deploys on its own.
+ */
+export interface Zone {
+  basePath: string;
+  destination: string;
 }
 
 export interface HeaderRule {
@@ -32,10 +69,26 @@ export type Middleware = (
   next: () => Promise<Response>,
 ) => Promise<Response> | Response;
 
-/** What a page declares about its own caching, read from the manifest. */
+/** What a page declares about itself, read from the manifest. */
 export interface SegmentConfig {
   revalidate?: number | false;
   dynamic?: 'force-dynamic' | 'force-static' | 'auto';
+  /** Where the deployment adapter should run this page. */
+  runtime?: 'node' | 'edge' | 'serverless';
+  /** Seconds the render may take before the request is failed with a 504. */
+  maxDuration?: number;
+  /**
+   * `false` refuses params that were not prerendered: a dynamic segment
+   * whose value is not in the prerendered list answers 404 instead of
+   * rendering.
+   */
+  dynamicParams?: boolean;
+  /** The default for `fetch()` calls made while rendering this segment. */
+  fetchCache?: 'default-cache' | 'default-no-store';
+  /** Recorded for deployment adapters that place functions by region. */
+  preferredRegion?: string | string[];
+  /** Partial prerendering: serve a cached shell, stream the rest. */
+  ppr?: boolean;
 }
 
 /** One entry of the flat page list in `ness-manifest.json`. */
@@ -71,6 +124,8 @@ export interface RequestHandlerOptions {
   redirects?: RoutingRule[];
   rewrites?: RoutingRule[];
   headers?: HeaderRule[];
+  /** Multi-zone composition: path prefixes served by other deployments. */
+  zones?: Zone[];
   imageHandler?: (request: Request) => Promise<Response> | Response;
   imagePath?: string;
   /** What to keep. Returning a falsy value leaves the response unstored. */
@@ -91,6 +146,23 @@ export interface RequestHandlerOptions {
    * `revalidate`/`dynamic`.
    */
   pages?: ManifestPage[];
+  /**
+   * Concrete paths the build prerendered, for `dynamicParams: false`: a
+   * dynamic segment that refuses unknown params answers 404 for any path not
+   * in this list.
+   */
+  prerenderedPaths?: string[];
+}
+
+/** What a platform adapter may hand over alongside one request. */
+export interface HandleRequestInit {
+  /** The platform's own `waitUntil` (Workers, Lambda streaming). */
+  waitUntil?: ((promise: Promise<unknown>) => void) | undefined;
+  /**
+   * A per-call load context — Workers bindings, Lambda event — used when the
+   * handler was not configured with its own `getLoadContext`.
+   */
+  loadContext?: unknown;
 }
 
 /** A React Router server build, described only where this module reaches in. */
@@ -206,6 +278,41 @@ function applyRoutingRules(
     return { request: new Request(destination, request) };
   }
   return { request };
+}
+
+/** The zone owning this pathname, if any. Longest base path wins. */
+function matchZone(zones: Zone[], pathname: string): Zone | undefined {
+  let best: Zone | undefined;
+  for (const zone of zones) {
+    const base = zone.basePath.replace(/\/+$/, '');
+    if (pathname !== base && !pathname.startsWith(`${base}/`)) continue;
+    if (!best || base.length > best.basePath.replace(/\/+$/, '').length)
+      best = zone;
+  }
+  return best;
+}
+
+/**
+ * Hands a request to another origin and returns whatever comes back, body
+ * streaming through. Used for zones and for rewrites whose destination is
+ * absolute: the URL names another deployment, so the answer is theirs.
+ */
+async function proxyRequest(request: Request): Promise<Response> {
+  const headers = new Headers(request.headers);
+  headers.set('x-forwarded-host', headers.get('host') || '');
+  headers.delete('host');
+  const response = await fetch(
+    new Request(request.url, {
+      method: request.method,
+      headers,
+      body: request.body,
+      // The visitor's client follows redirects against *this* origin; the
+      // zone's redirects must come back as redirects, not be swallowed here.
+      redirect: 'manual',
+      ...(request.body ? { duplex: 'half' } : {}),
+    } as RequestInit),
+  );
+  return response;
 }
 
 function applyHeaders(
@@ -457,6 +564,56 @@ function reportingBuild(
   };
 }
 
+/**
+ * Wraps every route's `loader` and `action` so their results pass through
+ * `assertUntainted` before React Router serializes them to the client.
+ *
+ * This is the boundary the taint API guards: loader data is the only door
+ * server objects leave through in classic mode. The scan is skipped entirely
+ * while nothing has ever been tainted, so an application that never calls
+ * `taintObjectReference` pays nothing here.
+ */
+function taintGuardedBuild(
+  build: ServerBuildLike | undefined,
+): ServerBuildLike | undefined {
+  const routes = build?.['routes'] as
+    | Record<
+        string,
+        { module?: Record<string, unknown> } | undefined
+      >
+    | undefined;
+  if (!routes) return build;
+  const guard = (fn: unknown) => {
+    if (typeof fn !== 'function') return fn;
+    return async (...args: unknown[]) => {
+      const result: unknown = await (
+        fn as (...call: unknown[]) => unknown
+      )(...args);
+      // A Response's body is bytes the application already chose to send.
+      if (result instanceof Response) return result;
+      const { assertUntainted } = await import('./context.js');
+      return assertUntainted(result);
+    };
+  };
+  const guarded: Record<string, unknown> = {};
+  for (const [id, route] of Object.entries(routes)) {
+    const module = route?.module;
+    if (!module || (!module['loader'] && !module['action'])) {
+      guarded[id] = route;
+      continue;
+    }
+    guarded[id] = {
+      ...route,
+      module: {
+        ...module,
+        ...(module['loader'] ? { loader: guard(module['loader']) } : {}),
+        ...(module['action'] ? { action: guard(module['action']) } : {}),
+      },
+    };
+  }
+  return { ...build, routes: guarded };
+}
+
 function createNessRequestHandler({
   build,
   requestHandler,
@@ -466,6 +623,7 @@ function createNessRequestHandler({
   redirects = [],
   rewrites = [],
   headers = [],
+  zones = [],
   imageHandler,
   imagePath = '/_ness/image',
   cachePolicy = defaultCachePolicy,
@@ -476,7 +634,11 @@ function createNessRequestHandler({
   // `revalidate`/`dynamic`. Absent — a build without a manifest, a test — and
   // every page simply follows the policies above.
   pages = [],
-}: RequestHandlerOptions = {}): (request: Request) => Promise<Response> {
+  prerenderedPaths = [],
+}: RequestHandlerOptions = {}): (
+  request: Request,
+  init?: HandleRequestInit,
+) => Promise<Response> {
   if (!build && !requestHandler) {
     throw new TypeError(
       'createNessRequestHandler requires a React Router server build or requestHandler.',
@@ -488,21 +650,35 @@ function createNessRequestHandler({
     (typeof rscHandler === 'function'
       ? (request: Request) => rscHandler(request)
       : createRouterRequestHandler(
-          reportingBuild(build) as unknown as ServerBuild,
+          taintGuardedBuild(reportingBuild(build)) as unknown as ServerBuild,
           mode,
         ));
   const run = composeMiddleware(middleware, async context => {
     const url = new URL(context.request.url);
     if (imageHandler && url.pathname === imagePath)
       return imageHandler(context.request);
+    // The adapter's per-call context (Workers bindings) counts only when it
+    // is the shape React Router accepts; the historical `{env, ctx}` object
+    // is still available to a configured getLoadContext, never passed raw.
+    const adapterContext = requestStoreRef()?.loadContext;
     const loadContext = getLoadContext
       ? await getLoadContext(context.request, context)
-      : undefined;
+      : adapterContext instanceof RouterContextProvider
+        ? adapterContext
+        : undefined;
     return routerHandler(context.request, loadContext);
   });
 
-  return async function handleRequest(
+  // From here on, every server-side `fetch` is memoized per request and can
+  // opt into the shared data cache with `{next: {revalidate, tags}}`.
+  installFetchCache();
+  const prerendered = new Set(
+    prerenderedPaths.map(value => value.replace(/\/+$/, '') || '/'),
+  );
+
+  async function respond(
     originalRequest: Request,
+    store: RequestStore,
   ): Promise<Response> {
     await instrumentation.register();
     const startedAt = performance.now();
@@ -514,11 +690,38 @@ function createNessRequestHandler({
       if (routed.response) return routed.response;
       request = routed.request;
 
+      // Zones first, then any rewrite that landed on another origin: both
+      // mean "this URL belongs to another deployment", and the answer is
+      // fetched from it rather than rendered here.
+      const zone = matchZone(zones, new URL(request.url).pathname);
+      if (zone) {
+        const target = new URL(request.url);
+        const destination = new URL(zone.destination);
+        target.protocol = destination.protocol;
+        target.host = destination.host;
+        return proxyRequest(new Request(target, request));
+      }
+      if (
+        new URL(request.url).origin !== new URL(originalRequest.url).origin
+      ) {
+        return proxyRequest(request);
+      }
+
       const cache = getCache();
       const key = `page:${request.method}:${new URL(request.url).href}`;
-      const segment = segmentCachePolicy(
-        matchPage(pages, new URL(request.url).pathname)?.config,
-      );
+      const pathname = new URL(request.url).pathname;
+      const pageConfig = matchPage(pages, pathname)?.config;
+      // `dynamicParams: false` closes the set of params: a URL the build did
+      // not prerender is not a page, however well it matches the pattern.
+      if (
+        pageConfig?.dynamicParams === false &&
+        !prerendered.has(pathname.replace(/\/+$/, '') || '/')
+      ) {
+        return new Response('Not Found', { status: 404 });
+      }
+      // Fetches made under this segment inherit its declared default.
+      store.fetchCacheDefault = pageConfig?.fetchCache;
+      const segment = segmentCachePolicy(pageConfig);
       // Asked before the read. A request that may not be answered from the
       // shared cache must not reach into it at all.
       const cacheable =
@@ -579,13 +782,17 @@ function createNessRequestHandler({
         return restoreResponse(cached.entry.value, 'STALE');
       }
 
-      let response = await run({ request, id, params: {}, state: new Map() });
+      let response = await withTimeout(
+        run({ request, id, params: {}, state: new Map() }),
+        pageConfig?.maxDuration,
+      );
       response = applyHeaders(response, request, headers);
       // `storableResponse` gates the policy rather than being folded into it,
       // so a project that supplies its own `cachePolicy` cannot reintroduce the
-      // leak by forgetting the check.
+      // leak by forgetting the check. `store.dynamic` is `noStore()`'s word:
+      // a render that declared itself per-request is never stored.
       let policy =
-        cacheable && storableResponse(response)
+        cacheable && !store.dynamic && storableResponse(response)
           ? await cachePolicy(request, response)
           : undefined;
       // The page's own `revalidate` outranks the application-wide policy: it
@@ -624,7 +831,86 @@ function createNessRequestHandler({
       await instrumentation.emit('onError', { error, request, id });
       throw error;
     }
+  }
+
+  return async function handleRequest(
+    originalRequest: Request,
+    init?: HandleRequestInit,
+  ): Promise<Response> {
+    const store = createRequestStore(originalRequest, {
+      waitUntil: init?.waitUntil,
+      loadContext: init?.loadContext,
+    });
+    const response = await runWithRequestStore(store, () =>
+      respond(originalRequest, store),
+    );
+    return flushWhenDone(response, store);
   };
+}
+
+/**
+ * Fails the request once the page's own `maxDuration` has passed.
+ *
+ * The render itself cannot be cancelled — React has no way to abandon a
+ * loader mid-await — so the losing branch keeps running to completion; what
+ * the declaration buys is that the *client* stops waiting, which is the
+ * contract the option states.
+ */
+async function withTimeout(
+  work: Promise<Response>,
+  seconds: number | undefined,
+): Promise<Response> {
+  if (!seconds || !Number.isFinite(seconds)) return work;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<undefined>(resolve => {
+    timer = setTimeout(() => resolve(undefined), seconds * 1000);
+  });
+  const result = await Promise.race([
+    work.finally(() => clearTimeout(timer)),
+    expired,
+  ]);
+  return (
+    result ??
+    new Response('Gateway Timeout', {
+      status: 504,
+      headers: { 'x-ness-timeout': String(seconds) },
+    })
+  );
+}
+
+/**
+ * Runs `after()` callbacks once the response has actually been sent.
+ *
+ * "Sent" means the body stream closed — for a streamed render that is when
+ * the last suspense boundary flushed, not when the handler returned. The
+ * callbacks are attached to the stream itself, so they also run when the
+ * client walks away mid-body.
+ */
+function flushWhenDone(response: Response, store: RequestStore): Response {
+  if (!response.body) {
+    if (store.deferred.length || store.pending.length)
+      void flushRequestStore(store);
+    return response;
+  }
+  let flushed = false;
+  const flush = () => {
+    if (flushed) return;
+    flushed = true;
+    void flushRequestStore(store);
+  };
+  const stream = response.body.pipeThrough(
+    // `cancel` is a spec-recent transformer hook; the DOM lib in use does not
+    // name it yet, hence the loose object.
+    new TransformStream<Uint8Array, Uint8Array>({ flush, cancel: flush } as {
+      flush: () => void;
+      cancel: () => void;
+    }),
+  );
+  return new Response(stream, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  });
 }
 
 export {
@@ -637,6 +923,9 @@ export {
   defaultCachePolicy,
   matchPage,
   matchPattern,
+  matchZone,
+  proxyRequest,
   segmentCachePolicy,
   storableResponse,
+  taintGuardedBuild,
 };

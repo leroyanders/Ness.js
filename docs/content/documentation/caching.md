@@ -18,6 +18,8 @@ await revalidatePath('/posts');
 
 Profiles include `seconds`, `minutes`, `hours`, `days`, `max`, and `default`. Concurrent calls are deduplicated. Expired values are regenerated; stale values are served while one background refresh runs.
 
+Server-side `fetch()` plugs into the same cache: identical GETs inside one request share one network call, and `fetch(url, {next: {revalidate: 60, tags: ['posts']}})` stores the response through whatever adapter is configured — invalidated by the same `revalidateTag`/`revalidatePath`. `noStore()` (or `await connection()`) from `@nessframework/core/server` takes a whole response out of the page cache. See [Next.js parity](./next-parity.md#fetch-caching-and-cache).
+
 ## Adapters
 
 `MemoryCacheAdapter` is the default and is process-local: a second instance keeps its own copy, and `revalidateTag` on one instance does not reach the others. Anything running more than one process needs a shared adapter.

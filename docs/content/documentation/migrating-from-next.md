@@ -24,7 +24,11 @@ The route conventions are nearly the same, which is what makes this mechanical r
 | `app/error.tsx`                                           | `app/routes/.../error.tsx`     |
 | `app/not-found.tsx`                                       | `app/routes/.../not-found.tsx` |
 | `app/forbidden.tsx`, `app/unauthorized.tsx`               | same names under `app/routes/` |
+| `app/global-error.tsx`                                    | `app/routes/global-error.tsx`  |
 | `app/api/x/route.ts`                                      | `app/routes/api/x/route.ts`    |
+| `@slot/…`, `default.tsx`                                  | identical (see [Next.js parity](./next-parity.md)) |
+| `(.)x`, `(..)x`, `(...)x` intercepting routes             | identical (overlay semantics)  |
+| `icon.png`, `apple-icon.png`, `opengraph-image.*`         | identical                      |
 | `[id]`, `[...rest]`, `[[...rest]]`, `(group)`, `_private` | identical                      |
 
 Route Handlers keep their shape too: a `route` module exporting `GET`, `POST`, and so on is dispatched by method in both frameworks.
@@ -36,8 +40,10 @@ Route Handlers keep their shape too: a `route` module exporting `GET`, `POST`, a
 | `next/link`             | `react-router`             | `href` becomes `to`               |
 | `next/image`            | `@nessframework/core`      |                                   |
 | `next/script`           | `@nessframework/core`      |                                   |
+| `next/dynamic`          | `@nessframework/core`      | same `{loading, ssr}` options     |
 | `next/navigation` hooks | `@nessframework/core`      | same names                        |
 | `next/cache`            | `@nessframework/cache`     | `unstable_cache` becomes `cached` |
+| `next/og`               | `@nessframework/core/og`   |                                   |
 | `next/font/local`       | `@nessframework/core/font` |                                   |
 
 ## What needs a human
@@ -76,11 +82,15 @@ export default function Page() {
 
 **`generateStaticParams`.** List the paths under `router.prerender` in `ness.config.mjs`.
 
-**`generateMetadata`.** There is no `meta` route export in Ness. A page declares its metadata in its own markup with `Meta`, `Title`, `Description`, `Canonical`, `Robots`, and `SocialImage` from `@nessframework/components`; React hoists the tags into `<head>`. See [Components](./components.md).
+**`metadata` and `generateMetadata`.** Both carry over as route exports — `export const metadata = {…}` and `export async function generateMetadata({params, loaderData})` render the same tags, title templates included. In classic mode `generateMetadata` also runs on client navigations, so derive from `loaderData` rather than reaching into a database. The element components (`Title`, `Description`, …) remain available. See [Next.js parity](./next-parity.md).
 
 **`next.config.js`.** `redirects`, `rewrites`, `headers`, and `images` move into the `server` section of `ness.config.mjs`; the option shapes match.
 
-**Middleware.** Next middleware runs once per request. Ness middleware is scoped to a route segment — usually a closer fit, but the placement has to be chosen.
+**Middleware.** `middleware.ts` at the project root runs once per request, like Next's. Ness also has per-segment `middleware.ts` files, which are usually the closer fit — the placement has to be chosen.
+
+**`unstable_noStore()`, `connection()`, `after()`.** All exist, from `@nessframework/core/server`: `noStore()`/`connection()` take the response out of the shared cache, `after()` runs once the response has been sent. `fetch(url, {next: {revalidate, tags}})` works on the server and stores through the Ness cache adapters.
+
+**Route segment config.** `revalidate`, `dynamic`, `runtime`, `maxDuration`, `dynamicParams`, `fetchCache`, `preferredRegion` and `experimental_ppr` are read off the page source the way Next reads them. `basePath` and `assetPrefix` move from `next.config.js` into the `router` section of `ness.config.mjs`.
 
 ## After migrating
 

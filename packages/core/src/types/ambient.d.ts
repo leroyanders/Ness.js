@@ -15,11 +15,29 @@ declare module 'virtual:ness/route-prefetch' {
   }>;
 }
 
-/** Vite's `import.meta.env`, only the flag this package reads. */
+/**
+ * The intercepting-route table the router's Vite plugin generates. Absent in
+ * a build without that plugin, which is why `interceptorTable()` swallows the
+ * import error.
+ */
+declare module 'virtual:ness/interceptors' {
+  export const interceptors: Array<{
+    from: string;
+    pattern: string;
+    load: () => Promise<{
+      default: import('react').ComponentType<{
+        params: Record<string, string | undefined>;
+      }>;
+    }>;
+  }>;
+}
+
+/** Vite's `import.meta.env`, only the flags this package reads. */
 interface ImportMetaEnv {
   readonly PROD?: boolean;
   readonly DEV?: boolean;
   readonly MODE?: string;
+  readonly NESS_PUBLIC_BASE_PATH?: string;
 }
 
 interface ImportMeta {

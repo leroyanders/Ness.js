@@ -127,16 +127,16 @@ test('files without an equivalent are reported instead of moved', async t => {
   const root = createNextApp(t);
   const plan = planMigration(root);
 
-  // Parallel routes still have no Ness equivalent.
-  const parallelDefault = plan.findings.find(finding =>
-    finding.file.endsWith('default.tsx'),
-  );
-  assert.ok(parallelDefault, 'default.tsx is reported');
-  assert.equal(parallelDefault.level, 'manual');
+  // Parallel routes carry over now: `default.tsx` moves with its slot.
   assert.ok(
-    !plan.moves.some(move => move.from.endsWith('default.tsx')),
-    'default.tsx must not be moved',
+    plan.moves.some(move => move.from.endsWith('default.tsx')),
+    'default.tsx is moved with the slot it belongs to',
   );
+  // Root instrumentation still has to be relocated by hand.
+  const instrumentation = plan.findings.find(finding =>
+    finding.file.endsWith('instrumentation.ts'),
+  );
+  if (instrumentation) assert.equal(instrumentation.level, 'manual');
 });
 
 test('a template is moved now that Ness has the convention', async t => {

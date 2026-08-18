@@ -407,10 +407,54 @@ async function createVercelOutput({
       configPath: resolvedConfigPath ? `./${resolvedConfigPath}` : undefined,
     }),
   );
+  // The pages' own segment config, aggregated onto the one function this
+  // output ships: the longest `maxDuration` any page declared, and the union
+  // of every `preferredRegion`. Per-page granularity would need per-page
+  // functions; until then the function is provisioned for its slowest page.
+  const segmentFunctionConfig = (() => {
+    try {
+      const nessManifest = JSON.parse(
+        fs.readFileSync(
+          path.join(absoluteBuild, 'ness-manifest.json'),
+          'utf8',
+        ),
+      ) as {
+        pages?: Array<{
+          config?: {
+            maxDuration?: number;
+            preferredRegion?: string | string[];
+          };
+        }>;
+      };
+      const durations = (nessManifest.pages ?? [])
+        .map(page => page.config?.maxDuration)
+        .filter((value): value is number => typeof value === 'number');
+      const regions = [
+        ...new Set(
+          (nessManifest.pages ?? []).flatMap(page =>
+            page.config?.preferredRegion == null
+              ? []
+              : [page.config.preferredRegion].flat(),
+          ),
+        ),
+      ];
+      return {
+        ...(durations.length ? { maxDuration: Math.max(...durations) } : {}),
+        ...(regions.length ? { regions } : {}),
+      };
+    } catch {
+      return {};
+    }
+  })();
   fs.writeFileSync(
     path.join(functionDirectory, '.vc-config.json'),
     `${JSON.stringify(
-      { runtime, handler: 'index.js', launcherType: 'Nodejs' },
+      {
+        runtime,
+        handler: 'index.js',
+        launcherType: 'Nodejs',
+        ...segmentFunctionConfig,
+      },
       null,
       2,
     )}\n`,

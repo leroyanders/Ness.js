@@ -11,10 +11,12 @@ export {
   RESERVED_FILES,
   ROUTE_EXTENSIONS,
   segmentPath,
+  nessInterceptors,
   nessRoutes,
   nessRoutePaths,
 } from './routes.js';
 export type {
+  InterceptorEntry,
   NessRoute,
   NessRoutePath,
   NessRoutesOptions,
@@ -54,6 +56,19 @@ export interface NessConfig extends Config {
   i18n?: I18nConfig;
   routeDirectory?: string;
   rsc?: boolean;
+  /**
+   * Serves the whole application under a path prefix — `/docs` — the way
+   * Next's `basePath` does. Routing, links, assets and the image endpoint all
+   * move with it; it is React Router's `basename` plus Vite's `base` plus the
+   * production server's mounts, stated once.
+   */
+  basePath?: string;
+  /**
+   * Where built assets are loaded from — a CDN origin, typically. Applies to
+   * the production build only; development stays local. Routes and the image
+   * endpoint keep following `basePath`.
+   */
+  assetPrefix?: string;
 }
 
 export interface NessInstrumentationConfig {
@@ -81,8 +96,12 @@ export interface NessManifest {
   version: 1;
   generatedAt: string;
   basename: string | undefined;
+  basePath?: string | undefined;
+  assetPrefix?: string | undefined;
   routes: Record<string, unknown>;
   pages: unknown[];
+  /** Concrete paths the build prerendered, for `dynamicParams: false`. */
+  prerenderedPaths?: string[];
   cache: NonNullable<NessConfig['cache']>;
   deployment: NonNullable<NessConfig['deployment']>;
   i18n?: I18nConfig | NormalizedI18nConfig;
@@ -90,8 +109,11 @@ export interface NessManifest {
 
 export interface ManifestPayloadOptions {
   basename?: string | undefined;
+  basePath?: string | undefined;
+  assetPrefix?: string | undefined;
   routes?: Record<string, unknown>;
   pages?: unknown[];
+  prerenderedPaths?: string[] | undefined;
   cache?: NessConfig['cache'];
   deployment?: NessConfig['deployment'];
   i18n?: I18nConfig | NormalizedI18nConfig | undefined;
@@ -127,8 +149,11 @@ function chainHooks(
  */
 function buildManifestPayload({
   basename,
+  basePath,
+  assetPrefix,
   routes,
   pages,
+  prerenderedPaths,
   cache,
   deployment,
   i18n,
@@ -137,12 +162,15 @@ function buildManifestPayload({
     version: 1,
     generatedAt: new Date().toISOString(),
     basename,
+    ...(basePath ? { basePath } : {}),
+    ...(assetPrefix ? { assetPrefix } : {}),
     routes: routes || {},
     // Every page as a full URL pattern, with whatever `revalidate` /
     // `dynamic` it declared. The production server reads this to answer a
     // question it has before it renders anything: may this URL be served from
     // the shared cache, and for how long is a stored copy good.
     pages: pages || [],
+    ...(prerenderedPaths?.length ? { prerenderedPaths } : {}),
     cache: cache || { profiles: DEFAULT_CACHE_PROFILES },
     deployment: deployment || { runtime: 'node' },
     ...(i18n ? { i18n } : {}),
@@ -162,17 +190,23 @@ function writeBuildManifest(options: {
   cache?: NessConfig['cache'];
   deployment?: NessConfig['deployment'];
   i18n?: I18nConfig | NormalizedI18nConfig | undefined;
+  basePath?: string | undefined;
+  assetPrefix?: string | undefined;
+  prerenderedPaths?: string[] | undefined;
 }): BuildEndHook {
   return async ({ buildManifest, reactRouterConfig }) => {
     writeNessManifest(
       reactRouterConfig.buildDirectory,
       buildManifestPayload({
         basename: reactRouterConfig.basename,
+        basePath: options.basePath,
+        assetPrefix: options.assetPrefix,
         routes: (buildManifest?.routes || {}) as Record<string, unknown>,
         pages: await nessRoutePaths({
           appDirectory: reactRouterConfig.appDirectory,
           i18n: options.i18n,
         }).catch(() => []),
+        prerenderedPaths: options.prerenderedPaths,
         cache: options.cache,
         deployment: options.deployment,
         i18n: options.i18n,
@@ -190,6 +224,8 @@ function defineConfig(options: NessConfig = {}): Config {
     rsc = true,
     routeDirectory,
     i18n,
+    basePath,
+    assetPrefix,
     ...reactRouterOptions
   } = options;
   // Validated here so a typo in ness.config.mjs fails immediately with a
@@ -209,6 +245,9 @@ function defineConfig(options: NessConfig = {}): Config {
       unstable_enableNodeReadableStream: true,
       ...(reactRouterOptions.future || {}),
     },
+    // `basePath` is React Router's `basename`, stated in the word every
+    // migrating project already uses. An explicit `basename` still wins.
+    ...(basePath ? { basename: basePath } : {}),
     ...reactRouterOptions,
     prerender,
     ...(rsc
@@ -216,7 +255,16 @@ function defineConfig(options: NessConfig = {}): Config {
       : {
           buildEnd: chainHooks(
             buildEnd,
-            writeBuildManifest({ cache, deployment, i18n: localization }),
+            writeBuildManifest({
+              cache,
+              deployment,
+              i18n: localization,
+              basePath,
+              assetPrefix,
+              prerenderedPaths: Array.isArray(prerender)
+                ? prerender.map(String)
+                : undefined,
+            }),
           ),
         }),
   } as Config;

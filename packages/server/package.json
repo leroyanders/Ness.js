@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/server",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/server/render",
   "bugs": {
@@ -51,6 +51,10 @@
     "./web-api": {
       "types": "./dist/web-api.d.ts",
       "default": "./dist/web-api.js"
+    },
+    "./ppr": {
+      "types": "./dist/ppr.d.ts",
+      "default": "./dist/ppr.js"
     }
   },
   "files": [
@@ -73,5 +77,9 @@
   "scripts": {
     "build": "tsc --build",
     "prepack": "tsc --build"
+  },
+  "peerDependencies": {
+    "react": ">=19",
+    "react-dom": ">=19"
   }
 }

@@ -73,20 +73,6 @@ function forbidden(body?: BodyInit): never {
   return interrupt(403, 'Forbidden', body);
 }
 
-function after<T>(callback: () => Promise<T> | T): Promise<T> {
-  if (typeof callback !== 'function')
-    throw new TypeError('after() expects a callback.');
-  const promise = new Promise<void>(resolve => {
-    setImmediate(resolve);
-  }).then(callback);
-  promise.catch((error: unknown) =>
-    queueMicrotask(() => {
-      throw error;
-    }),
-  );
-  return promise;
-}
-
 function parseCookies(request: Request): ParsedCookies {
   const source = request.headers.get('cookie') || '';
   const values = new Map<string, string>(
@@ -147,8 +133,11 @@ function userAgent(request: Request): UserAgent {
 
 const { data, redirectDocument, replace } = router;
 
+// Re-exported from the request context: `after()` is now tied to the request
+// lifecycle instead of `setImmediate`, but the import path stays valid.
+export { after } from './context.js';
+
 export {
-  after,
   data,
   forbidden,
   json,

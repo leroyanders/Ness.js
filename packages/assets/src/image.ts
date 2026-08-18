@@ -9,6 +9,17 @@ export interface StaticImage {
   blurDataURL?: string;
 }
 
+/**
+ * Builds the URL one rendition of an image is served from. The default
+ * loader targets the built-in `/_ness/image` optimizer; a custom one targets
+ * whatever CDN actually serves the pixels.
+ */
+export type ImageLoader = (props: {
+  src: string;
+  width: number;
+  quality?: number;
+}) => string;
+
 export interface ImageProps extends Omit<
   ImgHTMLAttributes<HTMLImageElement>,
   'src' | 'width' | 'height'
@@ -24,15 +35,40 @@ export interface ImageProps extends Omit<
   fill?: boolean;
   unoptimized?: boolean;
   endpoint?: string;
+  /** This image's own URL builder; overrides the application-wide loader. */
+  loader?: ImageLoader;
 }
 
 const DEFAULT_WIDTHS = [320, 480, 640, 750, 828, 1080, 1200, 1920, 2048, 3840];
+
+/**
+ * The application's `basePath`, statically injected by the Vite plugin. Empty
+ * everywhere else — tests, plain Node — where there is no prefix to honour.
+ */
+const BASE_PATH: string =
+  (typeof import.meta !== 'undefined' &&
+    (import.meta as { env?: Record<string, string> }).env?.[
+      'NESS_PUBLIC_BASE_PATH'
+    ]) ||
+  '';
+
+/**
+ * The application-wide image loader, when one was configured. Set once —
+ * typically in `root.tsx` — and every `<Image>` without its own `loader`
+ * prop builds its URLs through it, which is how a project points the whole
+ * image pipeline at Cloudinary or imgix without touching each usage.
+ */
+let globalImageLoader: ImageLoader | undefined;
+
+function setImageLoader(loader: ImageLoader | undefined): void {
+  globalImageLoader = loader;
+}
 
 function imageUrl(
   src: string,
   width: number,
   quality = 75,
-  endpoint = '/_ness/image',
+  endpoint = `${BASE_PATH}/_ness/image`,
 ): string {
   const query = new URLSearchParams({
     url: src,
@@ -55,6 +91,7 @@ function Image({
   fill = false,
   unoptimized = false,
   endpoint,
+  loader,
   ...props
 }: ImageProps): React.ReactElement {
   if (!src) throw new TypeError('Image requires a src property.');
@@ -78,16 +115,22 @@ function Image({
         ),
       ].sort((a, b) => a - b)
     : DEFAULT_WIDTHS;
+  // Per-image loader, then the application-wide one, then the built-in
+  // optimizer endpoint — the most specific statement wins.
+  const buildUrl: ImageLoader =
+    loader ||
+    globalImageLoader ||
+    (({ src: value, width: rendition, quality: q }) =>
+      imageUrl(value, rendition, q, endpoint));
   const optimizedSrc = unoptimized
     ? source
-    : imageUrl(
-        source,
+    : buildUrl({
+        src: source,
         // DEFAULT_WIDTHS always has a fifth entry; the filtered list is only
         // ever shorter when an explicit width made the index unnecessary.
-        numericWidth || candidateWidths[4]!,
+        width: numericWidth || candidateWidths[4]!,
         quality,
-        endpoint,
-      );
+      });
   const imageProps: ImgHTMLAttributes<HTMLImageElement> = {
     ...props,
     src: optimizedSrc,
@@ -102,7 +145,8 @@ function Image({
       ? undefined
       : candidateWidths
           .map(
-            value => `${imageUrl(source, value, quality, endpoint)} ${value}w`,
+            value =>
+              `${buildUrl({ src: source, width: value, quality })} ${value}w`,
           )
           .join(', '),
     style: {
@@ -126,4 +170,4 @@ function Image({
   return React.createElement('img', imageProps);
 }
 
-export { DEFAULT_WIDTHS, Image, imageUrl };
+export { DEFAULT_WIDTHS, Image, imageUrl, setImageLoader };

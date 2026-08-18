@@ -92,10 +92,13 @@ export async function loader() {
 - Streaming SSR, hydration, nested pending UI, error recovery, and automatic route code splitting
 - SSG/prerender plus stale-while-revalidate page caching and tag/path invalidation
 - Shared caching across instances: filesystem, SQLite, and Redis adapters, with an optional in-process tier and cross-instance invalidation
+- Server `fetch()` with per-request memoization and a tagged data cache; `after()`, `connection()`, `noStore()`, and the taint API
 - Locale-prefixed routing with `Accept-Language` negotiation
-- Metadata helpers for SEO, Open Graph, Twitter, manifests, robots, and sitemaps
-- Responsive `<Image>`, AVIF/WebP optimization, local fonts, and script loading strategies
+- Route `metadata`/`generateMetadata` with title templates, file-based icons and social images, and metadata helpers for manifests, robots, and sitemaps
+- Parallel routes (`@slot` + `default.tsx`), intercepting routes (`(.)`, `(..)`, `(...)`), `global-error.tsx`, and `dynamic()` with `ssr: false`
+- Responsive `<Image>` with custom CDN loaders, AVIF/WebP optimization, local fonts, and script loading strategies
 - Redirects, rewrites, response headers, route/global middleware, cookies, status helpers, and Web standard APIs
+- `basePath`/`assetPrefix`, multi-zone composition, segment config (`runtime`, `maxDuration`, `dynamicParams`, …), and experimental partial prerendering
 - `ness bundle node` — a self-contained deployment directory with a traced `node_modules` and no install step
 - Cloudflare Workers and AWS Lambda adapters; Docker templates built on the standalone output; graceful shutdown
 - A development error overlay with source-mapped stack frames, a code frame, and editor links

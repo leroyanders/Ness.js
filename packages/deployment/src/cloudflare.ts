@@ -76,7 +76,7 @@ function createWorkerHandler({
   let ready:
     | Promise<{
         server: Record<string, unknown>;
-        handler: (request: Request, context?: unknown) => Promise<Response>;
+        handler: ReturnType<typeof createNessRequestHandler>;
       }>
     | undefined;
   const prepare = async () => {
@@ -117,7 +117,17 @@ function createWorkerHandler({
       const loadContext = getLoadContext
         ? await getLoadContext({ request: forwarded, env, context })
         : { env, ctx: context };
-      return handler(forwarded, loadContext);
+      // The Worker freezes the isolate once the response is done; `after()`
+      // and `waitUntil()` survive that only through the platform's own hook.
+      const executionContext = context as
+        | { waitUntil?: (promise: Promise<unknown>) => void }
+        | undefined;
+      return handler(forwarded, {
+        loadContext,
+        waitUntil: executionContext?.waitUntil
+          ? executionContext.waitUntil.bind(executionContext)
+          : undefined,
+      });
     },
   };
 }

@@ -160,25 +160,34 @@ async function loadInstrumentation(root: string): Promise<void> {
 }
 
 /**
- * The page list the build wrote into `ness-manifest.json`.
+ * What this server reads out of `ness-manifest.json`.
  *
- * It carries each page's own `revalidate`/`dynamic`, which the request handler
- * needs before it renders anything. Missing manifest, unreadable manifest: the
- * server still starts and every page follows the application-wide policy —
- * caching rules are not worth refusing to boot over.
+ * The pages carry each one's own `revalidate`/`dynamic`, which the request
+ * handler needs before it renders anything; the prerendered list is what
+ * `dynamicParams: false` refuses everything outside of; the base path is
+ * where the whole application mounts. Missing manifest, unreadable manifest:
+ * the server still starts with the defaults — none of this is worth refusing
+ * to boot over.
  */
-function loadPages(root: string): ManifestPage[] {
+function loadManifest(root: string): {
+  pages: ManifestPage[];
+  prerenderedPaths: string[];
+  basePath: string;
+} {
   const filename = path.join(root, 'build', 'ness-manifest.json');
   try {
-    return (
-      (
-        JSON.parse(fs.readFileSync(filename, 'utf8')) as {
-          pages?: ManifestPage[];
-        }
-      ).pages || []
-    );
+    const manifest = JSON.parse(fs.readFileSync(filename, 'utf8')) as {
+      pages?: ManifestPage[];
+      prerenderedPaths?: string[];
+      basePath?: string;
+    };
+    return {
+      pages: manifest.pages || [],
+      prerenderedPaths: manifest.prerenderedPaths || [],
+      basePath: (manifest.basePath || '').replace(/\/+$/, ''),
+    };
   } catch {
-    return [];
+    return { pages: [], prerenderedPaths: [], basePath: '' };
   }
 }
 
@@ -246,10 +255,22 @@ async function main(): Promise<void> {
             : {},
         );
   const fileMiddleware = await loadRequestMiddleware(root);
+  const manifest = loadManifest(root);
+  // The manifest's word first — it records what was actually built — and the
+  // config's as the fallback for a build made before the option existed.
+  const routerSection = ((configModule as { ness?: { router?: unknown } })
+    ?.ness?.router || {}) as { basePath?: string };
+  const basePath = (
+    manifest.basePath ||
+    routerSection.basePath ||
+    ''
+  ).replace(/\/+$/, '');
   const handler = createNessRequestHandler({
     build,
     imageHandler,
-    pages: loadPages(root),
+    imagePath: `${basePath}/_ness/image`,
+    pages: manifest.pages,
+    prerenderedPaths: manifest.prerenderedPaths,
     ...handlerConfig,
     // The file runs ahead of anything the config named: it is the outermost
     // thing the project wrote, the way Next's middleware is.
@@ -263,26 +284,38 @@ async function main(): Promise<void> {
   const clientDirectory = path.join(root, 'build', 'client');
   const publicDirectory = path.join(root, 'public');
   const compression = config['compression'];
+  // Every static mount sits under the base path, so `/docs/assets/...` is
+  // what a `basePath: '/docs'` build actually gets asked for.
+  const mount = (route: string): string => `${basePath}${route}` || '/';
   // Ahead of every static mount: a hit here rewrites the URL to the
   // precompressed twin, which the mounts below then serve as an ordinary file.
   if (compression !== false) {
-    app.use(precompressed(clientDirectory));
-    app.use(precompressed(publicDirectory));
+    if (basePath) {
+      // Strip the prefix so the precompressed lookup sees disk-shaped paths.
+      app.use(mount('/'), precompressed(clientDirectory));
+      app.use(mount('/'), precompressed(publicDirectory));
+    } else {
+      app.use(precompressed(clientDirectory));
+      app.use(precompressed(publicDirectory));
+    }
   }
   app.use(
-    '/assets',
+    mount('/assets'),
     express.static(path.join(clientDirectory, 'assets'), {
       immutable: true,
       maxAge: '1y',
     }),
   );
-  app.use(express.static(clientDirectory, { index: false, maxAge: '1h' }));
-  app.use(express.static(publicDirectory, { maxAge: '1h' }));
+  app.use(
+    mount('/'),
+    express.static(clientDirectory, { index: false, maxAge: '1h' }),
+  );
+  app.use(mount('/'), express.static(publicDirectory, { maxAge: '1h' }));
   // Flipped the moment a shutdown signal arrives, so readiness fails while
   // in-flight requests are still being served.
   let draining = false;
 
-  app.get('/_ness/health', (_request, response) => {
+  app.get(mount('/_ness/health'), (_request, response) => {
     const cache = getCache();
     response
       .status(draining ? 503 : 200)

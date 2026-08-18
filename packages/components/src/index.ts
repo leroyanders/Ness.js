@@ -1,5 +1,18 @@
 export { ClientOnly, useHydrated } from './client-only.js';
 export type { ClientOnlyProps } from './client-only.js';
+export { dynamic } from './dynamic.js';
+export type { DynamicLoader, DynamicOptions } from './dynamic.js';
+export { MetadataTags, RouteMetadata } from './metadata.js';
+export type {
+  GenerateMetadata,
+  GenerateMetadataArgs,
+  Metadata,
+  OpenGraphImage,
+} from './metadata.js';
+export { FileMetadataTags } from './file-metadata.js';
+export type { FileMetadataProps } from './file-metadata.js';
+export { SlotBoundary } from './slot.js';
+export type { SlotBoundaryProps } from './slot.js';
 export { Form } from './form.js';
 export type { FormProps, FormState } from './form.js';
 export {

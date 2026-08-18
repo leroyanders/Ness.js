@@ -825,6 +825,136 @@ function chain<E>(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Intercepting routes
+// ---------------------------------------------------------------------------
+
+interface InterceptorRoute {
+  /** The URL scope the navigation must start from. */
+  from: string;
+  /** The URL pattern being intercepted, `:params` included. */
+  pattern: string;
+  load: () => Promise<{
+    default: React.ComponentType<{
+      params: Record<string, string | undefined>;
+    }>;
+  }>;
+}
+
+/**
+ * The generated table of intercepting routes (`virtual:ness/interceptors`).
+ * Loaded once and mirrored into a synchronous variable, because the decision
+ * has to be made inside a click handler, where nothing can be awaited before
+ * `preventDefault`.
+ */
+let interceptorsSync: InterceptorRoute[] | null = null;
+let interceptorTablePromise: Promise<InterceptorRoute[]> | undefined;
+
+function interceptorTable(): Promise<InterceptorRoute[]> {
+  interceptorTablePromise ??= import('virtual:ness/interceptors').then(
+    module => {
+      interceptorsSync = module.interceptors ?? [];
+      return interceptorsSync;
+    },
+    () => {
+      interceptorsSync = [];
+      return interceptorsSync;
+    },
+  );
+  return interceptorTablePromise;
+}
+
+function patternParams(
+  pattern: string,
+  pathname: string,
+): Record<string, string | undefined> | null {
+  const patternSegments = pattern.split('/').filter(Boolean);
+  const pathSegments = pathname.split('/').filter(Boolean);
+  if (patternSegments.length !== pathSegments.length) return null;
+  const params: Record<string, string | undefined> = {};
+  for (let index = 0; index < patternSegments.length; index += 1) {
+    const expected = patternSegments[index]!;
+    const actual = pathSegments[index]!;
+    if (expected.startsWith(':')) {
+      params[expected.slice(1)] = decodeURIComponent(actual);
+    } else if (expected === '*') {
+      params['splat'] = pathSegments.slice(index).join('/');
+      return params;
+    } else if (expected !== actual) {
+      return null;
+    }
+  }
+  return params;
+}
+
+/** The overlay an intercepted navigation renders into, one at a time. */
+let interceptorOverlay: {
+  container: HTMLElement;
+  unmount: () => void;
+} | null = null;
+
+function closeInterceptedRoute(): void {
+  if (!interceptorOverlay) return;
+  const { container, unmount } = interceptorOverlay;
+  interceptorOverlay = null;
+  unmount();
+  container.remove();
+  window.removeEventListener('popstate', closeInterceptedRoute);
+}
+
+async function openInterceptor(
+  entry: InterceptorRoute,
+  url: URL,
+): Promise<void> {
+  const [module, { createRoot }] = await Promise.all([
+    entry.load(),
+    import('react-dom/client'),
+  ]);
+  const params = patternParams(entry.pattern, url.pathname) ?? {};
+  closeInterceptedRoute();
+  // The URL changes so the address bar, sharing and reload all mean the
+  // intercepted page — but the router never hears about it, which is exactly
+  // what keeps the current screen mounted underneath.
+  window.history.pushState({ __nessInterceptor: true }, '', url.href);
+  const container = document.createElement('div');
+  container.setAttribute('data-ness-interceptor', '');
+  document.body.appendChild(container);
+  const root = createRoot(container);
+  root.render(React.createElement(module.default, { params }));
+  interceptorOverlay = { container, unmount: () => root.unmount() };
+  // Back closes the overlay and lands where the visitor already was.
+  window.addEventListener('popstate', closeInterceptedRoute);
+}
+
+/**
+ * Whether this click should render an interceptor instead of navigating.
+ *
+ * Yes only when the interceptor's own scope contains the *current* URL — an
+ * interception is a statement about where you are coming from, which is the
+ * entire difference between it and a plain route. A hard load of the same
+ * URL never runs this code and gets the real page.
+ */
+function maybeIntercept(event: { defaultPrevented: boolean; button?: number; metaKey?: boolean; altKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; preventDefault: () => void }, to: unknown): void {
+  if (typeof window === 'undefined' || typeof to !== 'string') return;
+  if (event.defaultPrevented) return;
+  if (event.button !== undefined && event.button !== 0) return;
+  if (event.metaKey || event.altKey || event.ctrlKey || event.shiftKey) return;
+  const table = interceptorsSync;
+  if (!table || table.length === 0) return;
+  const url = new URL(to, window.location.origin);
+  if (url.origin !== window.location.origin) return;
+  const current = window.location.pathname;
+  const entry = table.find(candidate => {
+    const scope = candidate.from.replace(/\/+$/, '') || '/';
+    const inScope =
+      scope === '/' || current === scope || current.startsWith(`${scope}/`);
+    return inScope && patternParams(candidate.pattern, url.pathname) !== null;
+  });
+  if (!entry) return;
+  event.preventDefault();
+  void openInterceptor(entry, url);
+}
+
 /**
  * Only what this wrapper reads. No index signature: with one, destructuring a
  * named property resolves through it and every handler comes out `unknown`.
@@ -835,6 +965,7 @@ interface LinkLikeProps {
   to?: To;
   prefetch?: PrefetchMode;
   scroll?: boolean;
+  onClick?: (event: unknown) => void;
   onPointerEnter?: (event: unknown) => void;
   onFocus?: (event: unknown) => void;
   onPointerLeave?: (event: unknown) => void;
@@ -852,6 +983,7 @@ function withPrefetch<Props extends { to: To }>(
       {
         prefetch = 'auto',
         scroll,
+        onClick,
         onPointerEnter,
         onFocus,
         onPointerLeave,
@@ -862,6 +994,12 @@ function withPrefetch<Props extends { to: To }>(
     ) {
       const mode = prefetch === 'auto' ? autoPrefetchMode() : prefetch;
       const handlers = usePrefetchHandlers(props.to, mode);
+      // Warm the interceptor table so the click handler can decide
+      // synchronously; a build without interceptors resolves to an empty
+      // table once and this is free from then on.
+      React.useEffect(() => {
+        void interceptorTable();
+      }, []);
       const element = React.useRef<HTMLAnchorElement | null>(null);
       const setRef = React.useCallback(
         (node: HTMLAnchorElement | null) => {
@@ -882,6 +1020,14 @@ function withPrefetch<Props extends { to: To }>(
         ...(scroll === false ? { preventScrollReset: true } : null),
         ...props,
         ref: setRef,
+        onClick: chain(
+          (event: unknown) =>
+            maybeIntercept(
+              event as Parameters<typeof maybeIntercept>[0],
+              props.to,
+            ),
+          onClick,
+        ),
         onPointerEnter: handlers
           ? chain(handlers.start, onPointerEnter)
           : onPointerEnter,
@@ -1043,6 +1189,7 @@ export {
   apiFetch,
   cachedClientLoader,
   clearClientCache,
+  closeInterceptedRoute,
   prefetch,
   hasCachedRoute,
   prefetchRoute,

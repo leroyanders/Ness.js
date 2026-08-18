@@ -5,7 +5,7 @@ import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
 import type { Plugin, PluginOption, ViteDevServer } from 'vite';
 import { buildManifestPayload, writeNessManifest } from '../index.js';
 import type { NessConfig } from '../index.js';
-import { nessRoutePaths, nessRoutes } from '../routes.js';
+import { nessInterceptors, nessRoutePaths, nessRoutes } from '../routes.js';
 import type { NessRoute } from '../routes.js';
 import type { I18nConfig } from '../i18n.js';
 import { nessErrorOverlay } from './overlay.js';
@@ -33,6 +33,7 @@ export interface NessViteOptions {
  * non-RSC build from failing on a package it never needed.
  */
 const PREFETCH_MODULE = 'virtual:ness/route-prefetch';
+const INTERCEPTOR_MODULE = 'virtual:ness/interceptors';
 
 /**
  * Config filenames, most preferred first. `.ts` leads because that is what
@@ -127,12 +128,17 @@ async function writeRscManifest({
   writeNessManifest(
     buildDirectory,
     buildManifestPayload({
-      basename: routerOptions.basename || '/',
+      basename: routerOptions.basename || routerOptions.basePath || '/',
+      basePath: routerOptions.basePath,
+      assetPrefix: routerOptions.assetPrefix,
       routes: flattenRouteTree(routes),
       pages: await nessRoutePaths({
         appDirectory: absoluteAppDirectory,
         i18n: routerOptions.i18n,
       }),
+      prerenderedPaths: Array.isArray(routerOptions.prerender)
+        ? routerOptions.prerender.map(String)
+        : undefined,
       cache: routerOptions.cache,
       deployment: routerOptions.deployment,
       i18n: routerOptions.i18n,
@@ -167,6 +173,37 @@ function resolveAppDirectory(
   }
 }
 
+/**
+ * The `basePath`/`assetPrefix` pair from the project's config file, read the
+ * same lazy way the manifest writer reads it. Absent file, absent fields:
+ * both come back undefined and nothing changes.
+ */
+async function readPathOptions(
+  root: string,
+  configFile: string,
+): Promise<{ basePath?: string | undefined; assetPrefix?: string | undefined }> {
+  const absolute = path.resolve(root, configFile);
+  if (!fs.existsSync(absolute)) return {};
+  try {
+    const imported = (await import(
+      /* @vite-ignore */ pathToFileURL(absolute).href
+    )) as { default?: { ness?: { router?: NessConfig } } } & {
+      ness?: { router?: NessConfig };
+    };
+    const config = imported.default || imported;
+    const router = config?.ness?.router || {};
+    return { basePath: router.basePath, assetPrefix: router.assetPrefix };
+  } catch {
+    return {};
+  }
+}
+
+/** `/docs` → `/docs/`, the shape Vite's `base` insists on. */
+function toBase(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  return value.endsWith('/') ? value : `${value}/`;
+}
+
 function nessVitePlugin(options: NessViteOptions = {}): Plugin {
   const configFile = resolveConfigFile(
     options.root || process.cwd(),
@@ -179,8 +216,28 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
   return {
     name: 'ness:framework',
     enforce: 'pre',
-    config() {
+    async config(_config, env) {
+      const { basePath, assetPrefix } = await readPathOptions(
+        options.root || process.cwd(),
+        configFile,
+      );
+      // Assets follow the CDN prefix in builds only; in development they are
+      // served by this very server, prefix or not. Routing always follows
+      // `basePath` — that part is React Router's `basename`, set in the
+      // router config.
+      const base =
+        env.command === 'build'
+          ? toBase(assetPrefix) || toBase(basePath)
+          : toBase(basePath);
       return {
+        ...(base ? { base } : {}),
+        // The client runtime needs the path prefix at runtime — the image
+        // endpoint and prefetch table live under it.
+        define: {
+          'import.meta.env.NESS_PUBLIC_BASE_PATH': JSON.stringify(
+            basePath || '',
+          ),
+        },
         envPrefix: ['VITE_', 'NESS_PUBLIC_'],
         ...(rsc
           ? {
@@ -222,6 +279,7 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
     resolveId(id: string) {
       if (id === 'virtual:ness/config') return '\0virtual:ness/config';
       if (id === PREFETCH_MODULE) return `\0${PREFETCH_MODULE}`;
+      if (id === INTERCEPTOR_MODULE) return `\0${INTERCEPTOR_MODULE}`;
       return null;
     },
     async load(id: string) {
@@ -254,6 +312,23 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
           })
           .join(',\n');
         return `export const routes = [\n${entries}\n];\n`;
+      }
+      // Intercepting routes: the client runtime reads this table to decide
+      // which navigations render an overlay instead of committing. Same
+      // discovery as the router itself, so the two cannot disagree.
+      if (id === `\0${INTERCEPTOR_MODULE}`) {
+        const root = options.root || process.cwd();
+        const appDirectory = path.resolve(root, options.appDirectory || 'app');
+        const interceptors = fs.existsSync(path.join(appDirectory, 'routes'))
+          ? await nessInterceptors({ appDirectory, i18n: options.i18n })
+          : [];
+        const entries = interceptors
+          .map(
+            entry =>
+              `  {from: ${JSON.stringify(entry.from)}, pattern: ${JSON.stringify(entry.pattern)}, load: () => import(${JSON.stringify(path.resolve(entry.file))})}`,
+          )
+          .join(',\n');
+        return `export const interceptors = [\n${entries}\n];\n`;
       }
       return null;
     },

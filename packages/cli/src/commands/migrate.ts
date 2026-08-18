@@ -54,19 +54,23 @@ const ROUTE_FILES = new Set([
   'sitemap',
   'robots',
   'manifest',
+  'default',
+  'global-error',
+  'opengraph-image',
+  'twitter-image',
+  'icon',
+  'apple-icon',
 ]);
 
 /** Files with no Ness equivalent; they are reported, not moved. */
 const UNSUPPORTED_FILES = new Map([
-  ['default', 'Parallel-route defaults are not supported.'],
-  ['global-error', 'Use app/routes/error.tsx at the root instead.'],
   [
     'instrumentation',
     'Move the hooks into instrumentation.mjs at the project root.',
   ],
   [
     'middleware',
-    'Next middleware runs per request; Ness middleware is per route segment.',
+    'Next middleware runs per request in Ness too — move it to middleware.ts at the project root — or scope it to a segment with a route-level middleware.ts.',
   ],
 ]);
 
@@ -91,6 +95,15 @@ const IMPORT_REWRITES: ImportRewrite[] = [
     from: 'next/script',
     to: '@nessframework/core',
     named: { default: 'Script' },
+  },
+  {
+    from: 'next/dynamic',
+    to: '@nessframework/core',
+    named: { default: 'dynamic' },
+  },
+  {
+    from: 'next/og',
+    to: '@nessframework/core/og',
   },
   {
     from: 'next/navigation',
@@ -119,6 +132,17 @@ const IMPORT_REWRITES: ImportRewrite[] = [
       revalidatePath: 'revalidatePath',
       unstable_cache: 'cached',
     },
+    unsupported: {
+      unstable_noStore:
+        "Import noStore() from '@nessframework/core/server' instead.",
+    },
+  },
+  {
+    from: 'next/server',
+    to: null,
+    rename: {},
+    notes:
+      "NextRequest and NextResponse are Web-standard Request and Response in Ness; after() and connection() come from '@nessframework/core/server'.",
   },
   {
     from: 'next/font/local',
@@ -130,12 +154,6 @@ const IMPORT_REWRITES: ImportRewrite[] = [
     to: null,
     notes:
       'cookies() and headers() read from an implicit request. Read them from the loader/action `request` argument instead.',
-  },
-  {
-    from: 'next/server',
-    to: null,
-    notes:
-      'NextRequest and NextResponse are Web-standard Request and Response in Ness; remove the import and use the globals.',
   },
 ];
 

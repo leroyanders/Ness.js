@@ -55,9 +55,11 @@ The `router` section accepts React Router Framework Mode options. Ness supplies 
 
 `rsc` defaults to `true` — a project scaffolded with `ness new --no-rsc` sets it to `false` instead, which switches to React Router's classic (non-RSC) plugin. `prerender` works the same either way.
 
+`basePath` serves the whole application under a path prefix — routing, links, built assets, the image endpoint and the production server's static mounts all move together. `assetPrefix` points built assets at a CDN origin in production builds while routing keeps following `basePath`. See [Next.js parity](./next-parity.md#basepath-and-assetprefix).
+
 ## Production server
 
-The `server` section is loaded by `ness start`. It supports the NestJS bridge, redirects, rewrites, response headers, image policy, middleware, and cache adapters.
+The `server` section is loaded by `ness start`. It supports the NestJS bridge, redirects, rewrites, response headers, image policy, middleware, cache adapters, and multi-zone composition via `zones` — path prefixes proxied to other deployments ([details](./next-parity.md#multi-zones)).
 
 It is not only `ness start` that reads it. The Worker entry `ness bundle cloudflare` generates, and `createLambdaApplication` from `@nessframework/deployment/lambda`, go through the same resolution, so the cache adapter, the instrumentation, the headers and the redirects behave the same on all three. Neither of those two can import `ness.config.mjs` — it pulls in Vite plugins at module scope — so put the runtime half in `ness.server.config.mjs`. `ness start` falls back to that file only when the project has no `ness.config.mjs` — it reads the first of the two that exists and merges nothing — so a project with both keeps its `server` and `instrumentation` sections in `ness.config.mjs` and duplicates them in the runtime-only file for the edge targets. See [Configuration at the edge](./deployment.md#configuration-at-the-edge).
 

@@ -1,4 +1,9 @@
-export { Image, Script } from '@nessframework/assets';
+export { Image, Script, setImageLoader } from '@nessframework/assets';
+export type { ImageLoader } from '@nessframework/assets';
+export { dynamic } from '@nessframework/components';
+export type { DynamicOptions, Metadata } from '@nessframework/components';
+// React's own per-render memoization, under the name everyone knows it by.
+export { cache } from 'react';
 export {
   Form,
   Link,
@@ -8,6 +13,7 @@ export {
   apiFetch,
   cachedClientLoader,
   clearClientCache,
+  closeInterceptedRoute,
   prefetch,
   reportWebVitals,
   useLinkStatus,

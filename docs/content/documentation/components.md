@@ -55,6 +55,8 @@ Render `<Title>` once per page and never in the root or a shared layout. React d
 
 `<Meta>` renders nothing itself. It exists so metadata sits in one readable block instead of scattering through the markup; anything it does not model goes inside it as ordinary elements.
 
+Pages arriving from Next can keep their object form instead: `export const metadata = {…}` and `export async function generateMetadata({params, loaderData})` are supported as route exports, title templates included, along with the file conventions (`icon.png`, `opengraph-image.tsx`, …). See [Next.js parity](./next-parity.md#route-metadata).
+
 ## Streaming
 
 A loader that returns a promise without awaiting lets the document stream: the shell reaches the browser immediately and the slow part fills in when it settles.
