@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { isBareDefault, normalizeI18n } from './i18n.js';
 import type { I18nConfig, NormalizedI18nConfig } from './i18n.js';
 
@@ -36,6 +37,14 @@ export interface SegmentConfig {
   ppr?: boolean;
 }
 
+/** What the prefetch layer needs to know about a page, decided statically. */
+export interface PagePrefetchInfo {
+  /** Whether the page's data comes from a server `loader`. */
+  serverLoader: boolean;
+  /** Whether the generated wrapper owns the page's `clientLoader`. */
+  wrapped: boolean;
+}
+
 /** A node of the generated route tree, shaped as React Router expects. */
 export interface NessRoute {
   id: string;
@@ -44,6 +53,7 @@ export interface NessRoute {
   index?: boolean;
   children?: NessRoute[];
   config?: SegmentConfig;
+  prefetch?: PagePrefetchInfo;
 }
 
 /** One navigable page, as a full path pattern. */
@@ -52,6 +62,7 @@ export interface NessRoutePath {
   path: string;
   file: string;
   config?: SegmentConfig;
+  prefetch?: PagePrefetchInfo;
 }
 
 export interface NessRoutesOptions {
@@ -60,6 +71,12 @@ export interface NessRoutesOptions {
   generatedDirectory?: string;
   /** Mounts the route tree under a locale segment. */
   i18n?: I18nConfig | NormalizedI18nConfig;
+  /**
+   * The application-wide `clientCache` default, in seconds. Normally read off
+   * `ness.config.*` beside the app directory; passing it explicitly overrides
+   * that lookup.
+   */
+  clientCache?: number;
 }
 
 /**
@@ -98,6 +115,60 @@ const SEGMENT_CONFIG = [
 
 function slash(value: string): string {
   return value.split(path.sep).join('/');
+}
+
+/**
+ * Config filenames, most preferred first — the same list the Vite plugin
+ * resolves, kept in the same order so both read the same file.
+ */
+const CONFIG_FILES = ['ness.config.ts', 'ness.config.mjs', 'ness.config.js'];
+
+/** Keyed file + mtime, so an edited config is re-read, not served stale. */
+const configClientCacheReads = new Map<string, Promise<number>>();
+
+/**
+ * The application-wide `clientCache` default, read off `ness.config.*` in the
+ * project root.
+ *
+ * Read here, in route generation, rather than threaded through options,
+ * because `nessRoutes` runs from several places — the application's own
+ * `app/routes.ts`, the Vite plugin's watcher, the manifest writer — and they
+ * regenerate the same files: two callers resolving the option differently
+ * would rewrite the wrappers back and forth forever. One source, every
+ * caller. Absent file, unreadable file, absent field: all mean `0`.
+ */
+function readConfigClientCache(root: string): Promise<number> {
+  const file = CONFIG_FILES.map(name => path.join(root, name)).find(
+    fs.existsSync,
+  );
+  if (!file) return Promise.resolve(0);
+  let key: string;
+  try {
+    key = `${file}:${fs.statSync(file).mtimeMs}`;
+  } catch {
+    return Promise.resolve(0);
+  }
+  let read = configClientCacheReads.get(key);
+  if (!read) {
+    read = import(
+      `${pathToFileURL(file).href}?mtime=${encodeURIComponent(key)}`
+    ).then(
+      imported => {
+        const module = imported as {
+          default?: { ness?: { router?: { clientCache?: unknown } } };
+          ness?: { router?: { clientCache?: unknown } };
+        };
+        const config = module.default || module;
+        const value = config?.ness?.router?.clientCache;
+        return typeof value === 'number' && Number.isFinite(value)
+          ? Math.max(0, value)
+          : 0;
+      },
+      () => 0,
+    );
+    configClientCacheReads.set(key, read);
+  }
+  return read;
 }
 
 function findModule(directory: string, basename: string): string | undefined {
@@ -363,9 +434,7 @@ function findSegmentConfig(source: string): SegmentConfig | undefined {
   );
   if (runtime)
     config.runtime = (runtime[1] === 'nodejs' ? 'node' : runtime[1]) as
-      | 'node'
-      | 'edge'
-      | 'serverless';
+      'node' | 'edge' | 'serverless';
   const maxDuration = source.match(
     /\bexport\s+const\s+maxDuration\s*(?::[^=]+)?=\s*(\d+(?:\.\d+)?)\b/,
   );
@@ -479,6 +548,23 @@ interface StreamedRouteOptions {
   routeId: string | undefined;
   namedExports: string[];
   server: AdjacentServer;
+  /** The application-wide `clientCache` default, baked into the wrapper. */
+  defaultSeconds: number;
+}
+
+/**
+ * The `shouldRevalidate` a wrapper should defer to: the route's own, its
+ * `.server` sibling's, or none.
+ */
+function userShouldRevalidateExpression(
+  namedExports: string[],
+  server: AdjacentServer,
+): string {
+  return namedExports.includes('shouldRevalidate')
+    ? 'NessRoute.shouldRevalidate'
+    : server.exports.includes('shouldRevalidate')
+      ? 'NessServerRoute.shouldRevalidate'
+      : 'undefined';
 }
 
 /**
@@ -501,13 +587,13 @@ function appendStreamedRoute(
     routeId,
     namedExports,
     server,
+    defaultSeconds,
   }: StreamedRouteOptions,
 ): void {
-  const userShouldRevalidate = namedExports.includes('shouldRevalidate')
-    ? 'NessRoute.shouldRevalidate'
-    : server.exports.includes('shouldRevalidate')
-      ? 'NessServerRoute.shouldRevalidate'
-      : 'undefined';
+  const userShouldRevalidate = userShouldRevalidateExpression(
+    namedExports,
+    server,
+  );
   lines.push(`import * as NessRoute from ${modulePath};`);
   // Only when the route's `shouldRevalidate` lives there: a `.server` module
   // is pulled into this graph by a re-export it actually needs, never by one
@@ -519,7 +605,7 @@ function appendStreamedRoute(
   );
   lines.push("import {streamRoute} from '@nessframework/core/client';");
   lines.push(
-    `const NessStreamed = streamRoute(NessRoute, NessLoading, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}});`,
+    `const NessStreamed = streamRoute(NessRoute, NessLoading, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}${defaultSeconds > 0 ? `, defaultSeconds: ${defaultSeconds}` : ''}});`,
   );
   lines.push('const NessComponent = NessStreamed.Component;');
   lines.push('export const clientLoader = NessStreamed.clientLoader;');
@@ -531,6 +617,57 @@ function appendStreamedRoute(
   lines.push('export const HydrateFallback = NessLoading;');
   // Everything the route declares other than the three exports above, which
   // this module now owns.
+  const owned = new Set(['clientLoader', 'shouldRevalidate']);
+  const passthrough = namedExports.filter(name => !owned.has(name));
+  if (passthrough.length)
+    lines.push(`export {${passthrough.join(', ')}} from ${modulePath};`);
+  const serverPassthrough = server.exports.filter(name => !owned.has(name));
+  if (serverPassthrough.length)
+    lines.push(
+      `export {${serverPassthrough.join(', ')}} from ${server.module};`,
+    );
+}
+
+interface CachedRouteOptions {
+  modulePath: string;
+  routeId: string | undefined;
+  namedExports: string[];
+  server: AdjacentServer;
+  defaultSeconds: number;
+}
+
+/**
+ * Emits the route with its navigations answerable from memory — the page's
+ * own `clientCache` export, or the application-wide default — without a
+ * `loading.tsx` in sight. The wrapper owns `clientLoader`/`shouldRevalidate`
+ * exactly the way the streamed wrapper does; the only thing missing is the
+ * boundary, so a load that must reach the network blocks the navigation the
+ * way it always did.
+ */
+function appendCachedRoute(
+  lines: string[],
+  {
+    modulePath,
+    routeId,
+    namedExports,
+    server,
+    defaultSeconds,
+  }: CachedRouteOptions,
+): void {
+  const userShouldRevalidate = userShouldRevalidateExpression(
+    namedExports,
+    server,
+  );
+  lines.push(`import * as NessRoute from ${modulePath};`);
+  if (userShouldRevalidate === 'NessServerRoute.shouldRevalidate')
+    lines.push(`import * as NessServerRoute from ${server.module};`);
+  lines.push("import {cacheRoute} from '@nessframework/core/client';");
+  lines.push(
+    `const NessCached = cacheRoute(NessRoute, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}${defaultSeconds > 0 ? `, defaultSeconds: ${defaultSeconds}` : ''}});`,
+  );
+  lines.push('const NessComponent = NessCached.Component;');
+  lines.push('export const clientLoader = NessCached.clientLoader;');
+  lines.push('export const shouldRevalidate = NessCached.shouldRevalidate;');
   const owned = new Set(['clientLoader', 'shouldRevalidate']);
   const passthrough = namedExports.filter(name => !owned.has(name));
   if (passthrough.length)
@@ -593,6 +730,15 @@ interface WrapperOptions extends BoundaryFiles {
   urlPath?: string;
   /** Parallel-route slots: prop name → generated slot module. */
   slots?: Array<{ name: string; file: string }>;
+  /** The application-wide `clientCache` default, in seconds. */
+  clientCacheDefault?: number;
+}
+
+/** What the wrapper turned out to be, for the prefetch table. */
+interface WrapperInfo {
+  streamed: boolean;
+  cached: boolean;
+  hasServerLoader: boolean;
 }
 
 function createWrapper({
@@ -613,11 +759,14 @@ function createWrapper({
   fileMetadata,
   urlPath = '',
   slots = [],
-}: WrapperOptions): void {
+  clientCacheDefault = 0,
+}: WrapperOptions): WrapperInfo {
   const lines = ['// Generated by Ness.js. Do not edit.'];
   let namedExports: string[] = [];
   let serverExports: string[] = [];
   let streamed = false;
+  let cached = false;
+  let hasServerLoader = false;
   if (sourceFile) {
     const modulePath = JSON.stringify(importPath(generatedFile, sourceFile));
     const source = fs.readFileSync(sourceFile, 'utf8');
@@ -627,11 +776,19 @@ function createWrapper({
     // Nothing to wait for means nothing to show a fallback for: a route
     // without a loader is emitted exactly as it always was, so a `loading.tsx`
     // costs nothing where there is no data.
-    const hasLoader =
-      namedExports.includes('clientLoader') ||
-      namedExports.includes('loader') ||
-      serverExports.includes('loader');
+    hasServerLoader =
+      namedExports.includes('loader') || serverExports.includes('loader');
+    const hasLoader = namedExports.includes('clientLoader') || hasServerLoader;
     streamed = Boolean(boundaryFile) && hasLoader;
+    // No boundary, but navigations may still be answered from memory — when
+    // the page asked with its own `clientCache`, or the application set a
+    // default for every page. A route neither asked about is emitted exactly
+    // as it always was, keeping its loaders in the batched data request.
+    cached =
+      !streamed &&
+      hasLoader &&
+      Boolean(routeId) &&
+      (namedExports.includes('clientCache') || clientCacheDefault > 0);
     if (streamed) {
       appendStreamedRoute(lines, {
         generatedFile,
@@ -640,6 +797,15 @@ function createWrapper({
         routeId,
         namedExports,
         server,
+        defaultSeconds: clientCacheDefault,
+      });
+    } else if (cached) {
+      appendCachedRoute(lines, {
+        modulePath,
+        routeId,
+        namedExports,
+        server,
+        defaultSeconds: clientCacheDefault,
       });
     } else {
       lines.push(`import NessComponent from ${modulePath};`);
@@ -770,6 +936,7 @@ function createWrapper({
     );
   }
   writeIfChanged(generatedFile, `${lines.join('\n')}\n`);
+  return { streamed, cached, hasServerLoader };
 }
 
 function createResourceWrapper({
@@ -891,9 +1058,7 @@ function createSlotWrapper({
     );
   const content = contentFile ? '<NessSlotContent {...props} />' : 'null';
   const fallback = loadingFile ? ' fallback={<NessSlotLoading />}' : '';
-  const errorFallback = errorFile
-    ? ' errorFallback={<NessSlotError />}'
-    : '';
+  const errorFallback = errorFile ? ' errorFallback={<NessSlotError />}' : '';
   lines.push(
     `export default function NessSlot(props){ return (<SlotBoundary${fallback}${errorFallback}>${content}</SlotBoundary>); }`,
   );
@@ -973,6 +1138,8 @@ interface DiscoverOptions {
   urlPath?: string;
   /** Ancestor layouts with a static `metadata` export, outermost first. */
   metadataParents?: string[];
+  /** The application-wide `clientCache` default, in seconds. */
+  clientCacheDefault?: number;
 }
 
 function discoverDirectory(
@@ -993,6 +1160,7 @@ function discoverDirectory({
   parentTemplateFile,
   urlPath = '',
   metadataParents = [],
+  clientCacheDefault = 0,
 }: DiscoverOptions): NessRoute[] | NessRoute | undefined {
   const layoutFile = findModule(directory, 'layout');
   const pageFile = findModule(directory, 'page');
@@ -1100,7 +1268,7 @@ function discoverDirectory({
       `${moduleId(routesDirectory, directory, 'page')}.tsx`,
     );
     const segmentConfig = segmentConfigFor(pageFile);
-    createWrapper({
+    const wrapper = createWrapper({
       generatedFile,
       routeId: moduleId(routesDirectory, directory, 'page'),
       sourceFile: pageFile,
@@ -1117,12 +1285,17 @@ function discoverDirectory({
       // otherwise the page carries its own.
       fileMetadata: layoutFile ? undefined : fileMetadata,
       urlPath,
+      clientCacheDefault,
     });
     children.push({
       id: moduleId(routesDirectory, directory, 'page'),
       index: true,
       file: routeFile(appDirectory, generatedFile),
       ...(segmentConfig ? { config: segmentConfig } : {}),
+      prefetch: {
+        serverLoader: wrapper.hasServerLoader,
+        wrapped: wrapper.streamed || wrapper.cached,
+      },
     });
   }
 
@@ -1194,6 +1367,7 @@ function discoverDirectory({
           ? urlPath
           : [urlPath, childSegment].filter(Boolean).join('/'),
       metadataParents: childMetadataParents,
+      clientCacheDefault,
     });
     if (childRoute) children.push(childRoute as NessRoute);
   }
@@ -1240,6 +1414,7 @@ function discoverDirectory({
     fileMetadata: layoutFile ? fileMetadata : undefined,
     urlPath,
     slots,
+    clientCacheDefault,
   });
   const entry: NessRoute = {
     id: moduleId(routesDirectory, directory, 'layout'),
@@ -1337,6 +1512,7 @@ async function nessRoutes({
   routesDirectory,
   generatedDirectory,
   i18n,
+  clientCache,
 }: NessRoutesOptions = {}): Promise<NessRoute[]> {
   const absoluteAppDirectory = path.resolve(appDirectory);
   const absoluteRoutesDirectory = path.resolve(
@@ -1350,6 +1526,10 @@ async function nessRoutes({
       `Ness routes directory does not exist: ${absoluteRoutesDirectory}`,
     );
   }
+  const clientCacheDefault =
+    typeof clientCache === 'number'
+      ? Math.max(0, clientCache)
+      : await readConfigClientCache(path.dirname(absoluteAppDirectory));
   const written = new Set<string>();
   const previous = generatedThisPass;
   generatedThisPass = written;
@@ -1363,6 +1543,7 @@ async function nessRoutes({
       generatedDirectory: absoluteGeneratedDirectory,
       directory: absoluteRoutesDirectory,
       root: true,
+      clientCacheDefault,
     });
     const localization = normalizeI18n(i18n);
     if (localization) createLocaleLayout(absoluteGeneratedDirectory);
@@ -1459,6 +1640,7 @@ function flattenRoutePaths(
         path: full,
         file: route.file,
         ...(route.config ? { config: route.config } : {}),
+        ...(route.prefetch ? { prefetch: route.prefetch } : {}),
       });
     }
     if (route.children?.length) {

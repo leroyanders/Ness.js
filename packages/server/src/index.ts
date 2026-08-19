@@ -409,6 +409,54 @@ function storableResponse(response: Response): boolean {
   return !response.headers.has('set-cookie');
 }
 
+/**
+ * Whether this URL is React Router's data request for a page — the
+ * `<path>.data` (classic) or `<path>.rsc` (RSC mode) fetch a client-side
+ * navigation makes instead of asking for the document.
+ */
+function isDataRequest(pathname: string): boolean {
+  return /\.(?:data|rsc)$/.test(pathname);
+}
+
+/**
+ * The page a data request is asking about: `/dashboard.data` → `/dashboard`,
+ * and the trailing-slash spelling `/_.data` → `/`. A pathname that is not a
+ * data request comes back unchanged, so this is safe to apply to every
+ * request before matching it against the page manifest.
+ */
+function pagePathname(pathname: string): string {
+  if (!isDataRequest(pathname)) return pathname;
+  const stripped = pathname.replace(/\.(?:data|rsc)$/, '');
+  // React Router spells "the index under a trailing slash" as `_`.
+  if (stripped === '_' || stripped === '/_') return '/';
+  if (stripped.endsWith('/_')) return stripped.slice(0, -1);
+  return stripped;
+}
+
+/**
+ * Whether a page's data request may be stored, mirroring what the document
+ * policy would have decided for the same page.
+ *
+ * Deliberately narrower than the document default: only a page that declared
+ * its own caching window (`revalidate`, `dynamic: 'force-static'`) has its
+ * navigations answered from the cache. A page that declared nothing keeps
+ * running its loaders per navigation — ISR staleness is a bargain a page opts
+ * into, not one it wakes up inside of.
+ */
+function dataRequestPolicy(
+  request: Request,
+  response: Response,
+  segment: SegmentCachePolicy | undefined,
+  pagePath: string,
+): PageCachePolicy | undefined {
+  if (!segment?.cacheable) return undefined;
+  if (!isDataRequest(new URL(request.url).pathname)) return undefined;
+  if (request.method !== 'GET') return undefined;
+  if (response.status !== 200) return undefined;
+  if (!storableResponse(response)) return undefined;
+  return { life: 'default', path: pagePath, tags: ['pages'] };
+}
+
 function defaultCachePolicy(
   request: Request,
   response: Response,
@@ -577,18 +625,15 @@ function taintGuardedBuild(
   build: ServerBuildLike | undefined,
 ): ServerBuildLike | undefined {
   const routes = build?.['routes'] as
-    | Record<
-        string,
-        { module?: Record<string, unknown> } | undefined
-      >
+    | Record<string, { module?: Record<string, unknown> } | undefined>
     | undefined;
   if (!routes) return build;
   const guard = (fn: unknown) => {
     if (typeof fn !== 'function') return fn;
     return async (...args: unknown[]) => {
-      const result: unknown = await (
-        fn as (...call: unknown[]) => unknown
-      )(...args);
+      const result: unknown = await (fn as (...call: unknown[]) => unknown)(
+        ...args,
+      );
       // A Response's body is bytes the application already chose to send.
       if (result instanceof Response) return result;
       const { assertUntainted } = await import('./context.js');
@@ -701,21 +746,23 @@ function createNessRequestHandler({
         target.host = destination.host;
         return proxyRequest(new Request(target, request));
       }
-      if (
-        new URL(request.url).origin !== new URL(originalRequest.url).origin
-      ) {
+      if (new URL(request.url).origin !== new URL(originalRequest.url).origin) {
         return proxyRequest(request);
       }
 
       const cache = getCache();
       const key = `page:${request.method}:${new URL(request.url).href}`;
       const pathname = new URL(request.url).pathname;
-      const pageConfig = matchPage(pages, pathname)?.config;
+      // A client-side navigation asks for `<path>.data`/`<path>.rsc`, but it
+      // is asking *about* the page — the page's own `revalidate`/`dynamic`
+      // must govern the answer either way.
+      const pagePath = pagePathname(pathname);
+      const pageConfig = matchPage(pages, pagePath)?.config;
       // `dynamicParams: false` closes the set of params: a URL the build did
       // not prerender is not a page, however well it matches the pattern.
       if (
         pageConfig?.dynamicParams === false &&
-        !prerendered.has(pathname.replace(/\/+$/, '') || '/')
+        !prerendered.has(pagePath.replace(/\/+$/, '') || '/')
       ) {
         return new Response('Not Found', { status: 404 });
       }
@@ -754,7 +801,8 @@ function createNessRequestHandler({
               });
               refreshed = applyHeaders(refreshed, request, headers);
               let policy = storableResponse(refreshed)
-                ? await cachePolicy(request, refreshed)
+                ? ((await cachePolicy(request, refreshed)) ??
+                  dataRequestPolicy(request, refreshed, segment, pagePath))
                 : undefined;
               if (policy && segment?.life)
                 policy = { ...policy, life: segment.life };
@@ -793,7 +841,8 @@ function createNessRequestHandler({
       // a render that declared itself per-request is never stored.
       let policy =
         cacheable && !store.dynamic && storableResponse(response)
-          ? await cachePolicy(request, response)
+          ? ((await cachePolicy(request, response)) ??
+            dataRequestPolicy(request, response, segment, pagePath))
           : undefined;
       // The page's own `revalidate` outranks the application-wide policy: it
       // is the more specific statement, and the one written next to the page
@@ -921,9 +970,11 @@ export {
   createNessRequestHandler,
   defaultCacheableRequest,
   defaultCachePolicy,
+  isDataRequest,
   matchPage,
   matchPattern,
   matchZone,
+  pagePathname,
   proxyRequest,
   segmentCachePolicy,
   storableResponse,

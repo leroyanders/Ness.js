@@ -93,6 +93,14 @@ Prerendered HTML and data are emitted into `build/client`. Other pages use SSR. 
 
 A response the page cache took part in carries `x-ness-cache`: `MISS` on the render that was stored, `HIT` on a replay of a fresh entry, and `STALE` on a replay of an entry past its `stale` age — the last of which may have a background refresh running behind it. A request the cache refused carries no such header at all.
 
+### Navigation data requests
+
+A client-side navigation does not ask for the document — it asks for the page's data (`/page.data`, or `/page.rsc` in RSC mode). Those requests follow the page's own rules: on a page that declares `revalidate` (or `dynamic: 'force-static'`), the data request is answered from the same page cache the document is, so repeat navigations stop running the loaders at all. `dynamicParams: false` closes them over unprerendered params the same way it closes documents.
+
+A page that declares nothing keeps running its loaders per navigation — ISR staleness is a bargain a page opts into, never one it wakes up inside of. And the standing refusals below apply unchanged: a credentialed request bypasses the cache, `force-dynamic` and `revalidate = 0` keep the page out entirely.
+
+For the round trips that remain, the client side has its own memory — see [the client cache](./router.md#client-cache).
+
 ### Draft mode
 
 ```ts title="app/routes/preview/route.ts"

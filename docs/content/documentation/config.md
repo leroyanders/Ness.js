@@ -57,6 +57,8 @@ The `router` section accepts React Router Framework Mode options. Ness supplies 
 
 `basePath` serves the whole application under a path prefix — routing, links, built assets, the image endpoint and the production server's static mounts all move together. `assetPrefix` points built assets at a CDN origin in production builds while routing keeps following `basePath`. See [Next.js parity](./next-parity.md#basepath-and-assetprefix).
 
+`clientCache` sets the application-wide default for how many seconds a client-side navigation may reuse a page's data from memory instead of refetching its loader. A page's own `export const clientCache = N` overrides it, and `clientCache = 0` opts that page back out. See [the client cache](./router.md#client-cache).
+
 ## Production server
 
 The `server` section is loaded by `ness start`. It supports the NestJS bridge, redirects, rewrites, response headers, image policy, middleware, cache adapters, and multi-zone composition via `zones` — path prefixes proxied to other deployments ([details](./next-parity.md#multi-zones)).

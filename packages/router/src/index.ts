@@ -20,6 +20,7 @@ export type {
   NessRoute,
   NessRoutePath,
   NessRoutesOptions,
+  PagePrefetchInfo,
   SegmentConfig,
 } from './routes.js';
 export {
@@ -56,6 +57,13 @@ export interface NessConfig extends Config {
   i18n?: I18nConfig;
   routeDirectory?: string;
   rsc?: boolean;
+  /**
+   * The application-wide default for how many seconds a client-side
+   * navigation may reuse a page's data from memory instead of refetching its
+   * loader. A page's own `export const clientCache = N` overrides it, and
+   * `clientCache = 0` opts that page back out. Off (`0`) when omitted.
+   */
+  clientCache?: number;
   /**
    * Serves the whole application under a path prefix — `/docs` — the way
    * Next's `basePath` does. Routing, links, assets and the image endpoint all
@@ -226,6 +234,10 @@ function defineConfig(options: NessConfig = {}): Config {
     i18n,
     basePath,
     assetPrefix,
+    // Consumed by route generation (`nessRoutes` reads it off the config
+    // file); pulled out here so React Router never sees an option it does
+    // not know.
+    clientCache,
     ...reactRouterOptions
   } = options;
   // Validated here so a typo in ness.config.mjs fails immediately with a

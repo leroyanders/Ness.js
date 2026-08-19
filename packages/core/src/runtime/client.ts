@@ -203,9 +203,19 @@ function consumeServedFromCache(key: string): boolean {
 /**
  * Whether this URL's data is already in hand — asked by `RouteOutlet` before
  * it puts a loading state in front of a page it could render right now.
+ *
+ * Route-owned entries are keyed `routeId\nurl` so that a layout and its page,
+ * which load different data for the same URL, cannot overwrite each other;
+ * this question is about the URL, so both spellings are checked.
  */
 function hasCachedRoute(href: string): boolean {
-  return clientDataCache.has(urlKey(href));
+  const target = urlKey(href);
+  if (clientDataCache.has(target)) return true;
+  for (const key of clientDataCache.keys()) {
+    const split = key.indexOf('\n');
+    if (split !== -1 && key.slice(split + 1) === target) return true;
+  }
+  return false;
 }
 
 /**
@@ -390,10 +400,12 @@ function beginStreamedLoad(
   settled.then(
     value => {
       streamedResults.set(key, { at: Date.now(), ok: true, value });
-      // Also kept under the plain URL, which is what Back and Forward read.
-      // Those pages were on screen a moment ago; re-fetching them to show
-      // the same thing again is a wait the reader did not agree to.
-      clientDataCache.set(urlKey(args.request.url), value);
+      // Also kept on the route's own shelf, which is what Back and Forward
+      // read. Those pages were on screen a moment ago; re-fetching them to
+      // show the same thing again is a wait the reader did not agree to.
+      // Keyed route+URL, not URL alone: a layout and its page load different
+      // data for the same URL, and one must not be served the other's.
+      clientDataCache.set(key, value);
     },
     (error: unknown) =>
       streamedResults.set(key, { at: Date.now(), ok: false, error }),
@@ -461,24 +473,25 @@ function settlePass(): boolean {
 function streamedClientLoader(
   routeId: string,
   load: ClientLoader,
-  cacheSeconds = 0,
+  cacheSecondsOf: () => number = () => 0,
 ): ClientLoader {
-  const store = (target: string, value: unknown): unknown => {
-    if (cacheSeconds > 0) {
-      clientDataCache.set(target, value);
-      clientCacheExpiry.set(target, Date.now() + cacheSeconds * 1000);
-    }
-    return value;
-  };
   return async (args: ClientLoaderArgs) => {
     const key = streamKey(routeId, args.request.url);
+    const target = urlKey(args.request.url);
+    const store = (value: unknown): unknown => {
+      const cacheSeconds = cacheSecondsOf();
+      if (cacheSeconds > 0) {
+        clientDataCache.set(key, value);
+        clientCacheExpiry.set(key, Date.now() + cacheSeconds * 1000);
+      }
+      return value;
+    };
     const claimed = claimStreamedResult(key);
     if (claimed) {
       if (!claimed.ok) throw claimed.error;
-      return store(urlKey(args.request.url), claimed.value);
+      return store(claimed.value);
     }
 
-    const target = urlKey(args.request.url);
     // Same page, whatever its arguments say: this is not a navigation the
     // reader made, it is the page changing its own mind — a month in a
     // calendar, a tab, a filter, a sort. They are already looking at real
@@ -489,26 +502,22 @@ function streamedClientLoader(
     // A revalidation of the very same URL — after a `<Form>`, after
     // `revalidate()` — is the same case and covered by the same test, and
     // its fresh answer re-arms the TTL below.
-    if (samePage(target, currentPage())) return store(target, await load(args));
+    if (samePage(target, currentPage())) return store(await load(args));
 
-    // The page's own `clientCache` window: within it a navigation is
-    // answered from memory outright — no fetch, no revalidation pass. Past
-    // it the entry is just stale memory, and the ordinary load below
-    // replaces it.
-    if (cacheSeconds > 0) {
-      const expiresAt = clientCacheExpiry.get(target);
-      if (
-        expiresAt !== undefined &&
-        expiresAt > Date.now() &&
-        clientDataCache.has(target)
-      ) {
-        return clientDataCache.get(target);
-      }
+    // The page's `clientCache` window (its own export, or the application
+    // default): within it a navigation is answered from memory outright — no
+    // fetch, no revalidation pass. Past it the entry is just stale memory,
+    // and the ordinary load below replaces it. The expiry may also have been
+    // set by a prefetch, which is the same statement made ahead of time.
+    const expiresAt = clientCacheExpiry.get(key);
+    if (expiresAt !== undefined && clientDataCache.has(key)) {
+      if (expiresAt > Date.now()) return clientDataCache.get(key);
+      clientCacheExpiry.delete(key);
     }
 
-    if (popNavigation && clientDataCache.has(target)) {
+    if (popNavigation && clientDataCache.has(key)) {
       servedFromCache.add(target);
-      return clientDataCache.get(target);
+      return clientDataCache.get(key);
     }
 
     const entry = streamedLoads.get(key) ?? beginStreamedLoad(key, load, args);
@@ -537,7 +546,7 @@ function streamedClientLoader(
     // come and nothing should be left on the shelf for the next visit. What
     // Back reads is a different shelf, written by the load itself.
     streamedResults.delete(key);
-    return store(target, raced);
+    return store(raced);
   };
 }
 
@@ -572,6 +581,29 @@ function HeldTitle(): React.ReactElement | null {
   return React.createElement('title', null, held);
 }
 
+/**
+ * Clears the whole navigation cache once any in-flight mutation — a top-level
+ * `<Form>` submission or a `useFetcher()` — finishes.
+ *
+ * Coarse on purpose: tracking which cached route depends on which mutation
+ * would need every action to declare it, and getting that wrong risks stale
+ * data, which is worse than an extra cache miss. Lives in every generated
+ * route component as well as `RouteOutlet`, so the guarantee holds in a
+ * layout that renders a plain `<Outlet/>` too; clearing twice costs nothing.
+ */
+function useMutationCacheClear(): void {
+  const navigation = router.useNavigation();
+  const fetchers = router.useFetchers();
+  const wasSubmittingRef = React.useRef(false);
+  React.useEffect(() => {
+    const isSubmittingNow =
+      navigation.state === 'submitting' ||
+      fetchers.some(fetcher => fetcher.state === 'submitting');
+    if (wasSubmittingRef.current && !isSubmittingNow) clearClientCache();
+    wasSubmittingRef.current = isSubmittingNow;
+  }, [navigation.state, fetchers]);
+}
+
 function streamedComponent(
   Page: React.ComponentType<Record<string, unknown>>,
   Loading: React.ComponentType,
@@ -583,6 +615,8 @@ function streamedComponent(
     const revalidator = router.useRevalidator();
     const pending = data === NESS_PENDING;
     const path = location.pathname + location.search;
+
+    useMutationCacheClear();
 
     // Lend the router's `revalidate` to the module, so a load that settles
     // after this navigation committed has a way to ask for its hand-off.
@@ -641,6 +675,27 @@ export interface StreamRouteOptions {
   id?: string;
   serverLoader?: boolean;
   shouldRevalidate?: (args: router.ShouldRevalidateFunctionArgs) => boolean;
+  /**
+   * The application-wide `clientCache` default (`ness.config.ts`), baked into
+   * the generated wrapper. A page's own `clientCache` export overrides it —
+   * including `clientCache = 0`, which opts the page back out.
+   */
+  defaultSeconds?: number;
+}
+
+/**
+ * How long navigations to this route may be answered from memory: the page's
+ * own `clientCache` export when it states one, the application default
+ * otherwise. Resolved per call so the page module stays the single source.
+ */
+function routeCacheSeconds(
+  route: RouteModule,
+  defaultSeconds: number,
+): () => number {
+  return () =>
+    typeof route.clientCache === 'number'
+      ? Math.max(0, route.clientCache)
+      : Math.max(0, defaultSeconds);
 }
 
 export interface StreamedRoute {
@@ -663,7 +718,12 @@ function streamRoute(
   Loading: React.ComponentType,
   options: StreamRouteOptions = {},
 ): StreamedRoute {
-  const { id, serverLoader = false, shouldRevalidate } = options;
+  const {
+    id,
+    serverLoader = false,
+    shouldRevalidate,
+    defaultSeconds = 0,
+  } = options;
   const load: ClientLoader | null =
     typeof route.clientLoader === 'function'
       ? route.clientLoader
@@ -683,9 +743,7 @@ function streamRoute(
     // The page's own statement about how long a navigation may reuse its
     // data. Read off the module so the generated wrapper needs no new
     // plumbing to carry it.
-    typeof route.clientCache === 'number' && route.clientCache > 0
-      ? route.clientCache
-      : 0,
+    routeCacheSeconds(route, defaultSeconds),
   ) as ClientLoader & {
     hydrate?: boolean;
   };
@@ -705,16 +763,163 @@ function streamRoute(
   };
 }
 
+/**
+ * The `clientLoader` of a route with no `loading.tsx`: `streamedClientLoader`
+ * minus the streaming. There is no boundary to show, so a load that has to
+ * reach the network simply blocks the navigation the way it always did — what
+ * this adds is every way of *not* reaching the network: the `clientCache`
+ * window, and Back/Forward rendering the page as it was left.
+ */
+function cachedRouteClientLoader(
+  routeId: string,
+  load: ClientLoader,
+  cacheSecondsOf: () => number,
+): ClientLoader {
+  return async (args: ClientLoaderArgs) => {
+    const key = streamKey(routeId, args.request.url);
+    const target = urlKey(args.request.url);
+    const store = (value: unknown): unknown => {
+      // Always kept for Back/Forward; the expiry decides whether an ordinary
+      // navigation may reuse it too.
+      clientDataCache.set(key, value);
+      const cacheSeconds = cacheSecondsOf();
+      if (cacheSeconds > 0)
+        clientCacheExpiry.set(key, Date.now() + cacheSeconds * 1000);
+      else clientCacheExpiry.delete(key);
+      return value;
+    };
+    // A revalidation of the page on screen — after a `<Form>`, after
+    // `revalidate()`, a search-param change — must reach the network, or a
+    // refresh would answer with the very thing it was refreshing.
+    if (samePage(target, currentPage())) return store(await load(args));
+
+    const expiresAt = clientCacheExpiry.get(key);
+    if (expiresAt !== undefined && clientDataCache.has(key)) {
+      if (expiresAt > Date.now()) return clientDataCache.get(key);
+      clientCacheExpiry.delete(key);
+    }
+
+    if (popNavigation && clientDataCache.has(key)) {
+      servedFromCache.add(target);
+      return clientDataCache.get(key);
+    }
+
+    return store(await load(args));
+  };
+}
+
+/**
+ * The same bookkeeping `streamedComponent` does, for a route that never
+ * streams: publish what is really on screen, settle up for a navigation that
+ * was answered from memory, and clear the cache once a mutation lands — so
+ * all of it holds under a layout that renders a plain `<Outlet/>`.
+ */
+function cachedComponent(
+  Page: React.ComponentType<Record<string, unknown>>,
+): React.ComponentType<Record<string, unknown>> {
+  return function NessCachedRoute(props: Record<string, unknown>) {
+    const location = router.useLocation();
+    const revalidator = router.useRevalidator();
+    const path = location.pathname + location.search;
+
+    useMutationCacheClear();
+
+    React.useEffect(() => {
+      setRenderedKey(urlKey(path));
+      if (
+        consumeServedFromCache(urlKey(path)) &&
+        revalidator.state === 'idle'
+      ) {
+        void revalidator.revalidate();
+      }
+    }, [path, revalidator]);
+
+    return React.createElement(Page, props);
+  };
+}
+
+export interface CacheRouteOptions {
+  id?: string;
+  serverLoader?: boolean;
+  shouldRevalidate?: (args: router.ShouldRevalidateFunctionArgs) => boolean;
+  /** The application-wide `clientCache` default; see `StreamRouteOptions`. */
+  defaultSeconds?: number;
+}
+
+/**
+ * Wires a route module with a loader but no `loading.tsx` into exports whose
+ * navigations can be answered from memory. Called by generated route modules;
+ * an application never writes this itself.
+ *
+ * This is what makes `clientCache` — the page's own export or the
+ * application-wide default — independent of streaming: a page that never
+ * shows a skeleton still stops refetching the server loader inside its
+ * window, and still renders instantly on Back/Forward.
+ */
+function cacheRoute(
+  route: RouteModule,
+  options: CacheRouteOptions = {},
+): StreamedRoute {
+  const {
+    id,
+    serverLoader = false,
+    shouldRevalidate,
+    defaultSeconds = 0,
+  } = options;
+  const load: ClientLoader | null =
+    typeof route.clientLoader === 'function'
+      ? route.clientLoader
+      : serverLoader
+        ? (args: ClientLoaderArgs) => args.serverLoader!()
+        : null;
+  if (!load) {
+    return {
+      Component: route.default,
+      clientLoader: route.clientLoader,
+      shouldRevalidate,
+    };
+  }
+  const clientLoader = cachedRouteClientLoader(
+    id!,
+    load,
+    routeCacheSeconds(route, defaultSeconds),
+  ) as ClientLoader & { hydrate?: boolean };
+  // A route that asked to run its own loader on hydration still does.
+  if (route.clientLoader?.hydrate) clientLoader.hydrate = true;
+  return {
+    Component: route.default ? cachedComponent(route.default) : route.default,
+    clientLoader,
+    shouldRevalidate(args: router.ShouldRevalidateFunctionArgs) {
+      // A settle pass belongs to whichever streamed route asked for it;
+      // nobody else should refetch on its account.
+      if (settlePasses > 0) return false;
+      return typeof shouldRevalidate === 'function'
+        ? shouldRevalidate(args)
+        : args.defaultShouldRevalidate;
+    },
+  };
+}
+
 /** One row of the generated prefetch table. */
 interface PrefetchRoute {
   path: string;
   id: string;
+  /** Whether the page's data comes from a server `loader`. */
+  serverLoader?: boolean;
+  /** Whether the generated wrapper owns the route's `clientLoader`. */
+  wrapped?: boolean;
   load: () => Promise<{
     clientLoader?: (args: {
       request: Request;
       params: Record<string, string | undefined>;
     }) => unknown;
   }>;
+}
+
+/** The generated table plus which data extension this build navigates with. */
+interface PrefetchTable {
+  routes: PrefetchRoute[];
+  mode: 'rsc' | 'data';
 }
 
 /**
@@ -725,21 +930,59 @@ interface PrefetchRoute {
  * simply has no table, and prefetching turns itself off rather than becoming
  * something the application has to configure.
  */
-let routeTablePromise: Promise<PrefetchRoute[]> | undefined;
+let routeTablePromise: Promise<PrefetchTable> | undefined;
 
-function routeTable(): Promise<PrefetchRoute[]> {
+function routeTable(): Promise<PrefetchTable> {
   // Not `@vite-ignore`: Vite has to resolve this so the generated table is
   // bundled as a chunk of its own. The router plugin always provides it; the
   // catch below is for a build without that plugin, where prefetching simply
   // does not exist.
   routeTablePromise ??= import('virtual:ness/route-prefetch').then(
-    module => module.routes ?? [],
-    () => [],
+    module => ({
+      routes: module.routes ?? [],
+      mode: module.mode === 'data' ? ('data' as const) : ('rsc' as const),
+    }),
+    () => ({ routes: [], mode: 'rsc' as const }),
   );
   return routeTablePromise;
 }
 
 const prefetchesInFlight = new Set<string>();
+
+/** Data URLs already handed to the browser's prefetch cache this session. */
+const prefetchedDataUrls = new Set<string>();
+
+/**
+ * The exact URL this route's wrapper will fetch on a navigation: React
+ * Router's single-fetch spelling of the page (`/page.data`, `/page.rsc`,
+ * `/_.data` for a trailing slash), narrowed to the one route with `_routes`.
+ */
+function routeDataUrl(url: URL, mode: 'rsc' | 'data', routeId: string): string {
+  const target = new URL(url.href);
+  target.pathname = target.pathname.endsWith('/')
+    ? `${target.pathname}_.${mode}`
+    : `${target.pathname}.${mode}`;
+  target.searchParams.set('_routes', routeId);
+  return target.pathname + target.search;
+}
+
+/**
+ * Asks the browser to fetch a page's data ahead of the visit, the way React
+ * Router's own `<Link prefetch>` does: a `<link rel="prefetch" as="fetch">`
+ * lands in the browser's prefetch cache, where the navigation's real fetch
+ * finds it. Even when that cache declines, the request has warmed the
+ * server's page cache, so the navigation's round trip is answered from
+ * memory there instead of running the loaders again.
+ */
+function appendDataPrefetchLink(href: string): void {
+  if (prefetchedDataUrls.has(href)) return;
+  prefetchedDataUrls.add(href);
+  const link = document.createElement('link');
+  link.rel = 'prefetch';
+  link.as = 'fetch';
+  link.href = href;
+  document.head.appendChild(link);
+}
 
 /**
  * Runs the loader of whichever page answers `href`, ahead of the visit, and
@@ -762,15 +1005,16 @@ const prefetchesInFlight = new Set<string>();
 async function prefetchRoute(href: string): Promise<void> {
   if (typeof window === 'undefined' || !href) return;
   const url = new URL(href, window.location.origin);
+  if (url.origin !== window.location.origin) return;
   const key = urlKey(url.href);
   if (
     key === currentPage() ||
-    clientDataCache.has(key) ||
+    hasCachedRoute(key) ||
     prefetchesInFlight.has(key)
   ) {
     return;
   }
-  const table = await routeTable();
+  const { routes: table, mode } = await routeTable();
   if (table.length === 0) return;
   // The table's rows are patterns plus a loader, which is exactly the shape
   // matchRoutes matches on — it never reaches for the rest of a RouteObject.
@@ -784,15 +1028,27 @@ async function prefetchRoute(href: string): Promise<void> {
   prefetchesInFlight.add(key);
   try {
     const route = match.route as unknown as PrefetchRoute;
+    // Warms the module chunk whatever else happens below.
     const module = await route.load();
-    // Only a client loader can be run ahead of time. A route whose data comes
-    // from the server has nothing to warm here — its own request is the work.
+    if (route.serverLoader) {
+      // The data lives on the server, so nothing here can run it ahead of
+      // time — but the browser can be asked to make the wrapper's exact
+      // request early. Only a wrapped route fetches per-route; an unwrapped
+      // one rides the batched request `<PrefetchPageLinks>` already covers.
+      if (route.wrapped)
+        appendDataPrefetchLink(routeDataUrl(url, mode, route.id));
+      return;
+    }
     if (typeof module.clientLoader !== 'function') return;
     const data = await module.clientLoader({
       request: new Request(url),
       params: match.params ?? {},
     });
-    clientDataCache.set(key, data);
+    // A streamed wrapper answers with its pending marker when the load is
+    // still in flight; the load itself files the result when it settles, and
+    // a symbol must never be served as page data.
+    if (typeof data !== 'symbol' && data !== undefined)
+      clientDataCache.set(key, data);
   } catch {
     // A warm-up that fails costs nothing.
   } finally {
@@ -835,6 +1091,7 @@ function useViewportPrefetch(
   elementRef: React.RefObject<HTMLAnchorElement | null>,
   href: string | null,
   active: boolean,
+  onWarm: () => void,
 ): void {
   React.useEffect(() => {
     if (!active || !href || typeof IntersectionObserver === 'undefined')
@@ -845,6 +1102,7 @@ function useViewportPrefetch(
       entries => {
         if (!entries.some(entry => entry.isIntersecting)) return;
         observer.disconnect();
+        onWarm();
         void prefetchRoute(href);
       },
       // Started slightly before the link is actually visible, so a link
@@ -853,7 +1111,7 @@ function useViewportPrefetch(
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [active, href, elementRef]);
+  }, [active, href, elementRef, onWarm]);
 }
 
 /**
@@ -867,6 +1125,7 @@ function useViewportPrefetch(
 function usePrefetchHandlers(
   to: unknown,
   prefetch: PrefetchMode | false | undefined,
+  onWarm: () => void,
 ): { start: () => void; cancel: () => void } | null {
   const timer = React.useRef<number | undefined>(undefined);
   const href = typeof to === 'string' ? to : null;
@@ -874,16 +1133,19 @@ function usePrefetchHandlers(
 
   React.useEffect(() => () => window.clearTimeout(timer.current), []);
   React.useEffect(() => {
-    if (active && prefetch === 'render') void prefetchRoute(href);
-  }, [active, prefetch, href]);
+    if (active && prefetch === 'render') {
+      onWarm();
+      void prefetchRoute(href);
+    }
+  }, [active, prefetch, href, onWarm]);
 
   if (!active || prefetch === 'render' || prefetch === 'viewport') return null;
   const start = () => {
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(
-      () => void prefetchRoute(href),
-      PREFETCH_INTENT_DELAY_MS,
-    );
+    timer.current = window.setTimeout(() => {
+      onWarm();
+      void prefetchRoute(href);
+    }, PREFETCH_INTENT_DELAY_MS);
   };
   const cancel = () => window.clearTimeout(timer.current);
   return { start, cancel };
@@ -1009,7 +1271,18 @@ async function openInterceptor(
  * entire difference between it and a plain route. A hard load of the same
  * URL never runs this code and gets the real page.
  */
-function maybeIntercept(event: { defaultPrevented: boolean; button?: number; metaKey?: boolean; altKey?: boolean; ctrlKey?: boolean; shiftKey?: boolean; preventDefault: () => void }, to: unknown): void {
+function maybeIntercept(
+  event: {
+    defaultPrevented: boolean;
+    button?: number;
+    metaKey?: boolean;
+    altKey?: boolean;
+    ctrlKey?: boolean;
+    shiftKey?: boolean;
+    preventDefault: () => void;
+  },
+  to: unknown,
+): void {
   if (typeof window === 'undefined' || typeof to !== 'string') return;
   if (event.defaultPrevented) return;
   if (event.button !== undefined && event.button !== 0) return;
@@ -1068,7 +1341,13 @@ function withPrefetch<Props extends { to: To }>(
       ref,
     ) {
       const mode = prefetch === 'auto' ? autoPrefetchMode() : prefetch;
-      const handlers = usePrefetchHandlers(props.to, mode);
+      // Once any trigger fires, the link also renders react-router's own
+      // `<PrefetchPageLinks>`, which asks the browser to fetch the target
+      // page's loader data (`.data`/`.rsc`) and its module chunks ahead of
+      // the click — so the navigation that follows finds both already local.
+      const [warmed, setWarmed] = React.useState(false);
+      const markWarm = React.useCallback(() => setWarmed(true), []);
+      const handlers = usePrefetchHandlers(props.to, mode, markWarm);
       // Warm the interceptor table so the click handler can decide
       // synchronously; a build without interceptors resolves to an empty
       // table once and this is free from then on.
@@ -1088,8 +1367,15 @@ function withPrefetch<Props extends { to: To }>(
         element,
         typeof props.to === 'string' ? props.to : null,
         mode === 'viewport',
+        markWarm,
       );
-      return React.createElement(Component, {
+      // The same value react-router's own Link hands PrefetchPageLinks: the
+      // resolved href, basename included.
+      const resolvedHref = router.useHref(props.to ?? '');
+      const prefetchAbsolute =
+        typeof props.to === 'string' &&
+        /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(props.to);
+      const anchor = React.createElement(Component, {
         // Next's `scroll={false}`, spelled `preventScrollReset` here. Written
         // first so a link passing react-router's own name still wins.
         ...(scroll === false ? { preventScrollReset: true } : null),
@@ -1112,6 +1398,14 @@ function withPrefetch<Props extends { to: To }>(
           : onPointerLeave,
         onBlur: handlers ? chain(handlers.cancel, onBlur) : onBlur,
       } as unknown as Props);
+      if (!warmed || prefetchAbsolute || typeof props.to !== 'string')
+        return anchor;
+      return React.createElement(
+        React.Fragment,
+        null,
+        anchor,
+        React.createElement(router.PrefetchPageLinks, { page: resolvedHref }),
+      );
     },
   );
   Wrapped.displayName = displayName;
@@ -1171,19 +1465,11 @@ export interface RouteOutletProps {
 function RouteOutlet({ fallback, context }: RouteOutletProps): ReactElement {
   const location = router.useLocation();
   const navigation = router.useNavigation();
-  const fetchers = router.useFetchers();
   const revalidator = router.useRevalidator();
-  const wasSubmittingRef = React.useRef(false);
   const heldTitleRef = React.useRef('');
   const locationKey = location.pathname + location.search;
 
-  React.useEffect(() => {
-    const isSubmittingNow =
-      navigation.state === 'submitting' ||
-      fetchers.some(fetcher => fetcher.state === 'submitting');
-    if (wasSubmittingRef.current && !isSubmittingNow) clearClientCache();
-    wasSubmittingRef.current = isSubmittingNow;
-  }, [navigation.state, fetchers]);
+  useMutationCacheClear();
 
   // Publish what is actually on screen, and settle up for anything that was
   // answered from memory. `cachedClientLoader` cannot do either itself: it
@@ -1262,6 +1548,7 @@ export {
   PrefetchPageLinks,
   RouteOutlet,
   apiFetch,
+  cacheRoute,
   cachedClientLoader,
   clearClientCache,
   closeInterceptedRoute,

@@ -73,7 +73,37 @@ Three things are deliberately not streamed:
 - **A load that finishes within a few milliseconds** — from `cachedClientLoader`, from a prefetch, from Back. Those navigate in a single frame with no fallback at all.
 - **Back and Forward**, which render from the client cache when it holds the page.
 
-The cost is one extra request: a route whose data comes from a `loader` in a `.server` module is fetched on its own rather than batched with the rest of the chain, because it now answers through a `clientLoader`. Only routes under a `loading.tsx` pay it.
+The cost is one extra request: a route whose data comes from a `loader` in a `.server` module is fetched on its own rather than batched with the rest of the chain, because it now answers through a `clientLoader`. Only routes under a `loading.tsx` — or inside the client cache below — pay it.
+
+## Client cache
+
+After the first document load, navigation is client-side: a `<Link>` click is a `pushState`, and the only thing that still reaches the server is the data request for the destination's loaders. `clientCache` removes that round trip too:
+
+```tsx title="app/routes/dashboard/page.tsx"
+export const clientCache = 60;
+```
+
+Within the window, a client-side navigation back to the page is answered from memory — no fetch, no skeleton, one frame. Past it, the next navigation loads normally and re-arms the window. A `loading.tsx` is not required; a page that streams and a page that blocks cache the same way.
+
+To state it once for the whole application:
+
+```ts title="ness.config.ts"
+export default defineNessConfig({
+  router: { clientCache: 60 },
+});
+```
+
+A page's own export overrides the default, and `export const clientCache = 0` opts a page back out entirely.
+
+Three guarantees hold either way:
+
+- **Any mutation clears the whole cache** — a `<Form>` submission or a `useFetcher()` finishing empties it, so an edit never renders stale.
+- **A revalidation of the page on screen always reaches the network** — `revalidate()` refreshes for real.
+- **Back and Forward render from memory whenever they can**, window or no window, and refresh behind the reader afterwards.
+
+The cache is per-tab memory: a document request never sees it, and a reload starts it empty. Pair it with a server-side `revalidate` on the page (see [Caching](./caching.md)) and the navigations that do miss it stop running loaders as well.
+
+`<Link prefetch>` warms the same machinery ahead of the click: the target's module chunk and its loader data (`.data`/`.rsc`) are requested while the link is hovered or scrolled into view, so the navigation that follows finds both already local.
 
 ## Server data
 

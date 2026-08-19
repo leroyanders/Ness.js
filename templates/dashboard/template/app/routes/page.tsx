@@ -1,4 +1,5 @@
 import { useLoaderData } from 'react-router';
+import { Link } from '@nessframework/core';
 import { Meta, Title } from '@nessframework/components';
 
 export default function Dashboard() {
@@ -9,14 +10,16 @@ export default function Dashboard() {
         <Title>Overview · Ness dashboard</Title>
       </Meta>
       <aside>
-        <a className="brand" href="/" aria-label="Ness dashboard home">
+        {/* In-app navigation goes through <Link>: a plain <a> is a full
+            document load, and the client router never gets to answer it. */}
+        <Link className="brand" to="/" aria-label="Ness dashboard home">
           <span>N</span>
           Ness
-        </a>
+        </Link>
         <nav aria-label="Dashboard navigation">
-          <a className="active" href="/">
+          <Link className="active" to="/">
             Overview
-          </a>
+          </Link>
           <a href="/api/dashboard/metrics">Metrics API</a>
           <a href="https://github.com/leroyanders/Ness.js">Documentation</a>
         </nav>

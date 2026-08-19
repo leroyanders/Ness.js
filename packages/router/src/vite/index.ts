@@ -181,7 +181,10 @@ function resolveAppDirectory(
 async function readPathOptions(
   root: string,
   configFile: string,
-): Promise<{ basePath?: string | undefined; assetPrefix?: string | undefined }> {
+): Promise<{
+  basePath?: string | undefined;
+  assetPrefix?: string | undefined;
+}> {
   const absolute = path.resolve(root, configFile);
   if (!fs.existsSync(absolute)) return {};
   try {
@@ -308,10 +311,12 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
         const entries = pages
           .map(page => {
             const absolute = path.resolve(appDirectory, page.file);
-            return `  {path: ${JSON.stringify(page.path)}, id: ${JSON.stringify(page.id)}, load: () => import(${JSON.stringify(absolute)})}`;
+            return `  {path: ${JSON.stringify(page.path)}, id: ${JSON.stringify(page.id)}, serverLoader: ${Boolean(page.prefetch?.serverLoader)}, wrapped: ${Boolean(page.prefetch?.wrapped)}, load: () => import(${JSON.stringify(absolute)})}`;
           })
           .join(',\n');
-        return `export const routes = [\n${entries}\n];\n`;
+        // Which single-fetch extension this build's navigations use — the
+        // prefetch layer mirrors the router's own data URLs with it.
+        return `export const routes = [\n${entries}\n];\nexport const mode = ${JSON.stringify(rsc ? 'rsc' : 'data')};\n`;
       }
       // Intercepting routes: the client runtime reads this table to decide
       // which navigations render an overlay instead of committing. Same

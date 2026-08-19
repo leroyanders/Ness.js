@@ -6,6 +6,8 @@ declare module 'virtual:ness/route-prefetch' {
   export const routes: Array<{
     path: string;
     id: string;
+    serverLoader?: boolean;
+    wrapped?: boolean;
     load: () => Promise<{
       clientLoader?: (args: {
         request: Request;
@@ -13,6 +15,8 @@ declare module 'virtual:ness/route-prefetch' {
       }) => unknown;
     }>;
   }>;
+  /** Which data extension this build navigates with: 'rsc' or 'data'. */
+  export const mode: string | undefined;
 }
 
 /**
