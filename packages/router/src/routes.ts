@@ -83,6 +83,12 @@ export interface NessRoutesOptions {
    * that lookup.
    */
   clientCache?: number;
+  /**
+   * Minimum time a shown `loading.tsx` stays on screen, in milliseconds.
+   * Normally read off `ness.config.*` beside the app directory; passing it
+   * explicitly overrides that lookup.
+   */
+  minimumLoadingMs?: number;
 }
 
 /**
@@ -129,11 +135,25 @@ function slash(value: string): string {
  */
 const CONFIG_FILES = ['ness.config.ts', 'ness.config.mjs', 'ness.config.js'];
 
+/** The application-wide route-generation defaults `ness.config.*` carries. */
+interface ConfigDefaults {
+  /** `clientCache`, in seconds. */
+  clientCache: number;
+  /** `minimumLoadingMs`, in milliseconds. */
+  minimumLoadingMs: number;
+}
+
+const NO_CONFIG_DEFAULTS: ConfigDefaults = {
+  clientCache: 0,
+  minimumLoadingMs: 0,
+};
+
 /** Keyed file + mtime, so an edited config is re-read, not served stale. */
-const configClientCacheReads = new Map<string, Promise<number>>();
+const configDefaultsReads = new Map<string, Promise<ConfigDefaults>>();
 
 /**
- * The application-wide `clientCache` default, read off `ness.config.*` in the
+ * The application-wide defaults route generation bakes into the wrappers —
+ * `clientCache`, `minimumLoadingMs` — read off `ness.config.*` in the
  * project root.
  *
  * Read here, in route generation, rather than threaded through options,
@@ -143,36 +163,41 @@ const configClientCacheReads = new Map<string, Promise<number>>();
  * would rewrite the wrappers back and forth forever. One source, every
  * caller. Absent file, unreadable file, absent field: all mean `0`.
  */
-function readConfigClientCache(root: string): Promise<number> {
+function readConfigDefaults(root: string): Promise<ConfigDefaults> {
   const file = CONFIG_FILES.map(name => path.join(root, name)).find(
     fs.existsSync,
   );
-  if (!file) return Promise.resolve(0);
+  if (!file) return Promise.resolve(NO_CONFIG_DEFAULTS);
   let key: string;
   try {
     key = `${file}:${fs.statSync(file).mtimeMs}`;
   } catch {
-    return Promise.resolve(0);
+    return Promise.resolve(NO_CONFIG_DEFAULTS);
   }
-  let read = configClientCacheReads.get(key);
+  let read = configDefaultsReads.get(key);
   if (!read) {
+    const numberOrZero = (value: unknown): number =>
+      typeof value === 'number' && Number.isFinite(value)
+        ? Math.max(0, value)
+        : 0;
     read = import(
       `${pathToFileURL(file).href}?mtime=${encodeURIComponent(key)}`
     ).then(
       imported => {
         const module = imported as {
-          default?: { ness?: { router?: { clientCache?: unknown } } };
-          ness?: { router?: { clientCache?: unknown } };
+          default?: { ness?: { router?: Record<string, unknown> } };
+          ness?: { router?: Record<string, unknown> };
         };
         const config = module.default || module;
-        const value = config?.ness?.router?.clientCache;
-        return typeof value === 'number' && Number.isFinite(value)
-          ? Math.max(0, value)
-          : 0;
+        const router = config?.ness?.router;
+        return {
+          clientCache: numberOrZero(router?.clientCache),
+          minimumLoadingMs: numberOrZero(router?.minimumLoadingMs),
+        };
       },
-      () => 0,
+      () => NO_CONFIG_DEFAULTS,
     );
-    configClientCacheReads.set(key, read);
+    configDefaultsReads.set(key, read);
   }
   return read;
 }
@@ -604,6 +629,8 @@ interface StreamedRouteOptions {
   server: AdjacentServer;
   /** The application-wide `clientCache` default, baked into the wrapper. */
   defaultSeconds: number;
+  /** The application-wide `minimumLoadingMs`, baked into the wrapper. */
+  minimumMs: number;
 }
 
 /**
@@ -642,6 +669,7 @@ function appendStreamedRoute(
     namedExports,
     server,
     defaultSeconds,
+    minimumMs,
   }: StreamedRouteOptions,
 ): void {
   const userShouldRevalidate = userShouldRevalidateExpression(
@@ -659,7 +687,7 @@ function appendStreamedRoute(
   );
   lines.push("import {streamRoute} from '@nessframework/core/client';");
   lines.push(
-    `const NessStreamed = streamRoute(NessRoute, NessLoading, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}${defaultSeconds > 0 ? `, defaultSeconds: ${defaultSeconds}` : ''}});`,
+    `const NessStreamed = streamRoute(NessRoute, NessLoading, {id: ${JSON.stringify(routeId)}, serverLoader: ${server.exports.includes('loader') || namedExports.includes('loader')}, shouldRevalidate: ${userShouldRevalidate}${defaultSeconds > 0 ? `, defaultSeconds: ${defaultSeconds}` : ''}${minimumMs > 0 ? `, minimumMs: ${minimumMs}` : ''}});`,
   );
   lines.push('const NessComponent = NessStreamed.Component;');
   lines.push('export const clientLoader = NessStreamed.clientLoader;');
@@ -786,6 +814,8 @@ interface WrapperOptions extends BoundaryFiles {
   slots?: Array<{ name: string; file: string }>;
   /** The application-wide `clientCache` default, in seconds. */
   clientCacheDefault?: number;
+  /** The application-wide `minimumLoadingMs` default, in milliseconds. */
+  minimumLoadingDefault?: number;
 }
 
 /** What the wrapper turned out to be, for the prefetch table. */
@@ -814,6 +844,7 @@ function createWrapper({
   urlPath = '',
   slots = [],
   clientCacheDefault = 0,
+  minimumLoadingDefault = 0,
 }: WrapperOptions): WrapperInfo {
   const lines = ['// Generated by Ness.js. Do not edit.'];
   let namedExports: string[] = [];
@@ -852,6 +883,7 @@ function createWrapper({
         namedExports,
         server,
         defaultSeconds: clientCacheDefault,
+        minimumMs: minimumLoadingDefault,
       });
     } else if (cached) {
       appendCachedRoute(lines, {
@@ -1324,6 +1356,8 @@ interface DiscoverOptions {
   metadataParents?: string[];
   /** The application-wide `clientCache` default, in seconds. */
   clientCacheDefault?: number;
+  /** The application-wide `minimumLoadingMs` default, in milliseconds. */
+  minimumLoadingDefault?: number;
 }
 
 function discoverDirectory(
@@ -1345,6 +1379,7 @@ function discoverDirectory({
   urlPath = '',
   metadataParents = [],
   clientCacheDefault = 0,
+  minimumLoadingDefault = 0,
 }: DiscoverOptions): NessRoute[] | NessRoute | undefined {
   const layoutFile = findModule(directory, 'layout');
   const pageFile = findModule(directory, 'page');
@@ -1471,6 +1506,7 @@ function discoverDirectory({
       fileMetadata: layoutFile ? undefined : fileMetadata,
       urlPath,
       clientCacheDefault,
+      minimumLoadingDefault,
     });
     children.push({
       id: moduleId(routesDirectory, directory, 'page'),
@@ -1555,6 +1591,7 @@ function discoverDirectory({
           : [urlPath, childSegment].filter(Boolean).join('/'),
       metadataParents: childMetadataParents,
       clientCacheDefault,
+      minimumLoadingDefault,
     });
     if (childRoute) children.push(childRoute as NessRoute);
   }
@@ -1602,6 +1639,7 @@ function discoverDirectory({
     urlPath,
     slots,
     clientCacheDefault,
+    minimumLoadingDefault,
   });
   const entry: NessRoute = {
     id: moduleId(routesDirectory, directory, 'layout'),
@@ -1700,6 +1738,7 @@ async function nessRoutes({
   generatedDirectory,
   i18n,
   clientCache,
+  minimumLoadingMs,
 }: NessRoutesOptions = {}): Promise<NessRoute[]> {
   const absoluteAppDirectory = path.resolve(appDirectory);
   const absoluteRoutesDirectory = path.resolve(
@@ -1713,10 +1752,17 @@ async function nessRoutes({
       `Ness routes directory does not exist: ${absoluteRoutesDirectory}`,
     );
   }
+  const configDefaults = await readConfigDefaults(
+    path.dirname(absoluteAppDirectory),
+  );
   const clientCacheDefault =
     typeof clientCache === 'number'
       ? Math.max(0, clientCache)
-      : await readConfigClientCache(path.dirname(absoluteAppDirectory));
+      : configDefaults.clientCache;
+  const minimumLoadingDefault =
+    typeof minimumLoadingMs === 'number'
+      ? Math.max(0, minimumLoadingMs)
+      : configDefaults.minimumLoadingMs;
   const written = new Set<string>();
   const previous = generatedThisPass;
   generatedThisPass = written;
@@ -1731,6 +1777,7 @@ async function nessRoutes({
       directory: absoluteRoutesDirectory,
       root: true,
       clientCacheDefault,
+      minimumLoadingDefault,
     });
     const localization = normalizeI18n(i18n);
     if (localization) createLocaleLayout(absoluteGeneratedDirectory);

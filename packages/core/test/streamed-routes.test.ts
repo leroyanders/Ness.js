@@ -173,6 +173,72 @@ test('changing a page’s own arguments keeps the page on screen — no skeleton
   delete globalThis.window;
 });
 
+test('a minimum stay widens the grace window — a load the default window would stream is returned outright', async () => {
+  const streamed = streamRoute(
+    {
+      default: Page,
+      clientLoader: async () => {
+        await tick(30); // Streams at the 8ms default; inside the held window.
+        return { page: 'held' };
+      },
+    },
+    Loading,
+    { id: 'held-grace', minimumMs: 400 },
+  );
+
+  setLocation('/dashboard/calendar', '?m=2026-08');
+  const answer = await streamed.clientLoader({
+    request: new Request('https://example.com/dashboard/held'),
+  });
+  assert.deepEqual(
+    answer,
+    { page: 'held' },
+    'a load this fast must never show a skeleton it would then owe the whole stay',
+  );
+  delete globalThis.window;
+});
+
+test('the minimum stay defers the ask, not the answer — a claim still collects the kept result', async () => {
+  let resolveLoad;
+  const streamed = streamRoute(
+    {
+      default: Page,
+      clientLoader: () =>
+        new Promise(resolve => {
+          resolveLoad = resolve;
+        }),
+    },
+    Loading,
+    { id: 'held-slow', minimumMs: 150 },
+  );
+
+  const router = createMemoryRouter(
+    [
+      { path: '/', Component: () => h('span', null, 'home') },
+      {
+        path: '/held-slow',
+        loader: streamed.clientLoader,
+        Component: streamed.Component,
+      },
+    ],
+    { initialEntries: ['/'] },
+  );
+
+  await router.navigate('/held-slow');
+  assert.match(renderToStaticMarkup(h(RouterProvider, { router })), /skeleton/);
+
+  resolveLoad({ from: 'network' });
+  await tick(0);
+  const handed = await streamed.clientLoader({
+    request: new Request('https://example.com/held-slow'),
+  });
+  assert.deepEqual(
+    handed,
+    { from: 'network' },
+    'the hold only delays when the router is asked back, never what it collects',
+  );
+});
+
 test('a different page under the same layout still streams', async () => {
   const streamed = streamRoute(
     {

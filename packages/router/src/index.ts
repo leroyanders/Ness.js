@@ -70,6 +70,16 @@ export interface NessConfig extends Config {
    */
   clientCache?: number;
   /**
+   * Minimum time a segment's `loading.tsx` stays on screen once it has been
+   * shown, in milliseconds. A navigation whose data arrives before the
+   * window closes keeps the skeleton up for the remainder instead of
+   * flashing it away — loading reads as a state, not a glitch. Navigations
+   * answered fast enough to never show the fallback (the grace window, the
+   * `clientCache` memory, Back/Forward) owe nothing and stay instant. Off
+   * (`0`) when omitted.
+   */
+  minimumLoadingMs?: number;
+  /**
    * Serves the whole application under a path prefix — `/docs` — the way
    * Next's `basePath` does. Routing, links, assets and the image endpoint all
    * move with it; it is React Router's `basename` plus Vite's `base` plus the
@@ -294,10 +304,11 @@ function defineConfig(options: NessConfig = {}): Config {
     basePath,
     assetPrefix,
     output,
-    // Consumed by route generation (`nessRoutes` reads it off the config
+    // Consumed by route generation (`nessRoutes` reads them off the config
     // file); pulled out here so React Router never sees an option it does
     // not know.
     clientCache,
+    minimumLoadingMs,
     ...reactRouterOptions
   } = options;
   // Validated here so a typo in ness.config.mjs fails immediately with a

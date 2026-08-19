@@ -152,6 +152,52 @@ test('a streamed route carries the application default too', async () => {
   }
 });
 
+test('a streamed route bakes in the minimum loading stay', async () => {
+  const { root, appDirectory, routesDirectory } = scaffold();
+  try {
+    fs.writeFileSync(
+      path.join(routesDirectory, 'page.tsx'),
+      'export default function Home() { return null; }\n',
+    );
+    fs.writeFileSync(
+      path.join(routesDirectory, 'page.server.ts'),
+      'export async function loader() { return null; }\n',
+    );
+    fs.writeFileSync(
+      path.join(routesDirectory, 'loading.tsx'),
+      'export default function Loading() { return null; }\n',
+    );
+
+    await nessRoutes({ appDirectory, minimumLoadingMs: 1000 });
+    const wrapper = wrapperOf(appDirectory);
+    assert.match(wrapper, /streamRoute\(/);
+    assert.match(wrapper, /minimumMs: 1000/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('a cached route never carries the stay — there is no fallback to hold', async () => {
+  const { root, appDirectory, routesDirectory } = scaffold();
+  try {
+    fs.writeFileSync(
+      path.join(routesDirectory, 'page.tsx'),
+      'export const clientCache = 30;\nexport default function Home() { return null; }\n',
+    );
+    fs.writeFileSync(
+      path.join(routesDirectory, 'page.server.ts'),
+      'export async function loader() { return null; }\n',
+    );
+
+    await nessRoutes({ appDirectory, minimumLoadingMs: 1000 });
+    const wrapper = wrapperOf(appDirectory);
+    assert.match(wrapper, /cacheRoute\(/);
+    assert.doesNotMatch(wrapper, /minimumMs/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('nessRoutePaths records what the prefetch layer needs', async () => {
   const { root, appDirectory, routesDirectory } = scaffold();
   try {

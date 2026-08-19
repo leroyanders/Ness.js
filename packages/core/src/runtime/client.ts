@@ -333,6 +333,28 @@ const STREAM_HANDOFF_TTL_MS = 5000;
  */
 const PENDING_GRACE_MS = 8;
 
+/**
+ * The grace window of a route that owes its fallback a minimum stay
+ * (`minimumLoadingMs` in `ness.config`). Once showing the skeleton costs a
+ * whole second, the eight-millisecond trigger is the wrong trade: a load that
+ * would have finished at eighty milliseconds flashed bones and then made the
+ * reader wait out the hold for data that was already there. Waiting a beat
+ * longer before committing means loads that fast never show a skeleton at
+ * all, and for the loads that genuinely miss it the extra wait is noise
+ * against the second they were about to spend anyway.
+ */
+const HELD_PENDING_GRACE_MS = 100;
+
+/**
+ * When each streamed navigation's fallback may be replaced, keyed like
+ * `streamedResults`. Written the moment a route answers `NESS_PENDING` with a
+ * minimum stay configured; a load that lands sooner has its hand-off deferred
+ * to this deadline, so a skeleton that appeared at all stays up long enough
+ * to read as a state rather than a flash. Entries leave with the result they
+ * covered — claimed, discarded, or superseded.
+ */
+const streamHoldUntil = new Map<string, number>();
+
 /** A load that settled, waiting for the router to come back and collect it. */
 type SettledResult =
   | { at: number; ok: true; value: unknown }
@@ -390,6 +412,7 @@ function claimStreamedResult(key: string): SettledResult | null {
   const settled = streamedResults.get(key);
   if (!settled) return null;
   streamedResults.delete(key);
+  streamHoldUntil.delete(key);
   return Date.now() - settled.at > STREAM_HANDOFF_TTL_MS ? null : settled;
 }
 
@@ -423,7 +446,14 @@ function beginStreamedLoad(
     // Only a load whose navigation already committed has anything to hand
     // over; one that beat the grace window was returned to the router the
     // ordinary way and has nobody waiting on a second pass.
-    if (entry.streamed) settlePass();
+    if (!entry.streamed) return;
+    // A fallback still owed the rest of its minimum stay keeps it: the
+    // result sits on the shelf and the ask is made when the hold is over.
+    // The deadline comfortably beats the hand-off TTL, so deferring never
+    // turns a fresh result into a discarded one.
+    const holdFor = (streamHoldUntil.get(key) ?? 0) - Date.now();
+    if (holdFor > 0) setTimeout(settlePass, holdFor);
+    else settlePass();
   };
   settled.then(finish, finish);
   return entry;
@@ -481,6 +511,7 @@ function streamedClientLoader(
   routeId: string,
   load: ClientLoader,
   cacheSecondsOf: () => number = () => 0,
+  minimumMs = 0,
 ): ClientLoader {
   return async (args: ClientLoaderArgs) => {
     const key = streamKey(routeId, args.request.url);
@@ -538,7 +569,10 @@ function streamedClientLoader(
       raced = await Promise.race([
         entry.settled,
         new Promise(resolve =>
-          setTimeout(() => resolve(NESS_PENDING), PENDING_GRACE_MS),
+          setTimeout(
+            () => resolve(NESS_PENDING),
+            minimumMs > 0 ? HELD_PENDING_GRACE_MS : PENDING_GRACE_MS,
+          ),
         ),
       ]);
     } catch (error) {
@@ -546,18 +580,22 @@ function streamedClientLoader(
       // thing a loader does inside the grace window. Whatever it was, it has
       // been handed to the router now and must not be handed over twice.
       streamedResults.delete(key);
+      streamHoldUntil.delete(key);
       throw error;
     }
     if (raced === NESS_PENDING) {
       // From here the load owns the hand-off: when it lands it will ask the
       // router to come back for it.
       entry.streamed = true;
+      // The fallback is about to be on screen; stamp how long it must stay.
+      if (minimumMs > 0) streamHoldUntil.set(key, Date.now() + minimumMs);
       return NESS_PENDING;
     }
     // This navigation never showed a fallback, so there is no hand-off to
     // come and nothing should be left on the shelf for the next visit. What
     // Back reads is a different shelf, written by the load itself.
     streamedResults.delete(key);
+    streamHoldUntil.delete(key);
     return store(raced);
   };
 }
@@ -638,10 +676,19 @@ function streamedComponent(
 
     // The safety net for the one case the load itself cannot cover: it landed
     // before this route was ever rendered, so the ask it made went nowhere.
+    // The minimum stay applies here too — the fallback only just mounted, so
+    // a result already waiting is exactly the flash the hold exists to stop.
     React.useEffect(() => {
       if (!pending) return;
       const key = streamKey(routeId, path);
-      if (streamedResults.has(key)) settlePass();
+      if (!streamedResults.has(key)) return;
+      const holdFor = (streamHoldUntil.get(key) ?? 0) - Date.now();
+      if (holdFor <= 0) {
+        settlePass();
+        return;
+      }
+      const timer = setTimeout(settlePass, holdFor);
+      return () => clearTimeout(timer);
     }, [pending, path]);
 
     // The same bookkeeping `RouteOutlet` does, done here too so it holds in a
@@ -695,6 +742,14 @@ export interface StreamRouteOptions {
    * including `clientCache = 0`, which opts the page back out.
    */
   defaultSeconds?: number;
+  /**
+   * Minimum time a shown `loading.tsx` stays on screen, in milliseconds
+   * (`minimumLoadingMs` in `ness.config`, baked into the generated wrapper).
+   * A load that finishes sooner keeps the fallback up for the remainder, so
+   * a skeleton reads as a state rather than a flash. Navigations answered
+   * within the grace window never show the fallback and owe nothing.
+   */
+  minimumMs?: number;
 }
 
 /**
@@ -737,6 +792,7 @@ function streamRoute(
     serverLoader = false,
     shouldRevalidate,
     defaultSeconds = 0,
+    minimumMs = 0,
   } = options;
   const load: ClientLoader | null =
     typeof route.clientLoader === 'function'
@@ -758,6 +814,7 @@ function streamRoute(
     // data. Read off the module so the generated wrapper needs no new
     // plumbing to carry it.
     routeCacheSeconds(route, defaultSeconds),
+    minimumMs,
   ) as ClientLoader & {
     hydrate?: boolean;
   };
