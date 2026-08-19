@@ -1559,6 +1559,65 @@ function RouteOutlet({ fallback, context }: RouteOutletProps): ReactElement {
   ) as ReactElement;
 }
 
+/** One matcher entry: a path pattern, or Next's `{source}` object form. */
+export type MiddlewareMatcherEntry = string | { source: string };
+
+export interface MiddlewareConfig {
+  matcher?: MiddlewareMatcherEntry | MiddlewareMatcherEntry[];
+}
+
+/**
+ * Compiles one matcher pattern the way Next reads them: `:name` matches a
+ * segment, `:name*` the rest of the path, `*` likewise — and a pattern
+ * containing a parenthesis is taken as the regular expression it already is,
+ * which is how the `'/((?!api|assets).*)'` idiom arrives from Next projects.
+ */
+function compileMatcher(pattern: string): RegExp {
+  if (pattern.includes('(')) return new RegExp(`^${pattern}$`);
+  let source = '';
+  for (const segment of pattern.split('/')) {
+    if (!segment) continue;
+    // `:path*` matches zero or more segments — `/about/:path*` covers
+    // `/about` itself, which is what the pattern means in Next.
+    if (segment === '*' || /^:[A-Za-z0-9_]+\*$/.test(segment)) {
+      source += '(?:/.*)?';
+    } else if (/^:[A-Za-z0-9_]+$/.test(segment)) {
+      source += '/[^/]+';
+    } else {
+      source += `/${segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`;
+    }
+  }
+  return new RegExp(`^${source || '/'}/?$`);
+}
+
+/**
+ * Applies a middleware file's `export const config = { matcher }` — the
+ * declarative scope Next middleware ships with. Middleware wrapped here runs
+ * only for requests whose pathname matches an entry; everything else passes
+ * straight to `next()`. Shape-agnostic on purpose: route-level middleware
+ * receives `({request}, next)` and the root file's receives the request
+ * context, and both carry the request as the first argument's `request`.
+ */
+function matchedMiddleware<
+  Fn extends (args: { request: Request }, next: () => unknown) => unknown,
+>(middleware: Fn | Fn[], config?: MiddlewareConfig): Fn[] {
+  const list = Array.isArray(middleware) ? middleware : [middleware];
+  const matcher = config?.matcher;
+  if (matcher === undefined) return list;
+  const patterns = (Array.isArray(matcher) ? matcher : [matcher]).map(entry =>
+    compileMatcher(typeof entry === 'string' ? entry : entry.source),
+  );
+  return list.map(
+    fn =>
+      ((args: { request: Request }, next: () => unknown) => {
+        const pathname = new URL(args.request.url).pathname;
+        return patterns.some(pattern => pattern.test(pathname))
+          ? fn(args, next)
+          : next();
+      }) as Fn,
+  );
+}
+
 export {
   Form,
   Link,
@@ -1567,6 +1626,7 @@ export {
   RouteOutlet,
   apiFetch,
   cacheRoute,
+  matchedMiddleware,
   cachedClientLoader,
   clearClientCache,
   closeInterceptedRoute,

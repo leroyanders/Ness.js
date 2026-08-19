@@ -27,7 +27,7 @@
   },
   "license": "MIT",
   "author": "Leroy Anders <leroy.anders23@gmail.com>",
-  "version": "9.3.0",
+  "version": "9.4.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

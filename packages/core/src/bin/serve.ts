@@ -8,6 +8,7 @@ import type { Duplex } from 'node:stream';
 import { createRequestListener } from '@remix-run/node-fetch-server';
 import { createImageHandler } from '@nessframework/assets/image/server';
 import type { ImageHandlerOptions } from '@nessframework/assets/image/server';
+import { createFontHandler } from '@nessframework/assets/font/server';
 import { getCache } from '@nessframework/cache';
 import { gracefulShutdown } from '@nessframework/deployment';
 import * as instrumentation from '@nessframework/instrumentation';
@@ -18,6 +19,8 @@ import type {
   Middleware,
   ServerBuildLike,
 } from '@nessframework/server';
+import { matchedMiddleware } from '../runtime/client.js';
+import type { MiddlewareConfig } from '../runtime/client.js';
 import {
   compressResponse,
   negotiateEncoding,
@@ -210,10 +213,13 @@ async function loadRequestMiddleware(root: string): Promise<Middleware[]> {
   )) as {
     default?: Middleware | Middleware[];
     middleware?: Middleware | Middleware[];
+    config?: MiddlewareConfig;
   };
   const middleware = module.default ?? module.middleware;
   if (!middleware) return [];
-  return Array.isArray(middleware) ? middleware : [middleware];
+  // The file's own `export const config = { matcher }`, the way Next scopes
+  // its middleware: entries outside the matcher pass straight through.
+  return matchedMiddleware(middleware as never, module.config) as Middleware[];
 }
 
 type ConfigureServer = (
@@ -258,17 +264,22 @@ async function main(): Promise<void> {
   const manifest = loadManifest(root);
   // The manifest's word first — it records what was actually built — and the
   // config's as the fallback for a build made before the option existed.
-  const routerSection = ((configModule as { ness?: { router?: unknown } })
-    ?.ness?.router || {}) as { basePath?: string };
-  const basePath = (
-    manifest.basePath ||
-    routerSection.basePath ||
-    ''
-  ).replace(/\/+$/, '');
+  const routerSection = ((configModule as { ness?: { router?: unknown } })?.ness
+    ?.router || {}) as { basePath?: string };
+  const basePath = (manifest.basePath || routerSection.basePath || '').replace(
+    /\/+$/,
+    '',
+  );
+  // `fonts: false` opts the endpoint out the way `images: false` does; a
+  // project that never calls `googleFont()` never gets a request here either.
+  const fontHandler =
+    config['fonts'] === false ? undefined : createFontHandler();
   const handler = createNessRequestHandler({
     build,
     imageHandler,
     imagePath: `${basePath}/_ness/image`,
+    fontHandler,
+    fontPath: `${basePath}/_ness/font`,
     pages: manifest.pages,
     prerenderedPaths: manifest.prerenderedPaths,
     ...handlerConfig,

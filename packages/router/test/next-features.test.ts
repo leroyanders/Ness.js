@@ -3,7 +3,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
-import { nessInterceptors, nessRoutePaths, nessRoutes } from '../dist/routes.js';
+import {
+  expandStaticParams,
+  fillStaticPath,
+  nessInterceptors,
+  nessRoutePaths,
+  nessRoutes,
+} from '../dist/routes.js';
 
 function scaffold() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ness-next-'));
@@ -249,4 +255,124 @@ test('an interceptor inside a slot resolves the same way', async () => {
   assert.equal(interceptors.length, 1);
   assert.equal(interceptors[0].from, '/gallery');
   assert.equal(interceptors[0].pattern, '/gallery/image/:id');
+});
+
+test('a page with a viewport export gets viewport tags rendered beside it', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  fs.writeFileSync(
+    path.join(routesDirectory, 'page.tsx'),
+    "export const viewport = {width: 'device-width', initialScale: 1};\nexport default function Home() { return null; }\n",
+  );
+  await nessRoutes({ appDirectory });
+  const generated = wrapper(appDirectory, 'root__page.tsx');
+  assert.match(generated, /RouteViewport as NessRouteViewport/);
+  assert.match(generated, /NessViewportModule\.viewport/);
+});
+
+test('generateViewport wires the same way', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  fs.writeFileSync(
+    path.join(routesDirectory, 'page.tsx'),
+    'export async function generateViewport({params}) { return {}; }\nexport default function Home() { return null; }\n',
+  );
+  await nessRoutes({ appDirectory });
+  const generated = wrapper(appDirectory, 'root__page.tsx');
+  assert.match(generated, /NessViewportModule\.generateViewport/);
+});
+
+test('middleware with a matcher config is wrapped through matchedMiddleware', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  fs.mkdirSync(path.join(routesDirectory, 'admin'));
+  fs.writeFileSync(
+    path.join(routesDirectory, 'admin', 'layout.tsx'),
+    'export default function Layout({children}) { return children; }\n',
+  );
+  fs.writeFileSync(
+    path.join(routesDirectory, 'admin', 'page.tsx'),
+    'export default function Admin() { return null; }\n',
+  );
+  fs.writeFileSync(
+    path.join(routesDirectory, 'admin', 'middleware.ts'),
+    "export const config = {matcher: '/admin/:path*'};\nexport default async function guard({request}, next) { return next(); }\n",
+  );
+  await nessRoutes({ appDirectory });
+  const generated = wrapper(appDirectory, 'admin__layout.tsx');
+  assert.match(generated, /matchedMiddleware/);
+  assert.match(generated, /NessMiddlewareConfig/);
+});
+
+test('middleware without a matcher keeps the plain array export', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  fs.writeFileSync(
+    path.join(routesDirectory, 'middleware.ts'),
+    'export default async function guard({request}, next) { return next(); }\n',
+  );
+  fs.writeFileSync(
+    path.join(routesDirectory, 'layout.tsx'),
+    'export default function Layout({children}) { return children; }\n',
+  );
+  await nessRoutes({ appDirectory });
+  const generated = wrapper(appDirectory, 'root__layout.tsx');
+  assert.match(generated, /Array\.isArray\(NessMiddleware\)/);
+  assert.doesNotMatch(generated, /matchedMiddleware/);
+});
+
+test('generateStaticParams is detected and recorded on the page', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  const blog = path.join(routesDirectory, 'blog', '[slug]');
+  fs.mkdirSync(blog, { recursive: true });
+  fs.writeFileSync(
+    path.join(blog, 'page.tsx'),
+    'export default function Post({params}) { return null; }\n',
+  );
+  fs.writeFileSync(
+    path.join(blog, 'page.server.ts'),
+    "export async function generateStaticParams() { return [{slug: 'one'}, {slug: 'two'}]; }\n",
+  );
+  const pages = await nessRoutePaths({ appDirectory });
+  const post = pages.find(page => page.path === '/blog/:slug');
+  assert.ok(post.staticParams.endsWith('page.server.ts'));
+});
+
+test('expandStaticParams turns param sets into concrete paths', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  const blog = path.join(routesDirectory, 'blog', '[slug]');
+  fs.mkdirSync(blog, { recursive: true });
+  fs.writeFileSync(
+    path.join(blog, 'page.tsx'),
+    'export default function Post({params}) { return null; }\n',
+  );
+  fs.writeFileSync(
+    path.join(blog, 'page.server.ts'),
+    "export async function generateStaticParams() { return [{slug: 'one'}, {slug: 'two'}]; }\n",
+  );
+  const pages = await nessRoutePaths({ appDirectory });
+  const expanded = await expandStaticParams(pages);
+  assert.deepEqual(expanded.sort(), ['/blog/one', '/blog/two']);
+});
+
+test('fillStaticPath substitutes params and joins catch-alls', () => {
+  assert.equal(fillStaticPath('/blog/:slug', { slug: 'hello' }), '/blog/hello');
+  assert.equal(
+    fillStaticPath('/docs/*', { slug: ['guides', 'intro'] }),
+    '/docs/guides/intro',
+  );
+  assert.equal(fillStaticPath('/blog/:slug', {}), undefined);
+});
+
+test('an image module with generateImageMetadata dispatches by id', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  fs.writeFileSync(
+    path.join(routesDirectory, 'opengraph-image.tsx'),
+    [
+      'export async function generateImageMetadata({params}) {',
+      "  return [{id: 'small', contentType: 'image/png'}, {id: 'large'}];",
+      '}',
+      'export default async function Image({params, id}) { return new Response(id); }',
+    ].join('\n'),
+  );
+  await nessRoutes({ appDirectory });
+  const generated = wrapper(appDirectory, 'root__opengraph_image.ts');
+  assert.match(generated, /generateImageMetadata/);
+  assert.match(generated, /searchParams\.get\('id'\)/);
 });

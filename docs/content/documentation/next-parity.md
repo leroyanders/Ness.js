@@ -39,6 +39,22 @@ export async function generateMetadata({ params, loaderData }) {
 - `generateMetadata` receives `{ params, loaderData }`. In RSC mode it runs on the server; in classic mode it also runs on client navigations, so derive from `loaderData` rather than reaching into a database.
 - The element components (`Title`, `Meta`, `Canonical`, …) still work; the export is for code that arrives already written this way.
 
+## `viewport` and `generateViewport`
+
+```tsx
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#111' },
+    { color: '#fff' },
+  ],
+  colorScheme: 'light dark',
+};
+```
+
+The separate viewport export, split out of `metadata` the way Next splits it. `generateViewport({params})` is the dynamic form. When a layout and its page both declare one, the page's tags render later in document order and the browser applies the last `name="viewport"` it sees — the deepest segment wins, which is also Next's rule.
+
 ## File metadata
 
 Files next to a page declare its icons and social images:
@@ -53,6 +69,8 @@ app/routes/blog/[slug]/
 ```
 
 A dynamic `opengraph-image.tsx` default-exports a function receiving `{ params }` and returning a `Response` — usually an `ImageResponse` from `@nessframework/core/og`. `twitter-image.*` works identically.
+
+A module that also exports `generateImageMetadata({params})` serves several images from one route: each `{id, contentType?, alt?}` it returns is addressed as `?id=<id>`, the default export receives that `id` alongside the params, and an id the function did not list answers 404. The head tags still carry the base route URL; point `metadata.openGraph.images` at the `?id=` variants where a page wants them all enumerated.
 
 ## `global-error.tsx`
 
@@ -86,6 +104,66 @@ app/routes/feed/
 
 Interceptor pages render client-side — keep them presentational, or fetch with `apiFetch`.
 
+## `generateStaticParams`
+
+```ts
+// app/routes/blog/[slug]/page.server.ts
+export async function generateStaticParams() {
+  return [{ slug: 'hello' }, { slug: 'world' }];
+}
+```
+
+Runs at build time; every param set becomes a prerendered path, merged with whatever `router.prerender` already lists, and recorded in the manifest for `dynamicParams: false`. Declare it on the `page.server` sibling by preference — the function runs on the build machine, and its imports belong in a server module. A catch-all segment takes an array value, joined with slashes. Parent params are not composed into nested calls — each page's function names its own full param sets.
+
+## `output: 'export'`
+
+```js
+export default defineNessConfig({
+  router: { output: 'export' },
+});
+```
+
+The whole application as static files. `ssr` switches off, every page is prerendered — static paths automatically, dynamic ones through `generateStaticParams` or an explicit `prerender` list — and `build/client/` deploys to any static host. `ness start` has nothing to start and says so.
+
+## Middleware `matcher`
+
+```ts
+// middleware.ts — project root, or any route segment's
+export const config = { matcher: ['/admin/:path*', '/((?!api|assets).*)'] };
+
+export default async function guard({ request }, next) { ... }
+```
+
+Next's declarative scope, honoured in both places middleware lives here: the project-root file the production server runs ahead of everything, and per-segment `middleware.ts` files. `:name` matches a segment, `:name*` zero or more (so `/admin/:path*` covers `/admin` itself), and a pattern containing a parenthesis is taken as the regular expression it already is — the `((?!...))` idiom ports unchanged. Requests outside the matcher pass straight through.
+
+## Google fonts
+
+```tsx
+import { FontStyles, googleFont } from '@nessframework/core/font';
+
+const inter = googleFont('Inter', {
+  subsets: ['latin'],
+  weight: ['400', '700'],
+});
+```
+
+`next/font/google`'s per-family exports become one function with the family as its first argument; the options carry over. The font is self-hosted through the application's own `/_ness/font` endpoint — browser never talks to Google, CSS and font bytes live in the shared cache. See [fonts](./assets.md#fonts-and-scripts).
+
+## `'use cache'`, `cacheLife()`, `cacheTag()`
+
+```ts
+import { cacheLife, cacheTag } from '@nessframework/cache';
+
+async function getPosts() {
+  'use cache';
+  cacheLife('hours');
+  cacheTag('posts');
+  return db.post.findMany();
+}
+```
+
+The Cache Components directive, compiled the same way: the function is memoized in the shared Ness cache keyed by identity plus arguments, `revalidateTag('posts')` drops it, and a module-level `'use cache'` covers every exported function. Server-side only, `async` and named functions only — a client bundle that reaches the directive is a build error. See [caching](./caching.md#the-use-cache-directive).
+
 ## `after()` and `waitUntil()`
 
 ```ts
@@ -93,7 +171,7 @@ import { after, waitUntil } from '@nessframework/core/server';
 
 export async function action({ request }) {
   const result = await save(request);
-  after(() => analytics.track('saved'));   // runs once the response is sent
+  after(() => analytics.track('saved')); // runs once the response is sent
   return result;
 }
 ```
@@ -103,7 +181,11 @@ export async function action({ request }) {
 ## `connection()`, `noStore()`, taint
 
 ```ts
-import { connection, noStore, taintObjectReference } from '@nessframework/core/server';
+import {
+  connection,
+  noStore,
+  taintObjectReference,
+} from '@nessframework/core/server';
 ```
 
 - `noStore()` (also exported as `unstable_noStore`) marks the response per-request: the page cache neither stores it nor serves a stored copy, and fetches made under it default to `no-store`.
@@ -127,12 +209,12 @@ The data cache is the same Ness cache `cached()` uses: same adapters (memory, fi
 ```ts
 export const revalidate = 60;
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';            // recorded for deployment adapters
-export const maxDuration = 30;            // request fails with 504 past this
-export const dynamicParams = false;       // un-prerendered params answer 404
+export const runtime = 'edge'; // recorded for deployment adapters
+export const maxDuration = 30; // request fails with 504 past this
+export const dynamicParams = false; // un-prerendered params answer 404
 export const fetchCache = 'default-no-store';
-export const preferredRegion = 'fra1';    // recorded for deployment adapters
-export const experimental_ppr = true;     // also spelled `ppr`
+export const preferredRegion = 'fra1'; // recorded for deployment adapters
+export const experimental_ppr = true; // also spelled `ppr`
 ```
 
 Read statically off the source, like `revalidate` always was. `maxDuration` and `dynamicParams` are enforced by the production server; `runtime`, `preferredRegion` and `maxDuration` also flow into the Vercel output (`.vc-config.json` gets the longest duration and the union of regions, since the output ships one function).
@@ -149,7 +231,17 @@ export async function loader({ request }) {
 }
 ```
 
-The static shell — everything above your `<Suspense>` boundaries — is rendered once and cached (tagged `pages`, invalidated like any page); the holes render fresh per request and stream in behind it. The shell is truly static: dynamic reads belong below a boundary, guarded by `await connection()`. This is a primitive to call where you want it, not a default pipeline — the standard request path still hands rendering to React Router.
+The static shell — everything above your `<Suspense>` boundaries — is rendered once and cached (tagged `pages`, invalidated like any page); the holes render fresh per request and stream in behind it. The shell is truly static: dynamic reads belong below a boundary, guarded by `await connection()`.
+
+To make the `experimental_ppr` segment flag actually drive the pipeline (classic mode), hand `entry.server` to the ready-made handler:
+
+```tsx
+// app/entry.server.tsx  (npx react-router reveal, once)
+import { createPprHandleRequest } from '@nessframework/server/ppr';
+export default createPprHandleRequest();
+```
+
+A GET for a page whose matched segments declare `ppr = true` (either spelling) is served shell-first through `partialResponse`; every other request renders exactly as React Router's default entry does. Without that one file, the flag stays what it was — recorded in the manifest, acted on by nothing — because the standard request path hands rendering to React Router and there is no honest way to split a stream it already owns.
 
 ## `basePath` and `assetPrefix`
 
@@ -171,8 +263,10 @@ export default defineNessConfig({
 import { setImageLoader } from '@nessframework/core';
 
 // once, in root.tsx
-setImageLoader(({ src, width, quality }) =>
-  `https://res.cloudinary.com/demo/image/fetch/w_${width},q_${quality ?? 75}/${src}`);
+setImageLoader(
+  ({ src, width, quality }) =>
+    `https://res.cloudinary.com/demo/image/fetch/w_${width},q_${quality ?? 75}/${src}`,
+);
 ```
 
 Every `<Image>` builds its `src` and `srcSet` through the loader instead of the built-in `/_ness/image` optimizer. A per-component `loader` prop overrides it. With a CDN loader the optimizer never runs, which is also how images work on runtimes without sharp.

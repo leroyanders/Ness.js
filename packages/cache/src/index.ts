@@ -440,3 +440,8 @@ export {
   updateTag,
   withCache,
 };
+// The `'use cache'` runtime: re-exported here so application code imports
+// `cacheLife`/`cacheTag` from the package it already knows. A cycle on paper
+// (use-cache imports `getCache` from this module), but both sides only touch
+// the other inside function bodies, so initialization order cannot bite.
+export { cacheLife, cacheTag } from './use-cache.js';

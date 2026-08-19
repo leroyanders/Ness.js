@@ -5,7 +5,12 @@ import { reactRouter, unstable_reactRouterRSC } from '@react-router/dev/vite';
 import type { Plugin, PluginOption, ViteDevServer } from 'vite';
 import { buildManifestPayload, writeNessManifest } from '../index.js';
 import type { NessConfig } from '../index.js';
-import { nessInterceptors, nessRoutePaths, nessRoutes } from '../routes.js';
+import {
+  expandStaticParams,
+  nessInterceptors,
+  nessRoutePaths,
+  nessRoutes,
+} from '../routes.js';
 import type { NessRoute } from '../routes.js';
 import type { I18nConfig } from '../i18n.js';
 import { nessErrorOverlay } from './overlay.js';
@@ -40,6 +45,146 @@ const INTERCEPTOR_MODULE = 'virtual:ness/interceptors';
  * `ness new` now scaffolds; the other two keep every existing project working.
  */
 const CONFIG_FILES = ['ness.config.ts', 'ness.config.mjs', 'ness.config.js'];
+
+/** The nodes `transformUseCache` walks, described only where it reaches in. */
+interface OxcNode {
+  type: string;
+  start: number;
+  end: number;
+  directive?: string;
+  async?: boolean;
+  id?: { type: string; name: string } | null;
+  body?: OxcNode | OxcNode[];
+  declaration?: OxcNode;
+  declarations?: OxcNode[];
+  init?: OxcNode | null;
+}
+
+/** Whether a function body's prologue opens with the `'use cache'` directive. */
+function opensWithUseCache(body: OxcNode | undefined): boolean {
+  const statements = Array.isArray(body?.body) ? body.body : undefined;
+  const first = statements?.[0];
+  return (
+    first?.type === 'ExpressionStatement' && first.directive === 'use cache'
+  );
+}
+
+/** fnv-1a, the same tiny stable hash the font module keys itself with. */
+function fnv(value: string): string {
+  let result = 2166136261;
+  for (let index = 0; index < value.length; index += 1) {
+    result ^= value.charCodeAt(index);
+    result = Math.imul(result, 16777619);
+  }
+  return (result >>> 0).toString(36);
+}
+
+interface UseCacheEdit {
+  pos: number;
+  text: string;
+}
+
+/**
+ * The compiler half of the `'use cache'` directive.
+ *
+ * A function whose body opens with `'use cache'` is routed through
+ * `__nessUseCache` from `@nessframework/cache/use-cache`, which memoizes it
+ * in the shared cache keyed by identity plus arguments; `cacheLife()` and
+ * `cacheTag()` inside the body configure the entry being written. A
+ * module-level `'use cache'` covers every exported function in the file.
+ *
+ * Source positions come from oxc's own parser on the raw TS/TSX — this runs
+ * before transpilation, so the edits are plain source edits: a declaration
+ * `f` gains `f = __nessUseCache(f, id)` right behind it (function bindings
+ * are mutable and exports are live, so importers see the wrapped one), and a
+ * `const f = async () ...` initializer is wrapped in place.
+ */
+function transformUseCache(
+  code: string,
+  id: string,
+  root: string,
+  parse: (filename: string, source: string) => { program: { body: OxcNode[] } },
+  fail: (message: string) => never,
+  warn: (message: string) => void,
+): string | null {
+  const filename = id.split('?')[0]!;
+  let program: { body: OxcNode[] };
+  try {
+    program = parse(path.basename(filename), code).program;
+  } catch {
+    // Not parseable here is not this plugin's error to report — the real
+    // compile that follows will say what is wrong, with a better message.
+    return null;
+  }
+  const moduleDirective =
+    program.body[0]?.type === 'ExpressionStatement' &&
+    program.body[0].directive === 'use cache';
+
+  const moduleKey = path.relative(root, filename).split(path.sep).join('/');
+  const edits: UseCacheEdit[] = [];
+  const wrapDeclaration = (fn: OxcNode, exported: boolean): void => {
+    const covered =
+      opensWithUseCache(fn.body as OxcNode) || (moduleDirective && exported);
+    if (!covered) return;
+    if (!fn.id || fn.id.type !== 'Identifier') {
+      warn(
+        `'use cache' needs a named function to wrap — an anonymous default export is left uncached: ${filename}`,
+      );
+      return;
+    }
+    if (!fn.async)
+      fail(`'use cache' functions must be async: ${fn.id.name} in ${filename}`);
+    const name = fn.id.name;
+    edits.push({
+      pos: fn.end,
+      text: `\n${name} = __nessUseCache(${name}, ${JSON.stringify(`${moduleKey}#${name}`)});`,
+    });
+  };
+  const wrapInitializer = (declarator: OxcNode, exported: boolean): void => {
+    const init = declarator.init;
+    if (
+      !init ||
+      (init.type !== 'ArrowFunctionExpression' &&
+        init.type !== 'FunctionExpression')
+    )
+      return;
+    const covered =
+      opensWithUseCache(init.body as OxcNode) || (moduleDirective && exported);
+    if (!covered) return;
+    const name =
+      declarator.id && declarator.id.type === 'Identifier'
+        ? declarator.id.name
+        : `anonymous_${fnv(String(init.start))}`;
+    if (!init.async)
+      fail(`'use cache' functions must be async: ${name} in ${filename}`);
+    edits.push({ pos: init.start, text: '__nessUseCache(' });
+    edits.push({
+      pos: init.end,
+      text: `, ${JSON.stringify(`${moduleKey}#${name}`)})`,
+    });
+  };
+
+  for (const statement of program.body) {
+    const exported =
+      statement.type === 'ExportNamedDeclaration' ||
+      statement.type === 'ExportDefaultDeclaration';
+    const declaration = exported ? statement.declaration : statement;
+    if (!declaration) continue;
+    if (declaration.type === 'FunctionDeclaration') {
+      wrapDeclaration(declaration, exported);
+    } else if (declaration.type === 'VariableDeclaration') {
+      for (const declarator of declaration.declarations ?? [])
+        wrapInitializer(declarator, exported);
+    }
+  }
+  if (!edits.length) return null;
+
+  let edited = code;
+  for (const edit of edits.sort((a, b) => b.pos - a.pos)) {
+    edited = edited.slice(0, edit.pos) + edit.text + edited.slice(edit.pos);
+  }
+  return `import {__nessUseCache} from '@nessframework/cache/use-cache';\n${edited}`;
+}
 
 /** The config this root actually has, or the preferred name when it has none. */
 function resolveConfigFile(root: string, explicit?: string): string {
@@ -125,20 +270,29 @@ async function writeRscManifest({
     appDirectory: absoluteAppDirectory,
     i18n: routerOptions.i18n,
   });
+  const pages = await nessRoutePaths({
+    appDirectory: absoluteAppDirectory,
+    i18n: routerOptions.i18n,
+  });
+  // The same paths the classic path records: whatever was listed, plus what
+  // every page's `generateStaticParams` names. The functions already ran
+  // during the build's prerender pass; running them again here costs one
+  // import of modules the build has warm.
+  const listed = Array.isArray(routerOptions.prerender)
+    ? routerOptions.prerender.map(String)
+    : [];
+  const expanded = await expandStaticParams(pages).catch(() => []);
+  const prerenderedPaths = [...new Set([...listed, ...expanded])];
   writeNessManifest(
     buildDirectory,
     buildManifestPayload({
       basename: routerOptions.basename || routerOptions.basePath || '/',
       basePath: routerOptions.basePath,
       assetPrefix: routerOptions.assetPrefix,
+      output: routerOptions.output,
       routes: flattenRouteTree(routes),
-      pages: await nessRoutePaths({
-        appDirectory: absoluteAppDirectory,
-        i18n: routerOptions.i18n,
-      }),
-      prerenderedPaths: Array.isArray(routerOptions.prerender)
-        ? routerOptions.prerender.map(String)
-        : undefined,
+      pages,
+      prerenderedPaths: prerenderedPaths.length ? prerenderedPaths : undefined,
       cache: routerOptions.cache,
       deployment: routerOptions.deployment,
       i18n: routerOptions.i18n,
@@ -337,14 +491,59 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
       }
       return null;
     },
-    transform(_code: string, id: string, context?: { ssr?: boolean }) {
+    async transform(code: string, id: string, context?: { ssr?: boolean }) {
       if (
         !context?.ssr &&
         /(?:^|[\\/])[^\\/]+\.server\.[cm]?[jt]sx?$/.test(id)
       ) {
         this.error(`Server-only module imported by the client bundle: ${id}`);
       }
-      return null;
+      if (id.includes('node_modules')) return null;
+      if (!/\.[cm]?[jt]sx?$/.test(id.split('?')[0]!)) return null;
+      if (!code.includes('use cache')) return null;
+      // The directive names server work: a client bundle reaching a module
+      // that carries it is the same mistake as importing a `.server` file,
+      // and gets the same build-time answer.
+      const environment = (this as { environment?: { name?: string } })
+        .environment?.name;
+      if (!context?.ssr && (!environment || environment === 'client')) {
+        // Only an error when the directive is really in play, not merely the
+        // twelve characters appearing in a string somewhere.
+        const probablyDirective = /(?:^|[{;\n])\s*(['"])use cache\1/.test(code);
+        if (probablyDirective)
+          this.error(
+            `'use cache' functions are server code and cannot be bundled for the client: ${id}. Move them into a .server module.`,
+          );
+        return null;
+      }
+      // oxc's parser, reached through rolldown — the parser Vite itself is
+      // built on, so the syntax it accepts is exactly the syntax the build
+      // accepts. Absent (an exotic setup), the directive quietly does
+      // nothing rather than taking the build down.
+      let parseSync:
+        | ((
+            filename: string,
+            source: string,
+          ) => { program: { body: OxcNode[] } })
+        | undefined;
+      try {
+        const rolldown = (await import('rolldown/experimental')) as {
+          parseSync?: typeof parseSync;
+        };
+        parseSync = rolldown.parseSync;
+      } catch {
+        return null;
+      }
+      if (!parseSync) return null;
+      const transformed = transformUseCache(
+        code,
+        id,
+        options.root || process.cwd(),
+        parseSync,
+        message => this.error(message),
+        message => this.warn(message),
+      );
+      return transformed === null ? null : { code: transformed, map: null };
     },
     // Only RSC mode needs this: the non-RSC build gets `ness-manifest.json`
     // from React Router's own `buildEnd` hook (see `writeBuildManifest` in
@@ -370,6 +569,40 @@ function nessVitePlugin(options: NessViteOptions = {}): Plugin {
     // the route *tree* itself changes shape (a route directory added or
     // removed), the config must be re-evaluated, so the server restarts.
     configureServer(server: ViteDevServer) {
+      // The `googleFont()` proxy, mounted in development the way the
+      // production server mounts it — so a font chosen in dev is already
+      // self-hosted, not a temporary link to Google that flips at deploy.
+      // Lazily imported: a project without `@nessframework/assets` simply has
+      // no `/_ness/font`, the same bargain the prefetch table strikes.
+      const fontMount = `${(server.config?.base ?? '/').replace(/\/$/, '')}/_ness/font`;
+      server.middlewares?.use(fontMount, (request, response) => {
+        void (async () => {
+          try {
+            const { createFontHandler } =
+              (await import('@nessframework/assets/font/server')) as {
+                createFontHandler: () => (
+                  request: Request,
+                ) => Promise<Response>;
+              };
+            const target = new URL(
+              request.originalUrl || request.url || '/',
+              'http://localhost',
+            );
+            const answered = await createFontHandler()(new Request(target));
+            response.statusCode = answered.status;
+            answered.headers.forEach((value, name) =>
+              response.setHeader(name, value),
+            );
+            response.end(Buffer.from(await answered.arrayBuffer()));
+          } catch (error) {
+            response.statusCode = 500;
+            response.end(
+              error instanceof Error ? error.message : 'font endpoint failed',
+            );
+          }
+        })();
+      });
+
       const root = options.root || server.config.root || process.cwd();
       const appDirectory = resolveAppDirectory(
         root,

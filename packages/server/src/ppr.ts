@@ -1,7 +1,9 @@
+import { createElement } from 'react';
 import type { ReactNode } from 'react';
 import { prerender } from 'react-dom/static';
-import { resume } from 'react-dom/server';
+import { renderToReadableStream, resume } from 'react-dom/server';
 import type { PostponedState } from 'react-dom/static';
+import { ServerRouter } from 'react-router';
 import { getCache } from '@nessframework/cache';
 
 /**
@@ -37,7 +39,9 @@ export interface PartialPrerenderOptions {
   bootstrapScripts?: string[];
 }
 
-async function collect(stream: ReadableStream<Uint8Array>): Promise<Uint8Array> {
+async function collect(
+  stream: ReadableStream<Uint8Array>,
+): Promise<Uint8Array> {
   const chunks: Uint8Array[] = [];
   const reader = stream.getReader();
   for (;;) {
@@ -140,7 +144,8 @@ async function partialResponse(
     responseHeaders.set('content-type', 'text/html; charset=utf-8');
   responseHeaders.set('x-ness-ppr', stored.postponed ? 'resumed' : 'static');
 
-  if (!stored.postponed) return new Response(shell, { headers: responseHeaders });
+  if (!stored.postponed)
+    return new Response(shell, { headers: responseHeaders });
 
   const holes = await resumePartial(element, stored.postponed);
   const body = new ReadableStream<Uint8Array>({
@@ -158,4 +163,106 @@ async function partialResponse(
   return new Response(body, { headers: responseHeaders });
 }
 
-export { partialPrerender, partialResponse, resumePartial };
+/** The corner of React Router's entry context this module reads. */
+interface EntryContextLike {
+  staticHandlerContext?: {
+    matches?: Array<{ route: { id: string } }>;
+  };
+  routeModules?: Record<
+    string,
+    { ppr?: boolean; experimental_ppr?: boolean } | undefined
+  >;
+}
+
+/** Whether any matched segment declared `ppr`/`experimental_ppr`. */
+function pprRequested(context: EntryContextLike): boolean {
+  const matches = context.staticHandlerContext?.matches ?? [];
+  return matches.some(match => {
+    const module = context.routeModules?.[match.route.id];
+    return module?.ppr === true || module?.experimental_ppr === true;
+  });
+}
+
+export interface PprHandleRequestOptions {
+  /** See `PartialResponseOptions.shellTimeout`. */
+  shellTimeout?: number;
+  /** Seconds a stored shell stays fresh. Default: an hour. */
+  revalidate?: number;
+}
+
+/**
+ * A drop-in `entry.server` handler that turns the `experimental_ppr` segment
+ * flag into the actual pipeline — the missing half of the primitive above.
+ *
+ * ```tsx
+ * // app/entry.server.tsx  (npx react-router reveal, once)
+ * import { createPprHandleRequest } from '@nessframework/server/ppr';
+ * export default createPprHandleRequest();
+ * ```
+ *
+ * A GET for a page whose matched segments include `ppr = true` (either
+ * spelling) is answered with `partialResponse`: the cached static shell
+ * immediately, the dynamic holes streamed in behind it. Everything else — no
+ * flag, a POST, a data request — renders exactly the way React Router's own
+ * default entry does. Classic mode only: the RSC pipeline owns its own
+ * rendering and never consults `entry.server`.
+ */
+function createPprHandleRequest({
+  shellTimeout,
+  revalidate,
+}: PprHandleRequestOptions = {}): (
+  request: Request,
+  responseStatusCode: number,
+  responseHeaders: Headers,
+  routerContext: unknown,
+) => Promise<Response> {
+  return async function handleRequest(
+    request: Request,
+    responseStatusCode: number,
+    responseHeaders: Headers,
+    routerContext: unknown,
+  ): Promise<Response> {
+    const element = createElement(ServerRouter, {
+      context: routerContext as never,
+      url: request.url,
+    });
+    responseHeaders.set('Content-Type', 'text/html; charset=utf-8');
+
+    if (
+      request.method === 'GET' &&
+      responseStatusCode === 200 &&
+      pprRequested(routerContext as EntryContextLike)
+    ) {
+      const partial = await partialResponse(element, {
+        key: new URL(request.url).pathname,
+        headers: responseHeaders,
+        ...(shellTimeout !== undefined ? { shellTimeout } : {}),
+        ...(revalidate !== undefined ? { revalidate } : {}),
+      });
+      return new Response(partial.body, {
+        status: responseStatusCode,
+        headers: partial.headers,
+      });
+    }
+
+    const stream = await renderToReadableStream(element, {
+      signal: request.signal,
+    });
+    // Crawlers get the finished document; the shell-first stream is a
+    // reader's bargain, not a bot's.
+    if (/bot|crawler|spider/i.test(request.headers.get('user-agent') || '')) {
+      await stream.allReady;
+    }
+    return new Response(stream, {
+      status: responseStatusCode,
+      headers: responseHeaders,
+    });
+  };
+}
+
+export {
+  createPprHandleRequest,
+  partialPrerender,
+  partialResponse,
+  resumePartial,
+};

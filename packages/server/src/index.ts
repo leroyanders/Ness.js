@@ -128,6 +128,9 @@ export interface RequestHandlerOptions {
   zones?: Zone[];
   imageHandler?: (request: Request) => Promise<Response> | Response;
   imagePath?: string;
+  /** The `googleFont()` proxy — see `@nessframework/assets/font/server`. */
+  fontHandler?: (request: Request) => Promise<Response> | Response;
+  fontPath?: string;
   /** What to keep. Returning a falsy value leaves the response unstored. */
   cachePolicy?: (
     request: Request,
@@ -671,6 +674,8 @@ function createNessRequestHandler({
   zones = [],
   imageHandler,
   imagePath = '/_ness/image',
+  fontHandler,
+  fontPath = '/_ness/font',
   cachePolicy = defaultCachePolicy,
   // Override this alongside `cachePolicy`, not instead of it: this one decides
   // whether the cache is touched, that one decides what is kept.
@@ -702,6 +707,11 @@ function createNessRequestHandler({
     const url = new URL(context.request.url);
     if (imageHandler && url.pathname === imagePath)
       return imageHandler(context.request);
+    if (
+      fontHandler &&
+      (url.pathname === fontPath || url.pathname.startsWith(`${fontPath}/`))
+    )
+      return fontHandler(context.request);
     // The adapter's per-call context (Workers bindings) counts only when it
     // is the shape React Router accepts; the historical `{env, ctx}` object
     // is still available to a configured getLoadContext, never passed raw.

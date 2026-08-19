@@ -9,6 +9,12 @@ export type {
   Metadata,
   OpenGraphImage,
 } from './metadata.js';
+export { RouteViewport, ViewportTags } from './viewport.js';
+export type {
+  GenerateViewport,
+  GenerateViewportArgs,
+  Viewport,
+} from './viewport.js';
 export { FileMetadataTags } from './file-metadata.js';
 export type { FileMetadataProps } from './file-metadata.js';
 export { SlotBoundary } from './slot.js';

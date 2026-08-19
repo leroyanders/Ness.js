@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/server",
-  "version": "8.2.0",
+  "version": "8.3.0",
   "description": "Request handling, middleware, routing rules, and web responses for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/server/render",
   "bugs": {

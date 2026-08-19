@@ -20,6 +20,23 @@ Profiles include `seconds`, `minutes`, `hours`, `days`, `max`, and `default`. Co
 
 Server-side `fetch()` plugs into the same cache: identical GETs inside one request share one network call, and `fetch(url, {next: {revalidate: 60, tags: ['posts']}})` stores the response through whatever adapter is configured — invalidated by the same `revalidateTag`/`revalidatePath`. `noStore()` (or `await connection()`) from `@nessframework/core/server` takes a whole response out of the page cache. See [Next.js parity](./next-parity.md#fetch-caching-and-cache).
 
+## The `'use cache'` directive
+
+The same memoization as `cached()`, written as Next 16 writes it — a directive instead of a wrapper:
+
+```ts
+import { cacheLife, cacheTag } from '@nessframework/cache';
+
+async function getPosts(limit: number) {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag('posts');
+  return db.post.findMany({ take: limit });
+}
+```
+
+A server-side function whose body opens with `'use cache'` is compiled into a cached one, keyed by function identity plus arguments. `cacheLife()` takes a profile name or a `{stale, revalidate, expire}` object; `cacheTag()` marks the entry for `revalidateTag()`. A module-level `'use cache'` covers every exported function in the file. Two honest limits: the function must be `async` and named (an anonymous default export has no binding to wrap), and the directive is server-only — a client bundle that reaches one is a build error, same as importing a `.server` module.
+
 ## Adapters
 
 `MemoryCacheAdapter` is the default and is process-local: a second instance keeps its own copy, and `revalidateTag` on one instance does not reach the others. Anything running more than one process needs a shared adapter.
@@ -90,6 +107,20 @@ export default defineNessConfig({
 ```
 
 Prerendered HTML and data are emitted into `build/client`. Other pages use SSR. The Ness production server adds CDN-compatible `s-maxage` and `stale-while-revalidate` headers and performs incremental regeneration for anonymous HTML GET requests.
+
+A dynamic page names its own prerender paths with `generateStaticParams`, exactly as in Next — export it from the page or (better) its `page.server` sibling:
+
+```ts
+// app/routes/blog/[slug]/page.server.ts
+export async function generateStaticParams() {
+  const posts = await db.post.findMany();
+  return posts.map(post => ({ slug: post.slug }));
+}
+```
+
+The function runs at build time; every param set it returns becomes a concrete path added to `prerender`, and the manifest records them for `dynamicParams: false`. A catch-all segment takes an array value, joined with slashes.
+
+`output: 'export'` in the router config turns the whole build into a static export: `ssr` switches off, every page is prerendered — static paths automatically, dynamic ones through their `generateStaticParams` — and `build/client/` is the deployable artifact for any static host. There is no server to start, and no ISR: regeneration means rebuilding.
 
 A response the page cache took part in carries `x-ness-cache`: `MISS` on the render that was stored, `HIT` on a replay of a fresh entry, and `STALE` on a replay of an entry past its `stale` age — the last of which may have a background refresh running behind it. A request the cache refused carries no such header at all.
 

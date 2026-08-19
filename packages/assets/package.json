@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/assets",
-  "version": "8.1.0",
+  "version": "8.2.0",
   "description": "Images, fonts, scripts, and metadata for Ness.js applications.",
   "homepage": "https://nessjs.com/docs/documentation/assets",
   "bugs": {
@@ -54,7 +54,11 @@
       "types": "./dist/script.d.ts",
       "default": "./dist/script.js"
     },
-    "./og": "./dist/image-response.js"
+    "./og": "./dist/image-response.js",
+    "./font/server": {
+      "types": "./dist/font-server.d.ts",
+      "default": "./dist/font-server.js"
+    }
   },
   "files": [
     "!dist/.tsbuildinfo",

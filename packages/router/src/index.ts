@@ -3,7 +3,7 @@ import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
 import type { UserConfig } from 'vite';
 import { normalizeI18n } from './i18n.js';
-import { nessRoutePaths, nessRoutes } from './routes.js';
+import { expandStaticParams, nessRoutePaths, nessRoutes } from './routes.js';
 import type { NessRoute, NessRoutesOptions } from './routes.js';
 import type { I18nConfig, NormalizedI18nConfig } from './i18n.js';
 
@@ -77,6 +77,14 @@ export interface NessConfig extends Config {
    * endpoint keep following `basePath`.
    */
   assetPrefix?: string;
+  /**
+   * `output: 'export'` builds the whole application as static files — Next's
+   * static export. `ssr` turns off, and every page is prerendered: the static
+   * paths automatically, dynamic ones through their `generateStaticParams`
+   * (or an explicit `prerender` list). The deployable artifact is
+   * `build/client/`, served by any static host; there is no server to start.
+   */
+  output?: 'export';
 }
 
 export interface NessInstrumentationConfig {
@@ -106,6 +114,8 @@ export interface NessManifest {
   basename: string | undefined;
   basePath?: string | undefined;
   assetPrefix?: string | undefined;
+  /** `'export'` when the build is a static export with no server bundle. */
+  output?: 'export';
   routes: Record<string, unknown>;
   pages: unknown[];
   /** Concrete paths the build prerendered, for `dynamicParams: false`. */
@@ -119,6 +129,7 @@ export interface ManifestPayloadOptions {
   basename?: string | undefined;
   basePath?: string | undefined;
   assetPrefix?: string | undefined;
+  output?: 'export' | undefined;
   routes?: Record<string, unknown>;
   pages?: unknown[];
   prerenderedPaths?: string[] | undefined;
@@ -159,6 +170,7 @@ function buildManifestPayload({
   basename,
   basePath,
   assetPrefix,
+  output,
   routes,
   pages,
   prerenderedPaths,
@@ -172,6 +184,7 @@ function buildManifestPayload({
     basename,
     ...(basePath ? { basePath } : {}),
     ...(assetPrefix ? { assetPrefix } : {}),
+    ...(output ? { output } : {}),
     routes: routes || {},
     // Every page as a full URL pattern, with whatever `revalidate` /
     // `dynamic` it declared. The production server reads this to answer a
@@ -200,7 +213,13 @@ function writeBuildManifest(options: {
   i18n?: I18nConfig | NormalizedI18nConfig | undefined;
   basePath?: string | undefined;
   assetPrefix?: string | undefined;
-  prerenderedPaths?: string[] | undefined;
+  output?: 'export' | undefined;
+  /**
+   * A thunk rather than a value: with `generateStaticParams` in play the full
+   * list only exists after the prerender pass ran, which is before this hook
+   * but after the config was built.
+   */
+  prerenderedPaths?: (() => string[] | undefined) | string[] | undefined;
 }): BuildEndHook {
   return async ({ buildManifest, reactRouterConfig }) => {
     writeNessManifest(
@@ -209,18 +228,53 @@ function writeBuildManifest(options: {
         basename: reactRouterConfig.basename,
         basePath: options.basePath,
         assetPrefix: options.assetPrefix,
+        output: options.output,
         routes: (buildManifest?.routes || {}) as Record<string, unknown>,
         pages: await nessRoutePaths({
           appDirectory: reactRouterConfig.appDirectory,
           i18n: options.i18n,
         }).catch(() => []),
-        prerenderedPaths: options.prerenderedPaths,
+        prerenderedPaths:
+          typeof options.prerenderedPaths === 'function'
+            ? options.prerenderedPaths()
+            : options.prerenderedPaths,
         cache: options.cache,
         deployment: options.deployment,
         i18n: options.i18n,
       }),
     );
   };
+}
+
+/**
+ * Whether any page under `app/routes` declares `generateStaticParams` — asked
+ * of the filesystem synchronously, because `defineConfig` is synchronous and
+ * only wants to know whether to install the combined prerender function at
+ * all. Which pages, and what they generate, is the build-time pass's business.
+ */
+function routesDeclareStaticParams(appDirectory: string): boolean {
+  const routesDirectory = path.join(appDirectory, 'routes');
+  if (!fs.existsSync(routesDirectory)) return false;
+  const declares =
+    /\bexport\s+(?:async\s+)?(?:function|const|let|var)\s+generateStaticParams\b/;
+  const walk = (directory: string): boolean => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        if (entry.name.startsWith('.') || entry.name === 'node_modules')
+          continue;
+        if (walk(path.join(directory, entry.name))) return true;
+      } else if (/^page(?:\.server)?\.[cm]?[jt]sx?$/.test(entry.name)) {
+        if (
+          declares.test(
+            fs.readFileSync(path.join(directory, entry.name), 'utf8'),
+          )
+        )
+          return true;
+      }
+    }
+    return false;
+  };
+  return walk(routesDirectory);
 }
 
 function defineConfig(options: NessConfig = {}): Config {
@@ -234,6 +288,7 @@ function defineConfig(options: NessConfig = {}): Config {
     i18n,
     basePath,
     assetPrefix,
+    output,
     // Consumed by route generation (`nessRoutes` reads it off the config
     // file); pulled out here so React Router never sees an option it does
     // not know.
@@ -245,6 +300,36 @@ function defineConfig(options: NessConfig = {}): Config {
   // `nessRoutes({i18n})` — rather than being injected behind the developer's
   // back, which would silently override a hand-written route tree.
   const localization = normalizeI18n(i18n);
+  const appDirectory = path.resolve(
+    (reactRouterOptions.appDirectory as string | undefined) ?? 'app',
+  );
+  const exporting = output === 'export';
+  // A static export prerenders everything unless told which paths; `true` is
+  // React Router's "every static path", and `generateStaticParams` below adds
+  // the dynamic ones.
+  const basePrerender = exporting && prerender === undefined ? true : prerender;
+  // What the prerender pass actually resolved to, captured for the manifest:
+  // with `generateStaticParams` the full list only exists once the functions
+  // have run, which happens during the build — after this config is built,
+  // before `buildEnd` reads it.
+  let resolvedPrerender: string[] | undefined;
+  const combinedPrerender = routesDeclareStaticParams(appDirectory)
+    ? async (args: { getStaticPaths: () => string[] }) => {
+        const base =
+          typeof basePrerender === 'function'
+            ? await basePrerender(args)
+            : Array.isArray(basePrerender)
+              ? basePrerender.map(String)
+              : basePrerender === true
+                ? args.getStaticPaths()
+                : [];
+        const expanded = await expandStaticParams(
+          await nessRoutePaths({ appDirectory, i18n }),
+        );
+        resolvedPrerender = [...new Set([...base, ...expanded])];
+        return resolvedPrerender;
+      }
+    : basePrerender;
   return {
     appDirectory: 'app',
     buildDirectory: 'build',
@@ -277,8 +362,11 @@ function defineConfig(options: NessConfig = {}): Config {
     // `basePath` is React Router's `basename`, stated in the word every
     // migrating project already uses. An explicit `basename` still wins.
     ...(basePath ? { basename: basePath } : {}),
+    // A static export has no server to render on. Stated before the spread so
+    // an application that knows better can still say `ssr` itself.
+    ...(exporting ? { ssr: false } : {}),
     ...reactRouterOptions,
-    prerender,
+    prerender: combinedPrerender,
     ...(rsc
       ? {}
       : {
@@ -290,9 +378,12 @@ function defineConfig(options: NessConfig = {}): Config {
               i18n: localization,
               basePath,
               assetPrefix,
-              prerenderedPaths: Array.isArray(prerender)
-                ? prerender.map(String)
-                : undefined,
+              output,
+              prerenderedPaths: () =>
+                resolvedPrerender ??
+                (Array.isArray(basePrerender)
+                  ? basePrerender.map(String)
+                  : undefined),
             }),
           ),
         }),

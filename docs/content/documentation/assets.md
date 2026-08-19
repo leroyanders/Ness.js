@@ -102,3 +102,16 @@ Rendered with [satori](https://github.com/vercel/satori), an optional peer — i
 ## Fonts and scripts
 
 `localFont` creates self-hosted `@font-face` rules, preload links, stable class names, fallbacks, and CSS variables. `<Script>` supports `beforeInteractive`, `afterInteractive`, and `lazyOnload` strategies.
+
+`googleFont` self-hosts a Google font without any files in the repository:
+
+```tsx
+import { FontStyles, googleFont } from '@nessframework/core/font';
+
+const inter = googleFont('Inter', { weight: ['400', '700'] });
+
+// in root.tsx: <FontStyles fonts={inter} /> in <head>,
+// className={inter.className} on <body>
+```
+
+The stylesheet link points at the application's own `/_ness/font` endpoint, which proxies the css2 API and rewrites every font file URL back through itself: the visitor's browser never connects to Google — the GDPR case that makes teams self-host in the first place — and both the CSS and the font bytes live in the shared Ness cache, so Google is asked once per cache lifetime, not once per visitor. Works identically in development and production. `weight` takes a list or a variable range (`'100..900'`), `style` adds italics, `display`/`variable`/`fallback` mean what they mean in `localFont`.

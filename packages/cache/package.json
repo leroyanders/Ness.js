@@ -1,6 +1,6 @@
 {
   "name": "@nessframework/cache",
-  "version": "8.0.0",
+  "version": "8.1.0",
   "description": "Caching, stale-while-revalidate, tags, and path invalidation for Ness.js.",
   "homepage": "https://nessjs.com/docs/documentation/caching",
   "bugs": {
@@ -52,7 +52,11 @@
       "types": "./dist/adapters/tiered.d.ts",
       "default": "./dist/adapters/tiered.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./use-cache": {
+      "types": "./dist/use-cache.d.ts",
+      "default": "./dist/use-cache.js"
+    }
   },
   "files": [
     "!dist/.tsbuildinfo",

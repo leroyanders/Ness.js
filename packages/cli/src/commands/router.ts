@@ -77,6 +77,25 @@ export async function startProductionServer(
   );
   const build = path.resolve(cwd, options.build || 'build/server/index.js');
   if (!fs.existsSync(build)) {
+    // A static export is the one build that is *supposed* to have no server
+    // bundle — tell the user what they actually have instead of implying the
+    // build failed.
+    try {
+      const manifest = JSON.parse(
+        fs.readFileSync(
+          path.resolve(cwd, 'build', 'ness-manifest.json'),
+          'utf8',
+        ),
+      ) as { output?: string };
+      if (manifest.output === 'export') {
+        throw new Error(
+          "This build is a static export (output: 'export'): there is no server to start. Deploy build/client/ to any static host, or serve it locally with: npx serve build/client",
+        );
+      }
+    } catch (error) {
+      if (error instanceof Error && /static export/.test(error.message))
+        throw error;
+    }
     throw new Error(
       `Production build not found at ${build}. Run ness build first.`,
     );

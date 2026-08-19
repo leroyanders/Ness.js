@@ -130,7 +130,12 @@ const IMPORT_REWRITES: ImportRewrite[] = [
     rename: {
       revalidateTag: 'revalidateTag',
       revalidatePath: 'revalidatePath',
+      updateTag: 'updateTag',
       unstable_cache: 'cached',
+      cacheLife: 'cacheLife',
+      cacheTag: 'cacheTag',
+      unstable_cacheLife: 'cacheLife',
+      unstable_cacheTag: 'cacheTag',
     },
     unsupported: {
       unstable_noStore:
@@ -148,6 +153,12 @@ const IMPORT_REWRITES: ImportRewrite[] = [
     from: 'next/font/local',
     to: '@nessframework/core/font',
     named: { default: 'localFont' },
+  },
+  {
+    from: 'next/font/google',
+    to: '@nessframework/core/font',
+    notes:
+      "Per-family exports become googleFont: `Inter({subsets})` is `googleFont('Inter', {subsets})`. Import {googleFont} and pass the family name.",
   },
   {
     from: 'next/headers',
@@ -449,9 +460,8 @@ function renderReport(
     '',
     '- **Server Components.** A Next `async` page component maps to a `loader` in an adjacent `page.server` file plus a synchronous component. The split depends on what the component awaits, so it is left alone.',
     '- **Server Actions.** A `"use server"` function becomes an `action` export in `page.server`, reached through a `<Form>`.',
-    '- **`generateStaticParams`.** List the paths under `router.prerender` in `ness.config.mjs`.',
-    '- **`generateMetadata`.** Export `meta` from the route, or use `@nessframework/core/metadata`.',
-    '- **Route groups and dynamic segments** carry over unchanged: `(group)`, `[id]`, `[...rest]`, `[[...rest]]`.',
+    "- **Google fonts.** `Inter({subsets})` from next/font/google becomes `googleFont('Inter', {...})` from `@nessframework/core/font` — same options, family stated as the first argument.",
+    '- **Route groups, dynamic segments, `generateStaticParams`, `metadata`/`generateMetadata`, `viewport`/`generateViewport`, middleware `matcher`** carry over unchanged.',
     '',
   ];
   return lines.join('\n');

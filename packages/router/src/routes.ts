@@ -54,6 +54,8 @@ export interface NessRoute {
   children?: NessRoute[];
   config?: SegmentConfig;
   prefetch?: PagePrefetchInfo;
+  /** The module declaring `generateStaticParams`, when the page has one. */
+  staticParams?: string;
 }
 
 /** One navigable page, as a full path pattern. */
@@ -63,6 +65,8 @@ export interface NessRoutePath {
   file: string;
   config?: SegmentConfig;
   prefetch?: PagePrefetchInfo;
+  /** The module declaring `generateStaticParams`, when the page has one. */
+  staticParams?: string;
 }
 
 export interface NessRoutesOptions {
@@ -326,6 +330,54 @@ function metadataExports(source: string): {
     generateMetadata:
       /\bexport\s+(?:async\s+)?function\s+generateMetadata\b/.test(source) ||
       /\bexport\s+(?:const|let|var)\s+generateMetadata\b/.test(source),
+  };
+}
+
+/**
+ * Whether a middleware file declares `export const config = { matcher }` —
+ * Next's declarative scope. Read statically, like everything else routing
+ * decides before it can run the module; the generated wrapper imports the
+ * real object and hands it to `matchedMiddleware` at runtime.
+ */
+function middlewareHasConfig(middlewareFile: string): boolean {
+  const source = fs.readFileSync(middlewareFile, 'utf8');
+  return /\bexport\s+(?:const|let|var)\s+config\b/.test(source);
+}
+
+/** The generated lines that publish a segment middleware, matcher included. */
+function middlewareLines(
+  generatedFile: string,
+  middlewareFile: string,
+): string[] {
+  const modulePath = JSON.stringify(importPath(generatedFile, middlewareFile));
+  if (!middlewareHasConfig(middlewareFile)) {
+    return [
+      `import NessMiddleware from ${modulePath};`,
+      'export const middleware = Array.isArray(NessMiddleware) ? NessMiddleware : [NessMiddleware];',
+    ];
+  }
+  return [
+    `import NessMiddleware, {config as NessMiddlewareConfig} from ${modulePath};`,
+    "import {matchedMiddleware as nessMatchedMiddleware} from '@nessframework/core/client';",
+    'export const middleware = nessMatchedMiddleware(NessMiddleware, NessMiddlewareConfig);',
+  ];
+}
+
+/**
+ * Whether a module exports `viewport` or `generateViewport`, read off the
+ * text the same way `metadataExports` is.
+ */
+function viewportExports(source: string): {
+  viewport: boolean;
+  generateViewport: boolean;
+} {
+  return {
+    viewport:
+      /\bexport\s+(?:const|let|var)\s+viewport\b/.test(source) ||
+      /\bexport\s*\{[^}]*\bviewport\b[^}]*\}/.test(source),
+    generateViewport:
+      /\bexport\s+(?:async\s+)?function\s+generateViewport\b/.test(source) ||
+      /\bexport\s+(?:const|let|var)\s+generateViewport\b/.test(source),
   };
 }
 
@@ -870,6 +922,31 @@ function createWrapper({
       component = 'NessWithMetadata';
     }
 
+    // The separate `viewport`/`generateViewport` export, the way Next splits
+    // it out of `metadata`. Rendered beside the component like the metadata
+    // tags are; when a layout and its page both declare one, the page's tag
+    // comes later in document order and the browser applies it — the deepest
+    // segment wins.
+    const ownViewport = sourceFile
+      ? viewportExports(fs.readFileSync(sourceFile, 'utf8'))
+      : { viewport: false, generateViewport: false };
+    if (ownViewport.viewport || ownViewport.generateViewport) {
+      lines.push(
+        "import {RouteViewport as NessRouteViewport} from '@nessframework/components';",
+      );
+      lines.push(
+        `import * as NessViewportModule from ${JSON.stringify(importPath(generatedFile, sourceFile!))};`,
+      );
+      const expression = ownViewport.viewport
+        ? 'NessViewportModule.viewport'
+        : 'NessViewportModule.generateViewport';
+      const previous = component;
+      lines.push(
+        `function NessWithViewport(props){ return (<><NessRouteViewport viewport={${expression}} args={{params: props?.params ?? {}}} /><${previous} {...props} /></>); }`,
+      );
+      component = 'NessWithViewport';
+    }
+
     if (fileMetadata) {
       lines.push(
         "import {FileMetadataTags as NessFileMetadataTags} from '@nessframework/components';",
@@ -927,14 +1004,8 @@ function createWrapper({
     lines.push(
       `export {default as HydrateFallback} from ${JSON.stringify(importPath(generatedFile, loadingFile))};`,
     );
-  if (middlewareFile) {
-    lines.push(
-      `import NessMiddleware from ${JSON.stringify(importPath(generatedFile, middlewareFile))};`,
-    );
-    lines.push(
-      'export const middleware = Array.isArray(NessMiddleware) ? NessMiddleware : [NessMiddleware];',
-    );
-  }
+  if (middlewareFile)
+    lines.push(...middlewareLines(generatedFile, middlewareFile));
   writeIfChanged(generatedFile, `${lines.join('\n')}\n`);
   return { streamed, cached, hasServerLoader };
 }
@@ -958,12 +1029,11 @@ function createResourceWrapper({
     )
     .map(name => `export const ${name} = RouteHandler.${name};`)
     .join('\n');
-  const middlewareImport = middlewareFile
-    ? `import NessMiddleware from ${JSON.stringify(importPath(generatedFile, middlewareFile))};`
-    : '';
-  const middlewareExport = middlewareFile
-    ? 'export const middleware = Array.isArray(NessMiddleware) ? NessMiddleware : [NessMiddleware];'
-    : '';
+  const middleware = middlewareFile
+    ? middlewareLines(generatedFile, middlewareFile)
+    : [];
+  const middlewareImport = middleware.slice(0, -1).join('\n');
+  const middlewareExport = middleware.at(-1) ?? '';
   const content = `// Generated by Ness.js. Do not edit.
 import * as RouteHandler from ${modulePath};
 ${middlewareImport}
@@ -1070,6 +1140,13 @@ function createSlotWrapper({
  * route it describes. The module default-exports a function receiving
  * `{params}` and returning a `Response` — usually an `ImageResponse` from
  * `@nessframework/assets/og`.
+ *
+ * A module that also exports `generateImageMetadata` serves several images
+ * from one route, Next-style: the function receives `{params}` and returns
+ * `[{id, contentType?, alt?}, ...]`; each image is addressed as `?id=<id>`
+ * and the default export receives that `id` alongside the params. An `id`
+ * the function did not list answers 404 — the list is the route's contract,
+ * not a hint.
  */
 function createImageRouteWrapper({
   generatedFile,
@@ -1085,17 +1162,106 @@ function createImageRouteWrapper({
 import * as NessImageModule from ${modulePath};
 
 export async function loader(args: {request: Request; params: Record<string, string | undefined>}) {
-  const produced = await NessImageModule.default(args);
+  const module = NessImageModule as {
+    contentType?: string;
+    generateImageMetadata?: (input: {params: Record<string, string | undefined>}) => Promise<Array<{id: string | number; contentType?: string}>> | Array<{id: string | number; contentType?: string}>;
+  };
+  let contentType = module.contentType;
+  let id: string | undefined;
+  if (typeof module.generateImageMetadata === 'function') {
+    const images = await module.generateImageMetadata({params: args.params});
+    id = new URL(args.request.url).searchParams.get('id') ?? String(images[0]?.id ?? '');
+    const image = images.find(entry => String(entry.id) === id);
+    if (!image) return new Response('Not Found', {status: 404});
+    contentType = image.contentType || contentType;
+  }
+  const produced = await NessImageModule.default({...args, ...(id === undefined ? {} : {id})});
   if (produced instanceof Response) return produced;
   return new Response(produced, {
     headers: {
-      'content-type': (NessImageModule as {contentType?: string}).contentType || 'image/png',
+      'content-type': contentType || 'image/png',
       'cache-control': 'public, max-age=0, must-revalidate',
     },
   });
 }
 `,
   );
+}
+
+/**
+ * The module declaring the page's `generateStaticParams`, if either the page
+ * or its `.server` sibling does. The sibling wins: the function runs at build
+ * time on the server, which is where a `.server` module's imports belong —
+ * declaring it on the page itself also works, but drags whatever the function
+ * needs into a module the client bundles.
+ */
+function staticParamsModule(sourceFile: string): string | undefined {
+  const declares = (file: string): boolean =>
+    /\bexport\s+(?:async\s+)?(?:function|const|let|var)\s+generateStaticParams\b/.test(
+      fs.readFileSync(file, 'utf8'),
+    );
+  const extension = path.extname(sourceFile);
+  const base = sourceFile.slice(0, -extension.length);
+  const serverFile = ROUTE_EXTENSIONS.map(
+    candidate => `${base}.server${candidate}`,
+  ).find(fs.existsSync);
+  if (serverFile && declares(serverFile)) return serverFile;
+  return declares(sourceFile) ? sourceFile : undefined;
+}
+
+/**
+ * Substitutes one `generateStaticParams` result into a page's URL pattern:
+ * `:slug` takes `params.slug`, and a catch-all (`*` in the compiled pattern —
+ * `[...slug]` in the directory name) takes the params' single array value,
+ * joined with slashes. A pattern still holding a `:param` afterwards is not a
+ * concrete path and is dropped rather than prerendered misspelled.
+ */
+function fillStaticPath(
+  pattern: string,
+  params: Record<string, unknown>,
+): string | undefined {
+  let filled = pattern.replace(/:([A-Za-z0-9_]+)/g, (match, name: string) => {
+    const value = params[name];
+    return value === undefined ? match : String(value);
+  });
+  if (filled.includes('*')) {
+    const rest = Object.values(params).find(Array.isArray) as
+      unknown[] | undefined;
+    if (rest) filled = filled.replace('*', rest.map(String).join('/'));
+  }
+  return /[:*]/.test(filled) ? undefined : filled;
+}
+
+/**
+ * Runs every page's `generateStaticParams` and returns the concrete paths
+ * they name — what `router.prerender` gets extended with at build time. The
+ * modules are imported for real here, exactly the way Next runs the function
+ * at build: this is the one route-generation step that executes application
+ * code, and it only happens for pages that wrote the export.
+ */
+async function expandStaticParams(pages: NessRoutePath[]): Promise<string[]> {
+  const paths: string[] = [];
+  for (const page of pages) {
+    if (!page.staticParams) continue;
+    // A static path has no params to generate; the export is meaningless there.
+    if (!/[:*]/.test(page.path)) continue;
+    const module = (await import(
+      /* @vite-ignore */ pathToFileURL(page.staticParams).href
+    )) as {
+      generateStaticParams?: (args: {
+        params: Record<string, string | undefined>;
+      }) =>
+        | Promise<Array<Record<string, unknown>>>
+        | Array<Record<string, unknown>>;
+    };
+    if (typeof module.generateStaticParams !== 'function') continue;
+    const sets = await module.generateStaticParams({ params: {} });
+    for (const params of sets ?? []) {
+      const filled = fillStaticPath(page.path, params ?? {});
+      if (filled) paths.push(filled);
+    }
+  }
+  return paths;
 }
 
 /** A page's own config, or its `.server` module's — whichever declares it. */
@@ -1268,6 +1434,7 @@ function discoverDirectory({
       `${moduleId(routesDirectory, directory, 'page')}.tsx`,
     );
     const segmentConfig = segmentConfigFor(pageFile);
+    const staticParams = staticParamsModule(pageFile);
     const wrapper = createWrapper({
       generatedFile,
       routeId: moduleId(routesDirectory, directory, 'page'),
@@ -1292,6 +1459,7 @@ function discoverDirectory({
       index: true,
       file: routeFile(appDirectory, generatedFile),
       ...(segmentConfig ? { config: segmentConfig } : {}),
+      ...(staticParams ? { staticParams } : {}),
       prefetch: {
         serverLoader: wrapper.hasServerLoader,
         wrapped: wrapper.streamed || wrapper.cached,
@@ -1641,6 +1809,7 @@ function flattenRoutePaths(
         file: route.file,
         ...(route.config ? { config: route.config } : {}),
         ...(route.prefetch ? { prefetch: route.prefetch } : {}),
+        ...(route.staticParams ? { staticParams: route.staticParams } : {}),
       });
     }
     if (route.children?.length) {
@@ -1700,6 +1869,8 @@ export {
   RESERVED_FILES,
   ROUTE_EXTENSIONS,
   SEGMENT_CONFIG,
+  expandStaticParams,
+  fillStaticPath,
   nessInterceptors,
   nessRoutePaths,
   nessRoutes,
