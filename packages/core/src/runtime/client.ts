@@ -506,13 +506,18 @@ function streamedClientLoader(
 
     // The page's `clientCache` window (its own export, or the application
     // default): within it a navigation is answered from memory outright — no
-    // fetch, no revalidation pass. Past it the entry is just stale memory,
-    // and the ordinary load below replaces it. The expiry may also have been
-    // set by a prefetch, which is the same statement made ahead of time.
+    // fetch, no revalidation pass. Past it the entry is still what the reader
+    // saw a moment ago, so it is served one more time as a stale answer that
+    // owes a refresh — the same debt a Back navigation records — and the
+    // loader re-runs behind real content as a data update instead of putting
+    // a skeleton in front of nothing. The expiry may also have been set by a
+    // prefetch, which is the same statement made ahead of time.
     const expiresAt = clientCacheExpiry.get(key);
     if (expiresAt !== undefined && clientDataCache.has(key)) {
       if (expiresAt > Date.now()) return clientDataCache.get(key);
       clientCacheExpiry.delete(key);
+      servedFromCache.add(target);
+      return clientDataCache.get(key);
     }
 
     if (popNavigation && clientDataCache.has(key)) {
@@ -664,9 +669,11 @@ export interface RouteModule {
   /**
    * `export const clientCache = 60` on a page: client-side navigations to it
    * are answered from memory for that many seconds instead of refetching the
-   * server loader. Mutations still clear the whole cache (`RouteOutlet`),
-   * and a document request never sees this — it is purely the navigation
-   * layer's memory.
+   * server loader. Past the window the last answer is still served — in a
+   * frame, no fallback — while the loader re-runs behind it and lands as a
+   * data update, so a repeat visit never waits on the network at all.
+   * Mutations still clear the whole cache (`RouteOutlet`), and a document
+   * request never sees this — it is purely the navigation layer's memory.
    */
   clientCache?: number;
 }
@@ -793,10 +800,14 @@ function cachedRouteClientLoader(
     // refresh would answer with the very thing it was refreshing.
     if (samePage(target, currentPage())) return store(await load(args));
 
+    // Same window, same past-the-window bargain as the streamed wrapper:
+    // stale is served in a frame and a refresh follows behind it.
     const expiresAt = clientCacheExpiry.get(key);
     if (expiresAt !== undefined && clientDataCache.has(key)) {
       if (expiresAt > Date.now()) return clientDataCache.get(key);
       clientCacheExpiry.delete(key);
+      servedFromCache.add(target);
+      return clientDataCache.get(key);
     }
 
     if (popNavigation && clientDataCache.has(key)) {
