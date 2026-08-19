@@ -251,7 +251,14 @@ function defineConfig(options: NessConfig = {}): Config {
     serverModuleFormat: 'esm',
     splitRouteModules: true,
     ssr: true,
-    subResourceIntegrity: true,
+    // Off by default: a CDN or proxy that rewrites JS assets (auto-minify,
+    // re-encoding, script injection) breaks the integrity hashes, and the
+    // browser then silently refuses to run `entry.client-*.js` — the page
+    // still renders from SSR HTML, hydration never happens, and every link
+    // click degrades to a full document load. Next.js ships without SRI for
+    // the same reason. A deployment that controls its asset pipeline can
+    // still opt in with `subResourceIntegrity: true`.
+    subResourceIntegrity: false,
     // Every route is compiled into the build's client manifest
     // (`assets/manifest-*.js`, a hashed immutable asset), the way Next.js
     // ships its route table: a production navigation resolves against the
