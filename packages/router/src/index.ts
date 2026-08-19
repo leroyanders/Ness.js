@@ -252,7 +252,17 @@ function defineConfig(options: NessConfig = {}): Config {
     splitRouteModules: true,
     ssr: true,
     subResourceIntegrity: true,
-    routeDiscovery: { mode: 'lazy' },
+    // Every route is compiled into the build's client manifest
+    // (`assets/manifest-*.js`, a hashed immutable asset), the way Next.js
+    // ships its route table: a production navigation resolves against the
+    // compiled routes it already holds and goes straight for the route's
+    // chunk and data. `lazy` would put a `/__manifest` discovery round trip
+    // in front of every first navigation — and a failed discovery degrades
+    // to a full document load, which is the "slow navigation" a deployment
+    // behind an aggressive CDN or proxy actually experiences. An application
+    // that prefers discovery-on-demand can still say `routeDiscovery:
+    // { mode: 'lazy' }` itself.
+    routeDiscovery: { mode: 'initial' },
     future: {
       unstable_enableNodeReadableStream: true,
       ...(reactRouterOptions.future || {}),

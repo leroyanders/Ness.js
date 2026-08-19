@@ -35,7 +35,7 @@ test('within the clientCache window a repeat navigation is answered from memory'
   assert.equal(loads, 1);
 });
 
-test('past the window the loader runs again', async () => {
+test('past the window the last answer is served stale, once', async () => {
   clearClientCache();
   let loads = 0;
   const cached = cacheRoute(
@@ -52,10 +52,19 @@ test('past the window the loader runs again', async () => {
     request: new Request('https://example.com/expiring'),
   });
   await new Promise(resolve => setTimeout(resolve, 10));
+  // Past the window the entry is still what the reader saw a moment ago: it
+  // is served one more time as a stale answer that owes a refresh, instead
+  // of putting a wait in front of the navigation.
   const second = await cached.clientLoader({
     request: new Request('https://example.com/expiring'),
   });
-  assert.deepEqual(second, { visit: 2 });
+  assert.deepEqual(second, { visit: 1 }, 'stale is served in a frame');
+  // The stale service consumed the expired entry, so the next ask — the
+  // refresh it owes — reaches the loader.
+  const third = await cached.clientLoader({
+    request: new Request('https://example.com/expiring'),
+  });
+  assert.deepEqual(third, { visit: 2 });
 });
 
 test('clientCache = 0 opts a page out of the application default', async () => {

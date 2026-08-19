@@ -51,7 +51,9 @@ The `vite` section accepts standard Vite configuration. Official NestJS, Tailwin
 
 ## Router
 
-The `router` section accepts React Router Framework Mode options. Ness supplies ESM server bundles, route-module splitting, subresource integrity, lazy route discovery, streaming SSR, and the `build/` directory by default.
+The `router` section accepts React Router Framework Mode options. Ness supplies ESM server bundles, route-module splitting, subresource integrity, streaming SSR, and the `build/` directory by default.
+
+`ness build` compiles every route into the build's client manifest — a hashed, immutable asset loaded with the document — the way Next.js ships its route table. A production navigation resolves against the compiled routes the client already holds and fetches the route's chunk and data directly, with no discovery round trip. An application that prefers React Router's on-demand discovery (`/__manifest` requests as the user navigates) can opt back in with `routeDiscovery: { mode: 'lazy' }`.
 
 `rsc` defaults to `true` — a project scaffolded with `ness new --no-rsc` sets it to `false` instead, which switches to React Router's classic (non-RSC) plugin. `prerender` works the same either way.
 

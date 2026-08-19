@@ -12,6 +12,16 @@ test('an explicit basename outranks basePath', () => {
   assert.equal(config.basename, '/other');
 });
 
+test('every route is compiled into the initial client manifest by default', () => {
+  const config = defineConfig();
+  assert.deepEqual(config.routeDiscovery, { mode: 'initial' });
+});
+
+test('an application can still opt back into lazy route discovery', () => {
+  const config = defineConfig({ routeDiscovery: { mode: 'lazy' } });
+  assert.deepEqual(config.routeDiscovery, { mode: 'lazy' });
+});
+
 test('the manifest records basePath, assetPrefix and prerendered paths', () => {
   const manifest = buildManifestPayload({
     basePath: '/docs',

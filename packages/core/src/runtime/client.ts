@@ -70,13 +70,20 @@ function useOptimisticAction<State, Action>(
   return [optimistic, addOptimistic, navigation.state !== 'idle'];
 }
 
+/**
+ * `useRouter().prefetch(href)`, Next's spelling: warms the page behind a URL
+ * ahead of the visit — its compiled module chunk, and its data where that can
+ * be had ahead of time. Every route is in the build's compiled manifest now
+ * (`routeDiscovery: 'initial'` is the default), so there is no discovery
+ * request to make — the old `/__manifest` round trip this used to be only
+ * exists under `routeDiscovery: { mode: 'lazy' }`, and under `initial` it
+ * answered 404.
+ */
 function prefetch(
   href: string,
-  { signal, headers }: { signal?: AbortSignal; headers?: HeadersInit } = {},
-): Promise<Response> {
-  const url = new URL('/__manifest', window.location.origin);
-  url.searchParams.set('p', href);
-  return fetch(url, { headers, signal, credentials: 'same-origin' });
+  _options: { signal?: AbortSignal; headers?: HeadersInit } = {},
+): Promise<void> {
+  return prefetchRoute(href);
 }
 
 /**

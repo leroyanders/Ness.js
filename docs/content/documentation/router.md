@@ -105,6 +105,8 @@ The cache is per-tab memory: a document request never sees it, and a reload star
 
 `<Link prefetch>` warms the same machinery ahead of the click: the target's module chunk and its loader data (`.data`/`.rsc`) are requested while the link is hovered or scrolled into view, so the navigation that follows finds both already local.
 
+None of this waits on route discovery: `ness build` compiles every route into the build's client manifest, so a production navigation already knows the target's chunks and data URL the moment the link is clicked — the way Next.js ships its route table. See [Configuration → Router](./config.md#router).
+
 ## Server data
 
 A page may keep client-safe exports in `page.tsx` and server-only work in `page.server.ts`:
