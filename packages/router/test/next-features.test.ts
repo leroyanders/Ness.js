@@ -7,6 +7,7 @@ import {
   expandStaticParams,
   fillStaticPath,
   nessInterceptors,
+  nessNonPrerenderablePaths,
   nessRoutePaths,
   nessRoutes,
 } from '../dist/routes.js';
@@ -375,4 +376,22 @@ test('an image module with generateImageMetadata dispatches by id', async () => 
   const generated = wrapper(appDirectory, 'root__opengraph_image.ts');
   assert.match(generated, /generateImageMetadata/);
   assert.match(generated, /searchParams\.get\('id'\)/);
+});
+
+test('a POST-only route.ts is named non-prerenderable', async () => {
+  const { appDirectory, routesDirectory } = scaffold();
+  const session = path.join(routesDirectory, 'auth-session');
+  fs.mkdirSync(session);
+  fs.writeFileSync(
+    path.join(session, 'route.ts'),
+    'export async function POST(request) { return new Response("ok"); }\n',
+  );
+  const api = path.join(routesDirectory, 'api', 'health');
+  fs.mkdirSync(api, { recursive: true });
+  fs.writeFileSync(
+    path.join(api, 'route.ts'),
+    'export async function GET() { return Response.json({ok: true}); }\n',
+  );
+  const blocked = await nessNonPrerenderablePaths({ appDirectory });
+  assert.deepEqual(blocked, ['/auth-session']);
 });

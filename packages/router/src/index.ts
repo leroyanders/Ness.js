@@ -3,7 +3,12 @@ import path from 'node:path';
 import type { Config } from '@react-router/dev/config';
 import type { UserConfig } from 'vite';
 import { normalizeI18n } from './i18n.js';
-import { expandStaticParams, nessRoutePaths, nessRoutes } from './routes.js';
+import {
+  expandStaticParams,
+  nessNonPrerenderablePaths,
+  nessRoutePaths,
+  nessRoutes,
+} from './routes.js';
 import type { NessRoute, NessRoutesOptions } from './routes.js';
 import type { I18nConfig, NormalizedI18nConfig } from './i18n.js';
 
@@ -313,23 +318,39 @@ function defineConfig(options: NessConfig = {}): Config {
   // have run, which happens during the build — after this config is built,
   // before `buildEnd` reads it.
   let resolvedPrerender: string[] | undefined;
-  const combinedPrerender = routesDeclareStaticParams(appDirectory)
-    ? async (args: { getStaticPaths: () => string[] }) => {
-        const base =
-          typeof basePrerender === 'function'
-            ? await basePrerender(args)
-            : Array.isArray(basePrerender)
-              ? basePrerender.map(String)
-              : basePrerender === true
-                ? args.getStaticPaths()
-                : [];
-        const expanded = await expandStaticParams(
-          await nessRoutePaths({ appDirectory, i18n }),
-        );
-        resolvedPrerender = [...new Set([...base, ...expanded])];
-        return resolvedPrerender;
-      }
-    : basePrerender;
+  const declaresStaticParams = routesDeclareStaticParams(appDirectory);
+  // Wrapped when there is something to add (`generateStaticParams`) or
+  // something to subtract: `prerender: true` expands to every static path,
+  // and that expansion includes `route.ts` resources — a POST-only endpoint
+  // would answer the prerender's GET with the 405 it answers any GET with,
+  // and React Router treats that as a failed build. An explicit list or
+  // function is the application's own word and passes through untouched.
+  const combinedPrerender =
+    declaresStaticParams || basePrerender === true
+      ? async (args: { getStaticPaths: () => string[] }) => {
+          let base =
+            typeof basePrerender === 'function'
+              ? await basePrerender(args)
+              : Array.isArray(basePrerender)
+                ? basePrerender.map(String)
+                : basePrerender === true
+                  ? args.getStaticPaths()
+                  : [];
+          if (basePrerender === true) {
+            const blocked = new Set(
+              await nessNonPrerenderablePaths({ appDirectory, i18n }),
+            );
+            base = base.filter(path => !blocked.has(path));
+          }
+          const expanded = declaresStaticParams
+            ? await expandStaticParams(
+                await nessRoutePaths({ appDirectory, i18n }),
+              )
+            : [];
+          resolvedPrerender = [...new Set([...base, ...expanded])];
+          return resolvedPrerender;
+        }
+      : basePrerender;
   return {
     appDirectory: 'app',
     buildDirectory: 'build',

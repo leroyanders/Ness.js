@@ -56,6 +56,8 @@ export interface NessRoute {
   prefetch?: PagePrefetchInfo;
   /** The module declaring `generateStaticParams`, when the page has one. */
   staticParams?: string;
+  /** The HTTP methods a `route.ts` resource exports, read off its source. */
+  methods?: string[];
 }
 
 /** One navigable page, as a full path pattern. */
@@ -1058,6 +1060,22 @@ ${middlewareExport}
 }
 
 /**
+ * The HTTP methods a `route.ts` module exports, read off its source the way
+ * every other build-time question is. Needed before the module can be run:
+ * `prerender: true` has to know that a POST-only endpoint cannot answer the
+ * GET a prerender would send it.
+ */
+function resourceMethods(sourceFile: string): string[] {
+  const source = fs.readFileSync(sourceFile, 'utf8');
+  return ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'].filter(
+    method =>
+      new RegExp(
+        `\\bexport\\s+(?:async\\s+)?(?:function|const|let|var)\\s+${method}\\b`,
+      ).test(source),
+  );
+}
+
+/**
  * A `sitemap`/`robots`/`manifest` module, published as the file it describes.
  *
  * The application exports a default function returning ordinary data; the
@@ -1517,6 +1535,7 @@ function discoverDirectory({
       id: moduleId(routesDirectory, directory, 'resource'),
       index: true,
       file: routeFile(appDirectory, generatedFile),
+      methods: resourceMethods(resourceFile),
     });
   }
 
@@ -1826,6 +1845,47 @@ async function nessRoutePaths(
 }
 
 /**
+ * The static paths `prerender: true` must NOT touch: `route.ts` resources
+ * that export no GET or HEAD. A prerender is a GET, and the generated
+ * dispatcher answers one honestly — 405 — which React Router's prerenderer
+ * treats as the build failure it would be anywhere else. The endpoint is not
+ * wrong and the prerender is not wrong; they just have nothing to say to
+ * each other, so the path is subtracted from the expansion of `true` rather
+ * than either side bending.
+ */
+function collectNonPrerenderable(
+  routes: NessRoute[],
+  parentPath = '',
+  blocked: string[] = [],
+): string[] {
+  for (const route of routes) {
+    const segment = route.index ? '' : (route.path ?? '');
+    const joined = segment
+      ? `${parentPath.replace(/\/$/, '')}/${segment}`
+      : parentPath;
+    const full = joined || '/';
+    if (
+      String(route.id).endsWith('__resource') &&
+      route.methods &&
+      !route.methods.includes('GET') &&
+      !route.methods.includes('HEAD')
+    ) {
+      blocked.push(full);
+    }
+    if (route.children?.length) {
+      collectNonPrerenderable(route.children, full, blocked);
+    }
+  }
+  return blocked;
+}
+
+async function nessNonPrerenderablePaths(
+  options: NessRoutesOptions = {},
+): Promise<string[]> {
+  return collectNonPrerenderable(await nessRoutes(options));
+}
+
+/**
  * Declares every route pattern the application has, so `href()` can be checked
  * against it.
  *
@@ -1872,6 +1932,7 @@ export {
   expandStaticParams,
   fillStaticPath,
   nessInterceptors,
+  nessNonPrerenderablePaths,
   nessRoutePaths,
   nessRoutes,
   prefixRouteIds,
